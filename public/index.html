@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencia — Local Dev</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080b0f; --surface: #0d1117; --border: #1e2d3d;
+      --text: #c9d5e0; --text-dim: #566678; --text-hi: #e8f0f8;
+      --blue: #1a7dff; --green: #00d68f;
+      --mono: 'IBM Plex Mono', monospace; --display: 'Syne', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { max-width: 560px; width: 100%; padding: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+    .logo { font-family: var(--display); font-size: 28px; font-weight: 800; color: var(--text-hi); letter-spacing: -0.02em; margin-bottom: 4px; }
+    .logo span { color: var(--blue); }
+    .tag { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 40px; }
+    .link-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .link-row:last-child { border-bottom: none; }
+    .link-label { font-size: 12px; color: var(--text-dim); }
+    .link-title { font-size: 13px; color: var(--text-hi); margin-bottom: 2px; }
+    a.pill { display: inline-block; padding: 6px 14px; background: var(--blue); color: #fff; border-radius: 4px; font-size: 11px; text-decoration: none; transition: opacity 0.15s; }
+    a.pill:hover { opacity: 0.85; }
+    .status-dot { display: inline-block; width: 7px; height: 7px; background: var(--green); border-radius: 50%; margin-right: 6px; box-shadow: 0 0 6px var(--green); }
+    .status { font-size: 11px; color: var(--green); margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">EVID<span>·</span>ENCIA</div>
+    <div class="tag">// local development server</div>
+
+    <div class="link-row">
+      <div>
+        <div class="link-title">Verification Portal</div>
+        <div class="link-label">Public — verify any proof</div>
+      </div>
+      <a class="pill" href="/verify.html">Open →</a>
+    </div>
+
+    <div class="link-row">
+      <div>
+        <div class="link-title">API Client</div>
+        <div class="link-label">Interactive request builder</div>
+      </div>
+      <a class="pill" href="/api-client.html">Open →</a>
+    </div>
+
+    <div class="link-row">
+      <div>
+        <div class="link-title">API Reference</div>
+        <div class="link-label">POST /v1/proofs · GET /v1/proofs/:id · POST /v1/verify</div>
+      </div>
+      <a class="pill" href="/api" style="background:transparent;border:1px solid var(--border);color:var(--text-dim)">JSON →</a>
+    </div>
+
+    <div class="status"><span class="status-dot"></span>Server is running</div>
+  </div>
+</body>
+</html>

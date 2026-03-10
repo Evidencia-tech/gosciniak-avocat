@@ -1,0 +1,26 @@
+name: evidencia
+description: Official Flutter SDK for the Evidencia proof infrastructure API. Create cryptographically verifiable proofs for files captured on iOS and Android.
+version: 1.0.0
+
+homepage: https://evidencia.io
+repository: https://github.com/evidencia/evidencia-flutter
+issue_tracker: https://github.com/evidencia/evidencia-flutter/issues
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  crypto: ^3.0.3
+  image_picker: ^1.0.7
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.8
+  flutter_lints: ^3.0.0

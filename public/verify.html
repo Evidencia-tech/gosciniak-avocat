@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencia — Verify Proof</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b0f;
+      --surface:   #0d1117;
+      --panel:     #111820;
+      --border:    #1e2d3d;
+      --border-hi: #2a3f55;
+      --text:      #c9d5e0;
+      --text-dim:  #566678;
+      --text-hi:   #e8f0f8;
+      --blue:      #1a7dff;
+      --blue-glow: rgba(26,125,255,0.15);
+      --green:     #00d68f;
+      --green-dim: rgba(0,214,143,0.12);
+      --red:       #ff4d6d;
+      --red-dim:   rgba(255,77,109,0.10);
+      --amber:     #f0a500;
+      --amber-dim: rgba(240,165,0,0.10);
+      --mono:      'IBM Plex Mono', monospace;
+      --display:   'Syne', sans-serif;
+      --radius:    4px;
+    }
+
+    html { font-size: 14px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid noise texture overlay ───────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────── */
+    header {
+      padding: 32px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-hi);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+    .logo span { color: var(--blue); }
+
+    .logo-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: var(--radius);
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────────────── */
+    .hero {
+      padding: 72px 0 48px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: var(--display);
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800;
+      color: var(--text-hi);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      font-size: 13px;
+      color: var(--text-dim);
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── Main input card ──────────────────────────────────────────────── */
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 32px;
+      transition: border-color 0.2s;
+    }
+    .input-card:focus-within { border-color: var(--border-hi); }
+
+    .input-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .proof-input {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-hi);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .proof-input::placeholder { color: var(--text-dim); }
+    .proof-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-glow);
+    }
+
+    /* ── Divider ──────────────────────────────────────────────────────── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: var(--text-dim);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Drop zone ────────────────────────────────────────────────────── */
+    .drop-zone {
+      border: 1px dashed var(--border-hi);
+      border-radius: var(--radius);
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragging {
+      border-color: var(--blue);
+      background: var(--blue-glow);
+    }
+    .drop-zone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .drop-icon {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto 10px;
+      color: var(--text-dim);
+    }
+    .drop-zone p { font-size: 12px; color: var(--text-dim); }
+    .drop-zone strong { color: var(--text); font-weight: 500; }
+
+    .file-selected {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 12px;
+    }
+    .file-selected .fname { color: var(--text-hi); font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-selected .fsize { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
+    .file-clear { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; }
+    .file-clear:hover { color: var(--red); }
+
+    /* ── Submit button ────────────────────────────────────────────────── */
+    .btn-verify {
+      width: 100%;
+      margin-top: 24px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 14px 24px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-verify:hover { opacity: 0.9; }
+    .btn-verify:active { transform: scale(0.99); }
+    .btn-verify:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Loading state ────────────────────────────────────────────────── */
+    .loader {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text-dim);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+    .loader.active { display: flex; }
+    .loader-dots span {
+      display: inline-block;
+      width: 5px; height: 5px;
+      background: var(--blue);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Result card ──────────────────────────────────────────────────── */
+    .result { display: none; animation: slideIn 0.3s ease-out; }
+    .result.visible { display: block; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .verdict-banner {
+      border-radius: 8px 8px 0 0;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .verdict-banner.valid   { background: var(--green-dim); border: 1px solid rgba(0,214,143,0.2); }
+    .verdict-banner.invalid { background: var(--red-dim);   border: 1px solid rgba(255,77,109,0.2); }
+    .verdict-banner.warn    { background: var(--amber-dim); border: 1px solid rgba(240,165,0,0.2); }
+
+    .verdict-icon {
+      width: 48px; height: 48px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .verdict-banner.valid   .verdict-icon { background: rgba(0,214,143,0.15); color: var(--green); }
+    .verdict-banner.invalid .verdict-icon { background: rgba(255,77,109,0.15); color: var(--red); }
+    .verdict-banner.warn    .verdict-icon { background: rgba(240,165,0,0.15);  color: var(--amber); }
+
+    .verdict-title {
+      font-family: var(--display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .verdict-banner.valid   .verdict-title { color: var(--green); }
+    .verdict-banner.invalid .verdict-title { color: var(--red); }
+    .verdict-banner.warn    .verdict-title { color: var(--amber); }
+    .verdict-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── Checks grid ──────────────────────────────────────────────────── */
+    .checks-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 0 32px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeRow 0.3s ease-out both;
+    }
+    .check-row:last-child { border-bottom: none; }
+
+    @keyframes fadeRow {
+      from { opacity: 0; transform: translateX(-6px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .check-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .check-indicator.pass { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .check-indicator.fail { background: var(--red); box-shadow: 0 0 6px var(--red); }
+    .check-indicator.skip { background: var(--text-dim); }
+
+    .check-name {
+      font-size: 12px;
+      color: var(--text);
+      flex: 1;
+    }
+    .check-value {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+    }
+    .check-value.pass { color: var(--green); }
+    .check-value.fail { color: var(--red); }
+    .check-value.skip { color: var(--text-dim); }
+
+    /* ── Data fields ──────────────────────────────────────────────────── */
+    .data-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 24px 32px;
+    }
+
+    .data-section-label {
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 480px) { .data-grid { grid-template-columns: 1fr; } }
+
+    .data-field label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .data-field .val {
+      font-size: 12px;
+      color: var(--text-hi);
+      word-break: break-all;
+    }
+    .data-field .val.mono { font-family: var(--mono); }
+
+    .hash-display {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 11px;
+      color: var(--text-dim);
+      word-break: break-all;
+      font-family: var(--mono);
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .hash-display .hash-label {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .hash-display .hash-val { color: var(--text); }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: var(--border);
+      border: none;
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { background: var(--border-hi); color: var(--text); }
+    .copy-btn.copied { color: var(--green); }
+
+    /* ── Again button ─────────────────────────────────────────────────── */
+    .btn-again {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-again:hover { border-color: var(--border-hi); color: var(--text); }
+
+    /* ── API endpoint ─────────────────────────────────────────────────── */
+    .api-note {
+      margin: 48px 0;
+      padding: 20px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .api-note code {
+      color: var(--blue);
+      font-family: var(--mono);
+      background: var(--panel);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+    .api-note a { color: var(--blue); text-decoration: none; }
+    .api-note a:hover { text-decoration: underline; }
+
+    /* ── Error message ────────────────────────────────────────────────── */
+    .error-msg {
+      display: none;
+      background: var(--red-dim);
+      border: 1px solid rgba(255,77,109,0.25);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 16px;
+    }
+    .error-msg.visible { display: block; }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      padding: 48px 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      margin-top: 64px;
+    }
+    footer p { font-size: 11px; color: var(--text-dim); }
+    footer a { color: var(--text-dim); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── URL proof ID auto-fill ────────────────────────────────────────── */
+    /* Handled in JS */
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <a class="logo" href="/">EVID<span>·</span>ENCIA</a>
+    <span class="logo-tag">Verify</span>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <p class="hero-eyebrow">// cryptographic proof verification</p>
+    <h1>The record<br/>speaks for itself.</h1>
+    <p>Enter a proof ID or drop the original file to independently verify any Evidencia receipt. No account required.</p>
+  </section>
+
+  <!-- Input card -->
+  <div class="input-card" id="inputCard">
+    <label class="input-label" for="proofIdInput">// proof_id or paste full receipt JSON</label>
+    <input
+      class="proof-input"
+      id="proofIdInput"
+      type="text"
+      placeholder="prf_01J4X9K2M8N3P5Q7R9S0T1U2V3"
+      autocomplete="off"
+      spellcheck="false"
+    />
+
+    <div class="or-divider">or upload original file</div>
+
+    <!-- Drop zone -->
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" />
+      <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+      </svg>
+      <p><strong>Drop file here</strong> or click to browse</p>
+      <p>Hashed client-side — file never uploaded</p>
+    </div>
+
+    <div class="file-selected" id="fileSelected" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--green)">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span class="fname" id="fileName"></span>
+      <span class="fsize" id="fileSize"></span>
+      <button class="file-clear" id="fileClear" title="Remove file">×</button>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <button class="btn-verify" id="verifyBtn" onclick="startVerify()">
+      Verify Proof →
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loader" id="loader">
+    <div class="loader-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <span id="loaderText">verifying signature</span>
+  </div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+    <div class="verdict-banner" id="verdictBanner">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div>
+        <div class="verdict-title" id="verdictTitle"></div>
+        <div class="verdict-sub" id="verdictSub"></div>
+      </div>
+    </div>
+
+    <div class="checks-panel" id="checksPanel"></div>
+
+    <div class="data-panel" id="dataPanel"></div>
+
+    <button class="btn-again" onclick="resetForm()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.87"/>
+      </svg>
+      Verify another proof
+    </button>
+  </div>
+
+  <!-- API note -->
+  <div class="api-note">
+    <strong style="color:var(--text)">Integrate verification in your app.</strong>
+    Verification is also available via API — no authentication required.<br/>
+    <code>POST /v1/verify</code> · <a href="https://docs.evidencia.io/verification">Read the docs →</a>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="wrap">
+  <footer>
+    <p>© 2025 Evidencia · <a href="https://evidencia.io">evidencia.io</a></p>
+    <p><a href="https://docs.evidencia.io">Docs</a> · <a href="https://status.evidencia.io">Status</a></p>
+  </footer>
+</div>
+
+<script>
+  // ── Configuration ──────────────────────────────────────────────────────────
+  // In production, point this to your deployed API.
+  // In dev: run the backend on :3000 and open this page from it.
+  const API_BASE = window.location.hostname === 'localhost'
+    ? `${window.location.protocol}//${window.location.hostname}:3000`
+    : 'https://api.evidencia.io';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let selectedFile = null;
+  let fileHash = null;
+
+  // ── Auto-fill from URL: /verify/prf_xxx ───────────────────────────────────
+  const pathMatch = window.location.pathname.match(/\/(?:prf_[A-Z0-9]+)/);
+  if (pathMatch) {
+    document.getElementById('proofIdInput').value = pathMatch[0].slice(1);
+  }
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.get('id')) {
+    document.getElementById('proofIdInput').value = searchParams.get('id');
+  }
+
+  // ── File drop / select ─────────────────────────────────────────────────────
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragging');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+  document.getElementById('fileClear').addEventListener('click', clearFile);
+
+  async function handleFile(file) {
+    selectedFile = file;
+    document.getElementById('dropZone').style.display = 'none';
+    document.getElementById('fileSelected').style.display = 'flex';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatBytes(file.size);
+
+    // Hash the file client-side (never send file to server)
+    const buffer = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+    const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    fileHash = `sha256:${hashHex}`;
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileHash = null;
+    fileInput.value = '';
+    document.getElementById('dropZone').style.display = 'block';
+    document.getElementById('fileSelected').style.display = 'none';
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
+    return `${(bytes/1024/1024).toFixed(1)} MB`;
+  }
+
+  // ── Verify ──────────────────────────────────────────────────────────────────
+  async function startVerify() {
+    const rawInput = document.getElementById('proofIdInput').value.trim();
+    hideError();
+
+    if (!rawInput) {
+      showError('Enter a proof ID (prf_…) or paste a receipt JSON object.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let body = {};
+
+      // Detect if input is a full receipt JSON
+      if (rawInput.startsWith('{')) {
+        let receipt;
+        try { receipt = JSON.parse(rawInput); } catch { throw new Error('Could not parse receipt JSON. Check for syntax errors.'); }
+        body = { receipt: JSON.stringify(receipt) };
+      } else if (rawInput.startsWith('prf_')) {
+        body = { proofId: rawInput };
+      } else {
+        throw new Error('Input must be a proof ID (starting with prf_) or a full receipt JSON object.');
+      }
+
+      // Add file hash if a file was selected
+      if (fileHash) body.fileHash = fileHash;
+
+      setLoaderText('verifying signature…');
+      const resp = await fetch(`${API_BASE}/v1/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      let data;
+      try { data = await resp.json(); } catch { throw new Error('Server returned an unexpected response.'); }
+
+      if (!resp.ok) {
+        throw new Error(data?.error?.message || `Server error ${resp.status}`);
+      }
+
+      setLoading(false);
+      renderResult(data);
+
+    } catch (err) {
+      setLoading(false);
+      showError(err.message);
+    }
+  }
+
+  // ── Render result ──────────────────────────────────────────────────────────
+  function renderResult(data) {
+    document.getElementById('inputCard').style.display = 'none';
+    document.getElementById('result').classList.add('visible');
+
+    const banner = document.getElementById('verdictBanner');
+    const icon   = document.getElementById('verdictIcon');
+    const title  = document.getElementById('verdictTitle');
+    const sub    = document.getElementById('verdictSub');
+
+    if (data.valid) {
+      banner.className = 'verdict-banner valid';
+      icon.innerHTML = svgCheck();
+      title.textContent = 'Proof Verified';
+      sub.textContent = `Signature is authentic · Issued ${formatDate(data.proof?.timestamp)}`;
+    } else {
+      banner.className = 'verdict-banner invalid';
+      icon.innerHTML = svgX();
+      title.textContent = 'Verification Failed';
+      sub.textContent = 'One or more checks did not pass. This proof may have been tampered with.';
+    }
+
+    // Checks
+    const checks = data.checks || {};
+    const checkDefs = [
+      { key: 'signatureValid',    label: 'Ed25519 signature',        desc: 'Cryptographic signature matches the proof' },
+      { key: 'fileHashMatch',     label: 'File hash',                desc: 'SHA-256 of original file matches receipt' },
+      { key: 'timestampPlausible',label: 'Timestamp plausibility',   desc: 'Proof was not issued in the future' },
+    ];
+
+    const checksPanel = document.getElementById('checksPanel');
+    checksPanel.innerHTML = '';
+
+    checkDefs.forEach((def, i) => {
+      const val = checks[def.key];
+      const state = val === null || val === undefined ? 'skip' : val ? 'pass' : 'fail';
+      const label = val === null || val === undefined ? 'not checked' : val ? 'PASS' : 'FAIL';
+
+      const row = document.createElement('div');
+      row.className = 'check-row';
+      row.style.animationDelay = `${i * 80}ms`;
+      row.innerHTML = `
+        <div class="check-indicator ${state}"></div>
+        <div class="check-name">${def.label}<br/><span style="color:var(--text-dim);font-size:10px">${def.desc}</span></div>
+        <div class="check-value ${state}">${label}</div>
+      `;
+      checksPanel.appendChild(row);
+    });
+
+    // Data fields
+    const proof = data.proof || {};
+    const dataPanel = document.getElementById('dataPanel');
+    dataPanel.innerHTML = `
+      <div class="data-section-label">// proof details</div>
+      <div class="data-grid">
+        <div class="data-field">
+          <label>proof id</label>
+          <div class="val mono">${data.proofId || '—'}</div>
+        </div>
+        <div class="data-field">
+          <label>issued at</label>
+          <div class="val">${formatDate(proof.timestamp)}</div>
+        </div>
+        <div class="data-field">
+          <label>capture method</label>
+          <div class="val mono">${proof.captureMethod || '—'}</div>
+        </div>
+        <div class="data-field">
+          <label>signature algorithm</label>
+          <div class="val mono">${proof.signatureAlgorithm || 'ed25519'}</div>
+        </div>
+        <div class="data-field">
+          <label>key id</label>
+          <div class="val mono">${proof.publicKeyId || '—'}</div>
+        </div>
+        <div class="data-field">
+          <label>verified at</label>
+          <div class="val">${formatDate(data.verifiedAt)}</div>
+        </div>
+      </div>
+      ${proof.fileHash ? `
+      <div class="hash-display">
+        <span class="hash-label">// file hash (sha-256)</span>
+        <span class="hash-val" id="hashVal">${proof.fileHash}</span>
+        <button class="copy-btn" id="copyBtn" onclick="copyHash('${proof.fileHash}')">copy</button>
+      </div>` : ''}
+    `;
+  }
+
+  function copyHash(hash) {
+    navigator.clipboard?.writeText(hash).then(() => {
+      const btn = document.getElementById('copyBtn');
+      if (btn) { btn.textContent = 'copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500); }
+    });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('inputCard').style.display = 'block';
+    document.getElementById('result').classList.remove('visible');
+    document.getElementById('proofIdInput').value = '';
+    clearFile();
+    hideError();
+  }
+
+  function setLoading(on) {
+    document.getElementById('loader').classList.toggle('active', on);
+    document.getElementById('verifyBtn').disabled = on;
+  }
+
+  function setLoaderText(t) { document.getElementById('loaderText').textContent = t; }
+  function showError(msg) { const el = document.getElementById('errorMsg'); el.textContent = msg; el.classList.add('visible'); }
+  function hideError() { document.getElementById('errorMsg').classList.remove('visible'); }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+    } catch { return iso; }
+  }
+
+  function svgCheck() {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  }
+  function svgX() {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  }
+
+  // Allow Enter key
+  document.getElementById('proofIdInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startVerify();
+  });
+</script>
+
+</body>
+</html>

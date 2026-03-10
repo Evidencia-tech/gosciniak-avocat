@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencia — API Client</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #080b0f;
+      --surface:    #0d1117;
+      --panel:      #111820;
+      --panel2:     #0f1620;
+      --border:     #1e2d3d;
+      --border-hi:  #2a3f55;
+      --text:       #c9d5e0;
+      --text-dim:   #566678;
+      --text-hi:    #e8f0f8;
+      --blue:       #1a7dff;
+      --blue-dim:   rgba(26,125,255,0.12);
+      --green:      #00d68f;
+      --green-dim:  rgba(0,214,143,0.10);
+      --red:        #ff4d6d;
+      --amber:      #f0a500;
+      --purple:     #a78bfa;
+      --mono:       'IBM Plex Mono', monospace;
+      --display:    'Syne', sans-serif;
+    }
+
+    html, body { height: 100%; font-size: 13px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ───────────────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .topbar-logo {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text-hi);
+      letter-spacing: -0.02em;
+    }
+    .topbar-logo span { color: var(--blue); }
+
+    .topbar-sep { width: 1px; height: 20px; background: var(--border); }
+
+    .topbar-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .api-key-input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-hi);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 10px;
+      width: 240px;
+      outline: none;
+    }
+    .api-key-input:focus { border-color: var(--blue); }
+    .api-key-input::placeholder { color: var(--text-dim); }
+
+    .base-url-input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--purple);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 10px;
+      width: 200px;
+      outline: none;
+    }
+    .base-url-input:focus { border-color: var(--purple); }
+
+    /* ── Main layout: sidebar + editor + response ──────────────────── */
+    .main {
+      display: grid;
+      grid-template-columns: 220px 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────────────── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+
+    .sidebar-section {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 0 16px;
+      margin: 16px 0 8px;
+    }
+    .sidebar-section:first-child { margin-top: 0; }
+
+    .endpoint-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .endpoint-btn:hover { background: var(--panel); }
+    .endpoint-btn.active {
+      background: var(--blue-dim);
+      border-left-color: var(--blue);
+    }
+
+    .method-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 5px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
+    }
+    .POST  { background: rgba(0,214,143,0.15); color: var(--green); }
+    .GET   { background: rgba(26,125,255,0.15); color: var(--blue); }
+
+    .endpoint-path {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .endpoint-btn.active .endpoint-path { color: var(--text-hi); }
+
+    /* ── Request editor ────────────────────────────────────────────── */
+    .editor-pane {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pane-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      background: var(--panel2);
+    }
+
+    .pane-title {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .pane-method {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pane-path { font-size: 11px; color: var(--text); }
+
+    .run-btn {
+      margin-left: auto;
+      background: var(--blue);
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 7px 16px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.15s;
+    }
+    .run-btn:hover { opacity: 0.85; }
+    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Editor fields ─────────────────────────────────────────────── */
+    .editor-fields {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-hi);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: var(--blue); }
+    .field-input::placeholder { color: var(--text-dim); }
+
+    textarea.field-input {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+
+    .file-drop {
+      border: 1px dashed var(--border-hi);
+      border-radius: 4px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .file-drop:hover { border-color: var(--blue); background: var(--blue-dim); }
+    .file-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .file-drop p { font-size: 11px; color: var(--text-dim); }
+
+    .file-info {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .file-info.show { display: flex; }
+    .file-info .fn { flex: 1; color: var(--green); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-info .fsz { color: var(--text-dim); flex-shrink: 0; }
+    .file-info .fhash { font-size: 10px; color: var(--text-dim); display: block; margin-top: 2px; word-break: break-all; }
+
+    .field-hint {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* ── Response pane ─────────────────────────────────────────────── */
+    .response-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .response-header-bar {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      background: var(--panel2);
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+    .status-2xx { background: var(--green-dim); color: var(--green); }
+    .status-4xx { background: rgba(255,77,109,0.1); color: var(--red); }
+    .status-5xx { background: rgba(240,165,0,0.1); color: var(--amber); }
+
+    .response-time { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+
+    .response-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .response-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-dim);
+      font-size: 12px;
+      gap: 8px;
+    }
+    .response-empty .hint { font-size: 10px; opacity: 0.5; }
+
+    pre.json-output {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+
+    /* JSON syntax colouring */
+    .j-key    { color: #79c0ff; }
+    .j-str    { color: #a5d6a7; }
+    .j-num    { color: #f0a500; }
+    .j-bool   { color: var(--purple); }
+    .j-null   { color: var(--text-dim); }
+    .j-brace  { color: var(--text-dim); }
+
+    /* ── Generated curl command ────────────────────────────────────── */
+    .curl-section {
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      flex-shrink: 0;
+    }
+    .curl-label {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .curl-code {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: #a5d6a7;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      position: relative;
+    }
+    .curl-copy {
+      position: absolute;
+      top: 6px; right: 8px;
+      background: var(--border);
+      border: none;
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+    .curl-copy:hover { background: var(--border-hi); color: var(--text); }
+
+    /* ── Tabs ──────────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 1px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 9px 16px;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab.active { color: var(--text-hi); border-bottom-color: var(--blue); }
+    .tab:hover { color: var(--text); }
+
+    /* ── Loading spinner ───────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Scrollbar styling ─────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">EVID<span>·</span>ENCIA</div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-label">API Client</div>
+  <div class="topbar-right">
+    <input class="base-url-input" id="baseUrl" value="http://localhost:3000" placeholder="https://api.evidencia.io" />
+    <input class="api-key-input" id="apiKey" placeholder="evd_sk_dev_... (API key)" type="password" />
+  </div>
+</div>
+
+<!-- Main layout -->
+<div class="main">
+
+  <!-- Sidebar: endpoint list -->
+  <nav class="sidebar">
+    <div class="sidebar-section">Proofs</div>
+    <button class="endpoint-btn active" onclick="selectEndpoint('create')" id="btn-create">
+      <span class="method-badge POST">POST</span>
+      <span class="endpoint-path">/v1/proofs</span>
+    </button>
+    <button class="endpoint-btn" onclick="selectEndpoint('retrieve')" id="btn-retrieve">
+      <span class="method-badge GET">GET</span>
+      <span class="endpoint-path">/v1/proofs/:id</span>
+    </button>
+
+    <div class="sidebar-section">Verification</div>
+    <button class="endpoint-btn" onclick="selectEndpoint('verify')" id="btn-verify">
+      <span class="method-badge POST">POST</span>
+      <span class="endpoint-path">/v1/verify</span>
+    </button>
+
+    <div class="sidebar-section">Keys</div>
+    <button class="endpoint-btn" onclick="selectEndpoint('publicKey')" id="btn-publicKey">
+      <span class="method-badge GET">GET</span>
+      <span class="endpoint-path">/v1/public-key</span>
+    </button>
+  </nav>
+
+  <!-- Request editor -->
+  <div class="editor-pane">
+    <div class="pane-header">
+      <span class="pane-title">Request</span>
+      <span class="pane-method" id="reqMethod"></span>
+      <span class="pane-path" id="reqPath"></span>
+      <button class="run-btn" id="runBtn" onclick="sendRequest()">▶ Send</button>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-params" onclick="showTab('params')">Parameters</div>
+      <div class="tab" id="tab-curl" onclick="showTab('curl')">curl</div>
+    </div>
+
+    <div class="editor-fields" id="editorFields"></div>
+  </div>
+
+  <!-- Response pane -->
+  <div class="response-pane">
+    <div class="response-header-bar">
+      <span class="pane-title">Response</span>
+      <span id="statusBadge" style="display:none"></span>
+      <span class="response-time" id="responseTime"></span>
+    </div>
+
+    <div class="response-body" id="responseBody">
+      <div class="response-empty">
+        <div>No response yet</div>
+        <div class="hint">Configure a request and press Send →</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Endpoint definitions ──────────────────────────────────────────────────
+
+const ENDPOINTS = {
+  create: {
+    method: 'POST',
+    path: '/v1/proofs',
+    auth: true,
+    label: 'Create Proof',
+    fields: ['file', 'captureMethod', 'metadata'],
+  },
+  retrieve: {
+    method: 'GET',
+    path: '/v1/proofs/:id',
+    auth: true,
+    label: 'Get Proof',
+    fields: ['proofId'],
+  },
+  verify: {
+    method: 'POST',
+    path: '/v1/verify',
+    auth: false,
+    label: 'Verify Proof',
+    fields: ['verifyBy', 'proofId', 'receiptJson', 'fileHashVerify'],
+  },
+  publicKey: {
+    method: 'GET',
+    path: '/v1/public-key',
+    auth: false,
+    label: 'Public Key',
+    fields: [],
+  },
+};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+
+let currentEndpoint = 'create';
+let selectedFile = null;
+let computedHash = null;
+
+// ─── Endpoint selection ────────────────────────────────────────────────────────
+
+function selectEndpoint(id) {
+  currentEndpoint = id;
+  selectedFile = null;
+  computedHash = null;
+
+  // Update sidebar active state
+  document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`btn-${id}`).classList.add('active');
+
+  const ep = ENDPOINTS[id];
+  document.getElementById('reqMethod').textContent = ep.method;
+  document.getElementById('reqMethod').style.color = ep.method === 'POST' ? 'var(--green)' : 'var(--blue)';
+  document.getElementById('reqPath').textContent = ep.path;
+
+  renderFields(id);
+  clearResponse();
+  updateCurl();
+}
+
+// ─── Field rendering ───────────────────────────────────────────────────────────
+
+function renderFields(id) {
+  const container = document.getElementById('editorFields');
+  container.innerHTML = '';
+
+  if (id === 'create') {
+    container.innerHTML = `
+      <div class="field-group">
+        <label>file (hashed client-side)</label>
+        <div class="file-drop" id="createDrop">
+          <input type="file" id="createFile" onchange="handleCreateFile()" />
+          <p>Drop file or click to browse</p>
+          <p style="font-size:10px;margin-top:4px;opacity:0.6">File never uploaded — only SHA-256 hash is sent</p>
+        </div>
+        <div class="file-info" id="createFileInfo">
+          <div>
+            <span class="fn" id="createFileName"></span>
+            <span class="fhash" id="createFileHash"></span>
+          </div>
+          <span class="fsz" id="createFileSize"></span>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>captureMethod</label>
+        <input class="field-input" id="fCaptureMethod" value="api_upload" placeholder="api_upload" onchange="updateCurl()" />
+        <div class="field-hint">e.g. api_upload, sdk_js, sdk_ios_camera</div>
+      </div>
+      <div class="field-group">
+        <label>metadata (JSON)</label>
+        <textarea class="field-input" id="fMetadata" placeholder='{"claimId":"CLM-001"}' onchange="updateCurl()">{}</textarea>
+      </div>
+    `;
+    document.getElementById('createDrop').addEventListener('dragover', e => { e.preventDefault(); document.getElementById('createDrop').style.borderColor = 'var(--blue)'; });
+    document.getElementById('createDrop').addEventListener('dragleave', () => { document.getElementById('createDrop').style.borderColor = ''; });
+    document.getElementById('createDrop').addEventListener('drop', e => {
+      e.preventDefault();
+      if (e.dataTransfer.files[0]) { document.getElementById('createFile').files = e.dataTransfer.files; handleCreateFile(); }
+    });
+  }
+
+  else if (id === 'retrieve') {
+    container.innerHTML = `
+      <div class="field-group">
+        <label>proof id</label>
+        <input class="field-input" id="fProofId" placeholder="prf_01J4X9K2M8N3P5Q7R9S0T1U2V3" onchange="updateCurl()" oninput="updateCurl()" />
+        <div class="field-hint">The proof ID returned when the proof was created.</div>
+      </div>
+    `;
+  }
+
+  else if (id === 'verify') {
+    container.innerHTML = `
+      <div class="field-group">
+        <label>verify by</label>
+        <select class="field-input" id="fVerifyBy" onchange="toggleVerifyMode()">
+          <option value="proofId">Proof ID (server lookup)</option>
+          <option value="receipt">Inline receipt (offline)</option>
+        </select>
+      </div>
+      <div id="verifyProofIdField" class="field-group">
+        <label>proof id</label>
+        <input class="field-input" id="fVerifyProofId" placeholder="prf_01J4X9K2M8N3P5Q7R9S0T1U2V3" onchange="updateCurl()" oninput="updateCurl()" />
+      </div>
+      <div id="verifyReceiptField" class="field-group" style="display:none">
+        <label>receipt JSON</label>
+        <textarea class="field-input" id="fReceiptJson" placeholder='{"schemaVersion":"1","proofId":"prf_...",...}' style="min-height:160px" onchange="updateCurl()"></textarea>
+      </div>
+      <div class="field-group">
+        <label>original file hash (optional — checks file hasn't changed)</label>
+        <input class="field-input" id="fVerifyHash" placeholder="sha256:e3b0..." onchange="updateCurl()" oninput="updateCurl()" />
+        <div class="field-hint">Or drop the original file to compute hash automatically:</div>
+        <div class="file-drop" style="margin-top:8px" id="verifyDrop">
+          <input type="file" id="verifyFile" onchange="handleVerifyFile()" />
+          <p style="font-size:11px">Drop original file to compute hash</p>
+        </div>
+        <div class="file-info" id="verifyFileInfo">
+          <div>
+            <span class="fn" id="verifyFileName"></span>
+            <span class="fhash" id="verifyFileHash"></span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  else if (id === 'publicKey') {
+    container.innerHTML = `<div style="padding:20px 0;color:var(--text-dim);font-size:12px">No parameters required. This endpoint is public.</div>`;
+  }
+}
+
+// ─── File handling ─────────────────────────────────────────────────────────────
+
+async function handleCreateFile() {
+  const file = document.getElementById('createFile').files[0];
+  if (!file) return;
+  selectedFile = file;
+
+  const hash = await computeHash(file);
+  computedHash = hash;
+
+  document.getElementById('createDrop').style.display = 'none';
+  const info = document.getElementById('createFileInfo');
+  info.classList.add('show');
+  document.getElementById('createFileName').textContent = file.name;
+  document.getElementById('createFileSize').textContent = formatBytes(file.size);
+  document.getElementById('createFileHash').textContent = hash;
+  updateCurl();
+}
+
+async function handleVerifyFile() {
+  const file = document.getElementById('verifyFile').files[0];
+  if (!file) return;
+  const hash = await computeHash(file);
+  document.getElementById('fVerifyHash').value = hash;
+  const info = document.getElementById('verifyFileInfo');
+  info.classList.add('show');
+  document.getElementById('verifyFileName').textContent = file.name;
+  document.getElementById('verifyFileHash').textContent = hash;
+  updateCurl();
+}
+
+async function computeHash(file) {
+  const buffer = await file.arrayBuffer();
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  const hex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `sha256:${hex}`;
+}
+
+function toggleVerifyMode() {
+  const mode = document.getElementById('fVerifyBy').value;
+  document.getElementById('verifyProofIdField').style.display = mode === 'proofId' ? 'block' : 'none';
+  document.getElementById('verifyReceiptField').style.display = mode === 'receipt' ? 'block' : 'none';
+  updateCurl();
+}
+
+// ─── Curl generation ───────────────────────────────────────────────────────────
+
+function updateCurl() {
+  const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+  const apiKey  = document.getElementById('apiKey').value || 'evd_sk_dev_...';
+  const ep = ENDPOINTS[currentEndpoint];
+
+  let cmd = '';
+
+  if (currentEndpoint === 'create') {
+    const hash = computedHash || 'sha256:<your-file-hash>';
+    const method = document.getElementById('fCaptureMethod')?.value || 'api_upload';
+    cmd = `curl -X POST ${baseUrl}/v1/proofs \\\n` +
+      `  -H "Authorization: Bearer ${apiKey}" \\\n` +
+      `  -H "Content-Type: application/json" \\\n` +
+      `  -d '{"fileHash":"${hash}","captureMethod":"${method}"}'`;
+  }
+  else if (currentEndpoint === 'retrieve') {
+    const id = document.getElementById('fProofId')?.value || 'prf_01J4X9K2M8N3P5Q7R9S0T1U2V3';
+    cmd = `curl ${baseUrl}/v1/proofs/${id} \\\n  -H "Authorization: Bearer ${apiKey}"`;
+  }
+  else if (currentEndpoint === 'verify') {
+    const mode = document.getElementById('fVerifyBy')?.value || 'proofId';
+    const hash = document.getElementById('fVerifyHash')?.value;
+    if (mode === 'proofId') {
+      const id = document.getElementById('fVerifyProofId')?.value || 'prf_01J4X9K2M8N3P5Q7R9S0T1U2V3';
+      cmd = `curl -X POST ${baseUrl}/v1/verify \\\n` +
+        `  -H "Content-Type: application/json" \\\n` +
+        `  -d '{"proofId":"${id}"${hash ? `,"fileHash":"${hash}"` : ""}}'`;
+    } else {
+      cmd = `curl -X POST ${baseUrl}/v1/verify \\\n` +
+        `  -H "Content-Type: application/json" \\\n` +
+        `  -d '{"receipt":{...}}'`;
+    }
+  }
+  else if (currentEndpoint === 'publicKey') {
+    cmd = `curl ${baseUrl}/v1/public-key`;
+  }
+
+  // Show in curl tab if active
+  const curlContainer = document.getElementById('curlContainer');
+  if (curlContainer) curlContainer.textContent = cmd;
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+
+  const fields = document.getElementById('editorFields');
+  if (tab === 'curl') {
+    const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const apiKey  = document.getElementById('apiKey').value || 'evd_sk_dev_...';
+
+    // Generate curl lazily
+    const curlDiv = document.createElement('div');
+    curlDiv.style.padding = '0 0 0 0';
+    curlDiv.innerHTML = `
+      <div class="curl-label">// generated curl command</div>
+      <div class="curl-code" style="position:relative">
+        <span id="curlContainer"></span>
+        <button class="curl-copy" onclick="copyCurl()">copy</button>
+      </div>
+    `;
+    fields.innerHTML = '';
+    fields.appendChild(curlDiv);
+    updateCurl();
+  } else {
+    renderFields(currentEndpoint);
+  }
+}
+
+function copyCurl() {
+  const text = document.getElementById('curlContainer')?.textContent;
+  if (text) navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.curl-copy');
+    if (btn) { btn.textContent = 'copied!'; setTimeout(() => btn.textContent = 'copy', 1500); }
+  });
+}
+
+// ─── Send request ──────────────────────────────────────────────────────────────
+
+async function sendRequest() {
+  const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+  const apiKey  = document.getElementById('apiKey').value;
+  const ep = ENDPOINTS[currentEndpoint];
+
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<span class="spinner"></span>';
+
+  clearResponse();
+  const start = Date.now();
+
+  try {
+    let url, method, headers = {}, body;
+    if (ep.auth && apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+    if (currentEndpoint === 'create') {
+      url = `${baseUrl}/v1/proofs`;
+      method = 'POST';
+      headers['Content-Type'] = 'application/json';
+      const hash = computedHash || (() => { throw new Error('Select a file first, or compute a hash.'); })();
+      const captureMethod = document.getElementById('fCaptureMethod')?.value || 'api_upload';
+      let meta = {};
+      try { meta = JSON.parse(document.getElementById('fMetadata')?.value || '{}'); } catch {}
+      body = JSON.stringify({ fileHash: hash, captureMethod, metadata: JSON.stringify(meta) });
+    }
+    else if (currentEndpoint === 'retrieve') {
+      const id = document.getElementById('fProofId')?.value?.trim();
+      if (!id) throw new Error('Enter a proof ID.');
+      url = `${baseUrl}/v1/proofs/${id}`;
+      method = 'GET';
+    }
+    else if (currentEndpoint === 'verify') {
+      url = `${baseUrl}/v1/verify`;
+      method = 'POST';
+      headers['Content-Type'] = 'application/json';
+      const mode = document.getElementById('fVerifyBy')?.value;
+      const bodyObj = {};
+      if (mode === 'proofId') {
+        const id = document.getElementById('fVerifyProofId')?.value?.trim();
+        if (!id) throw new Error('Enter a proof ID.');
+        bodyObj.proofId = id;
+      } else {
+        const raw = document.getElementById('fReceiptJson')?.value?.trim();
+        if (!raw) throw new Error('Paste a receipt JSON object.');
+        bodyObj.receipt = raw;
+      }
+      const hash = document.getElementById('fVerifyHash')?.value?.trim();
+      if (hash) bodyObj.fileHash = hash;
+      body = JSON.stringify(bodyObj);
+    }
+    else if (currentEndpoint === 'publicKey') {
+      url = `${baseUrl}/v1/public-key`;
+      method = 'GET';
+    }
+
+    const resp = await fetch(url, { method, headers, body });
+    const elapsed = Date.now() - start;
+    const data = await resp.json();
+
+    renderResponse(resp.status, data, elapsed);
+
+  } catch (err) {
+    const elapsed = Date.now() - start;
+    renderError(err.message, elapsed);
+  } finally {
+    runBtn.disabled = false;
+    runBtn.innerHTML = '▶ Send';
+  }
+}
+
+// ─── Response rendering ────────────────────────────────────────────────────────
+
+function renderResponse(status, data, ms) {
+  const badge = document.getElementById('statusBadge');
+  badge.style.display = 'inline';
+  badge.textContent = status;
+  badge.className = 'status-badge ' + (status < 300 ? 'status-2xx' : status < 500 ? 'status-4xx' : 'status-5xx');
+  document.getElementById('responseTime').textContent = `${ms}ms`;
+
+  document.getElementById('responseBody').innerHTML =
+    `<pre class="json-output">${syntaxHighlight(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+function renderError(msg, ms) {
+  document.getElementById('statusBadge').style.display = 'none';
+  document.getElementById('responseTime').textContent = ms ? `${ms}ms` : '';
+  document.getElementById('responseBody').innerHTML =
+    `<div style="color:var(--red);font-size:12px;padding:8px 0">Error: ${escapeHtml(msg)}</div>`;
+}
+
+function clearResponse() {
+  document.getElementById('statusBadge').style.display = 'none';
+  document.getElementById('responseTime').textContent = '';
+  document.getElementById('responseBody').innerHTML =
+    `<div class="response-empty"><div>Waiting for response…</div></div>`;
+}
+
+// ─── JSON syntax highlight ─────────────────────────────────────────────────────
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+      let cls = 'j-num';
+      if (/^"/.test(match)) {
+        cls = /:$/.test(match) ? 'j-key' : 'j-str';
+      } else if (/true|false/.test(match)) {
+        cls = 'j-bool';
+      } else if (/null/.test(match)) {
+        cls = 'j-null';
+      }
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatBytes(b) {
+  if (b < 1024) return `${b} B`;
+  if (b < 1024*1024) return `${(b/1024).toFixed(1)} KB`;
+  return `${(b/1024/1024).toFixed(1)} MB`;
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+
+selectEndpoint('create');
+</script>
+
+</body>
+</html>
