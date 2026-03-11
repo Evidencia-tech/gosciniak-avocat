@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencia — Certifier un fichier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/ev-system.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* ── Mise en page principale ───────────────────────────────────── */
+    .demo-layout {
+      padding: 56px 0 80px;
+    }
+
+    .demo-header {
+      text-align:    center;
+      margin-bottom: 48px;
+    }
+
+    .demo-eyebrow {
+      font-family:    var(--mono);
+      font-size:      11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--blue);
+      margin-bottom:  14px;
+    }
+
+    .demo-title {
+      font-family:    var(--serif);
+      font-size:      clamp(28px, 4vw, 40px);
+      color:          var(--ink);
+      letter-spacing: -0.02em;
+      line-height:    1.15;
+      margin-bottom:  10px;
+    }
+
+    .demo-sub {
+      font-size:   15px;
+      color:       var(--ink-mid);
+      max-width:   420px;
+      margin:      0 auto;
+      line-height: 1.65;
+    }
+
+    /* ── Étapes de progression ─────────────────────────────────────── */
+    .progress-steps {
+      display:         flex;
+      align-items:     center;
+      justify-content: center;
+      gap:             0;
+      margin-bottom:   40px;
+    }
+
+    .progress-step {
+      display:     flex;
+      align-items: center;
+      gap:         8px;
+    }
+
+    .progress-step__dot {
+      width:         28px;
+      height:        28px;
+      border-radius: 50%;
+      border:        1.5px solid var(--border);
+      background:    var(--surface);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      font-size:     12px;
+      font-weight:   600;
+      color:         var(--ink-dim);
+      transition:    all 0.3s;
+      flex-shrink:   0;
+    }
+    .progress-step__dot.is-active {
+      border-color: var(--blue);
+      background:   var(--blue);
+      color:        #fff;
+    }
+    .progress-step__dot.is-done {
+      border-color: var(--green);
+      background:   var(--green-bg);
+      color:        var(--green);
+    }
+
+    .progress-step__label {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      font-weight: 500;
+    }
+    .progress-step__label.is-active { color: var(--ink); }
+    .progress-step__label.is-done   { color: var(--green); }
+
+    .progress-sep {
+      width:      40px;
+      height:     1px;
+      background: var(--border);
+      margin:     0 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Phase 1 : Import du fichier ───────────────────────────────── */
+    .phase { display: none; }
+    .phase.is-active { display: block; animation: ev-fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+
+    .phase-card {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow:    var(--shadow-md);
+      overflow:      hidden;
+    }
+
+    .phase-card__header {
+      padding:       24px 28px 0;
+    }
+
+    .phase-card__body {
+      padding: 24px 28px 28px;
+    }
+
+    /* Fichier prêt */
+    .file-ready-box {
+      display:       none;
+      align-items:   center;
+      gap:           14px;
+      background:    var(--green-bg);
+      border:        1px solid var(--green-ring);
+      border-radius: var(--r-md);
+      padding:       16px 18px;
+      margin-bottom: 20px;
+    }
+    .file-ready-box.is-visible { display: flex; }
+
+    .file-ready-box__icon {
+      width:         40px;
+      height:        40px;
+      background:    var(--green-ring);
+      border-radius: var(--r-sm);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--green);
+      flex-shrink:   0;
+    }
+
+    .file-ready-box__info { flex: 1; min-width: 0; }
+    .file-ready-box__name {
+      font-size:     14px;
+      font-weight:   600;
+      color:         var(--green-deep);
+      overflow:      hidden;
+      text-overflow: ellipsis;
+      white-space:   nowrap;
+      margin-bottom: 2px;
+    }
+    .file-ready-box__hash {
+      font-family: var(--mono);
+      font-size:   11px;
+      color:       var(--green);
+    }
+
+    .file-clear-btn {
+      background:  none;
+      border:      none;
+      color:       var(--ink-dim);
+      cursor:      pointer;
+      font-size:   20px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .file-clear-btn:hover { color: var(--red); }
+
+    /* Champ label optionnel */
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .field-group label {
+      display:        block;
+      font-size:      12px;
+      font-weight:    500;
+      color:          var(--ink-mid);
+      margin-bottom:  6px;
+    }
+    .field-group .field-hint {
+      font-size:  11px;
+      color:      var(--ink-dim);
+      margin-top: 5px;
+    }
+
+    /* Clé API */
+    .api-key-row {
+      display:       flex;
+      align-items:   center;
+      gap:           10px;
+      padding:       16px 20px;
+      background:    var(--panel);
+      border-top:    1px solid var(--border);
+      flex-wrap:     wrap;
+    }
+    .api-key-row label {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      flex-shrink: 0;
+    }
+    .api-key-row input {
+      background:    var(--surface);
+      border:        1px solid var(--border);
+      border-radius: var(--r-sm);
+      color:         var(--ink-mid);
+      font-family:   var(--mono);
+      font-size:     12px;
+      padding:       6px 10px;
+      outline:       none;
+      flex:          1;
+      min-width:     160px;
+    }
+
+    /* Pied de la carte */
+    .phase-card__footer {
+      padding:       16px 28px 24px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      gap:           12px;
+      flex-wrap:     wrap;
+    }
+
+    .phase-card__footer .ev-btn { font-size: 15px; padding: 12px 28px; }
+
+    .footer-note {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      line-height: 1.5;
+    }
+
+    /* Spinner certification */
+    .certifying-overlay {
+      display:        none;
+      flex-direction: column;
+      align-items:    center;
+      gap:            16px;
+      padding:        48px 28px;
+      text-align:     center;
+    }
+    .certifying-overlay.is-visible { display: flex; }
+
+    .certifying-overlay__title {
+      font-family:    var(--serif);
+      font-size:      22px;
+      color:          var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .certifying-overlay__sub {
+      font-size:   13px;
+      color:       var(--ink-dim);
+    }
+
+    /* ── Phase 2 : Résultat ────────────────────────────────────────── */
+    .result-burst {
+      text-align:    center;
+      margin-bottom: 32px;
+    }
+
+    .result-burst__ring {
+      width:         72px;
+      height:        72px;
+      background:    var(--green-bg);
+      border:        2px solid var(--green-ring);
+      border-radius: 50%;
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      margin:        0 auto 16px;
+      color:         var(--green);
+      animation:     ring-pulse 2s ease-out 0.4s both;
+    }
+    @keyframes ring-pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(14,127,90,0.3); }
+      70%  { box-shadow: 0 0 0 16px rgba(14,127,90,0); }
+      100% { box-shadow: 0 0 0 0   rgba(14,127,90,0); }
+    }
+
+    .result-burst__title {
+      font-family:    var(--serif);
+      font-size:      26px;
+      color:          var(--ink);
+      letter-spacing: -0.01em;
+      margin-bottom:  6px;
+    }
+    .result-burst__sub {
+      font-size:   14px;
+      color:       var(--ink-mid);
+      line-height: 1.6;
+    }
+
+    /* Bannière identifiant */
+    .proof-banner {
+      background:    var(--green-bg);
+      border:        1.5px solid var(--green-ring);
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      padding:       20px 28px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      flex-wrap:     wrap;
+      gap:           12px;
+    }
+
+    .proof-banner__label {
+      font-family:    var(--mono);
+      font-size:      10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--green);
+      margin-bottom:  4px;
+    }
+    .proof-banner__id {
+      font-family:  var(--mono);
+      font-size:    15px;
+      font-weight:  500;
+      color:        var(--green-deep);
+      letter-spacing: 0.02em;
+    }
+
+    /* Corps du résultat */
+    .result-body {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-top:    none;
+    }
+
+    .result-cols {
+      display:               grid;
+      grid-template-columns: 1fr auto;
+    }
+    @media (max-width: 520px) { .result-cols { grid-template-columns: 1fr; } }
+
+    .result-details {
+      padding:      24px 28px;
+      border-right: 1px solid var(--border);
+    }
+    @media (max-width: 520px) {
+      .result-details { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    .result-qr {
+      padding:        24px;
+      display:        flex;
+      flex-direction: column;
+      align-items:    center;
+      gap:            10px;
+      min-width:      168px;
+    }
+
+    .result-qr__caption {
+      font-size:   11px;
+      color:       var(--ink-dim);
+      text-align:  center;
+      max-width:   136px;
+      line-height: 1.5;
+    }
+
+    /* Pied de résultat */
+    .result-footer {
+      border-top:    1px solid var(--border);
+      border-radius: 0 0 var(--r-lg) var(--r-lg);
+      background:    var(--surface);
+      padding:       16px 28px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      flex-wrap:     wrap;
+      gap:           12px;
+    }
+
+    .result-footer__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .result-footer__issuer {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      font-style:  italic;
+    }
+
+    /* Prochaines étapes */
+    .next-section {
+      margin-top: 28px;
+    }
+
+    .next-grid {
+      display:               grid;
+      grid-template-columns: 1fr 1fr;
+      gap:                   10px;
+      margin-top:            14px;
+    }
+    @media (max-width: 440px) { .next-grid { grid-template-columns: 1fr; } }
+
+    .next-card {
+      background:    var(--surface);
+      border:        1px solid var(--border);
+      border-radius: var(--r-md);
+      padding:       16px;
+      cursor:        pointer;
+      transition:    all 0.15s;
+      text-decoration: none;
+      display:       block;
+    }
+    .next-card:hover { border-color: var(--border-hi); box-shadow: var(--shadow-sm); }
+
+    .next-card__icon {
+      width:         32px;
+      height:        32px;
+      background:    var(--panel);
+      border-radius: var(--r-sm);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--ink-mid);
+      margin-bottom: 10px;
+    }
+
+    .next-card__title {
+      font-size:     13px;
+      font-weight:   600;
+      color:         var(--ink);
+      margin-bottom: 3px;
+    }
+    .next-card__desc { font-size: 11px; color: var(--ink-dim); line-height: 1.5; }
+
+    /* ── Média capturé — résultat ──────────────────────────────────── */
+    .result-media {
+      border-bottom: 1px solid var(--border);
+      padding:       0;
+      overflow:      hidden;
+    }
+
+    .result-media__inner {
+      display:     flex;
+      align-items: stretch;
+      gap:         0;
+    }
+    @media (max-width: 560px) {
+      .result-media__inner { flex-direction: column; }
+    }
+
+    .result-media__preview {
+      width:            200px;
+      min-height:       160px;
+      flex-shrink:      0;
+      background:       #0e0d0b;
+      position:         relative;
+      overflow:         hidden;
+      display:          flex;
+      align-items:      center;
+      justify-content:  center;
+    }
+    @media (max-width: 560px) {
+      .result-media__preview { width: 100%; height: 200px; min-height: unset; }
+    }
+
+    .result-media__preview img,
+    .result-media__preview video {
+      width:      100%;
+      height:     100%;
+      object-fit: cover;
+      display:    block;
+    }
+
+    .result-media__badge {
+      position:      absolute;
+      top:           10px;
+      left:          10px;
+      background:    rgba(14,127,90,0.92);
+      color:         #fff;
+      font-family:   var(--mono);
+      font-size:     9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding:       3px 8px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .result-media__info {
+      flex:        1;
+      padding:     20px 24px;
+      display:     flex;
+      flex-direction: column;
+      gap:         10px;
+      justify-content: center;
+    }
+
+    .result-media__title {
+      font-size:   13px;
+      font-weight: 600;
+      color:       var(--ink);
+      margin-bottom: 1px;
+    }
+
+    .result-media__note {
+      font-size:   11px;
+      color:       var(--ink-dim);
+      line-height: 1.6;
+      max-width:   340px;
+    }
+
+    .result-media__note strong {
+      color:       var(--ink-mid);
+      font-weight: 600;
+    }
+
+    .result-media__save {
+      display:       inline-flex;
+      align-items:   center;
+      gap:           6px;
+      font-size:     12px;
+      font-weight:   500;
+      color:         var(--blue);
+      background:    var(--blue-bg);
+      border:        1px solid rgba(26,82,204,0.2);
+      border-radius: var(--r-sm);
+      padding:       7px 12px;
+      cursor:        pointer;
+      transition:    all 0.15s;
+      align-self:    flex-start;
+      text-decoration: none;
+    }
+    .result-media__save:hover { background: rgba(26,82,204,0.12); border-color: rgba(26,82,204,0.35); }
+
+    /* ── Boutons de capture caméra ─────────────────────────────────── */
+    .capture-grid {
+      display:               grid;
+      grid-template-columns: 1fr 1fr;
+      gap:                   12px;
+      margin-bottom:         20px;
+    }
+    @media (max-width: 460px) { .capture-grid { grid-template-columns: 1fr; } }
+
+    .capture-btn {
+      position:       relative;
+      display:        flex;
+      flex-direction: column;
+      align-items:    center;
+      gap:            10px;
+      padding:        28px 16px 22px;
+      background:     var(--panel);
+      border:         1.5px solid var(--border);
+      border-radius:  var(--r-md);
+      cursor:         pointer;
+      transition:     all 0.18s;
+      overflow:       hidden;
+    }
+    .capture-btn:hover           { border-color: var(--border-hi); background: var(--surface); box-shadow: var(--shadow-sm); }
+    .capture-btn.is-selected     { border-color: var(--blue); background: var(--blue-bg); }
+    .capture-btn input[type=file]{ position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    .capture-btn__ring {
+      width:         52px;
+      height:        52px;
+      border-radius: 50%;
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--ink-mid);
+      transition:    all 0.18s;
+    }
+    .capture-btn:hover       .capture-btn__ring { border-color: var(--border-hi); color: var(--ink); }
+    .capture-btn.is-selected .capture-btn__ring { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    .capture-btn__label {
+      font-size:   14px;
+      font-weight: 600;
+      color:       var(--ink);
+      text-align:  center;
+    }
+    .capture-btn__sub {
+      font-size:   11px;
+      color:       var(--ink-dim);
+      text-align:  center;
+      line-height: 1.5;
+    }
+
+
+    /* Aperçu du fichier capturé */
+    .capture-preview {
+      display:       none;
+      align-items:   flex-start;
+      gap:           14px;
+      background:    var(--green-bg);
+      border:        1px solid var(--green-ring);
+      border-radius: var(--r-md);
+      padding:       14px 16px;
+      margin-bottom: 0;
+    }
+    .capture-preview.is-visible { display: flex; }
+
+    .capture-preview__thumb {
+      width:         60px;
+      height:        60px;
+      border-radius: var(--r-sm);
+      background:    var(--green-ring);
+      overflow:      hidden;
+      flex-shrink:   0;
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--green);
+    }
+    .capture-preview__thumb img,
+    .capture-preview__thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .capture-preview__info { flex: 1; min-width: 0; }
+    .capture-preview__name {
+      font-size:     13px;
+      font-weight:   600;
+      color:         var(--green-deep);
+      overflow:      hidden;
+      text-overflow: ellipsis;
+      white-space:   nowrap;
+      margin-bottom: 2px;
+    }
+    .capture-preview__type { font-size: 11px; color: var(--green); margin-bottom: 3px; }
+    .capture-preview__hash { font-family: var(--mono); font-size: 10px; color: var(--green); }
+
+    .capture-preview__clear {
+      background: none; border: none; cursor: pointer;
+      color: var(--ink-dim); font-size: 18px; line-height: 1;
+      flex-shrink: 0; align-self: flex-start;
+    }
+    .capture-preview__clear:hover { color: var(--red); }
+
+    /* ── Modal desktop — capture mobile requise ────────────────────── */
+    .desktop-overlay {
+      display:         none;
+      position:        fixed;
+      inset:           0;
+      background:      rgba(26,24,20,0.55);
+      backdrop-filter: blur(3px);
+      z-index:         200;
+      align-items:     center;
+      justify-content: center;
+      padding:         24px;
+      animation:       ev-fadeIn 0.2s ease both;
+    }
+    .desktop-overlay.is-open { display: flex; }
+
+    .desktop-modal {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow:    var(--shadow-lg);
+      max-width:     400px;
+      width:         100%;
+      overflow:      hidden;
+      animation:     ev-scaleIn 0.25s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .desktop-modal__header {
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .desktop-modal__icon-wrap {
+      width:         44px;
+      height:        44px;
+      border-radius: var(--r-md);
+      background:    var(--amber-bg);
+      border:        1px solid var(--amber-ring);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--amber);
+      flex-shrink:   0;
+      margin-top:    2px;
+    }
+
+    .desktop-modal__title {
+      font-family:    var(--serif);
+      font-size:      18px;
+      color:          var(--ink);
+      letter-spacing: -0.01em;
+      line-height:    1.2;
+      margin-bottom:  6px;
+    }
+
+    .desktop-modal__text {
+      font-size:   13px;
+      color:       var(--ink-mid);
+      line-height: 1.65;
+    }
+
+    .desktop-modal__qr-section {
+      padding:        20px 24px 10px;
+      display:        flex;
+      flex-direction: column;
+      align-items:    center;
+      gap:            12px;
+    }
+
+    .desktop-modal__qr-wrap {
+      background:    var(--panel);
+      border:        1px solid var(--border);
+      border-radius: var(--r-md);
+      padding:       14px;
+      display:       inline-flex;
+    }
+
+    .desktop-modal__qr-label {
+      font-family:  var(--mono);
+      font-size:    11px;
+      color:        var(--ink-dim);
+      letter-spacing: 0.04em;
+      text-align:   center;
+    }
+
+    .desktop-modal__actions {
+      padding:         10px 24px 22px;
+      display:         flex;
+      gap:             10px;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+<div class="ev-page">
+
+  <!-- En-tête -->
+  <header class="ev-header">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-header__inner">
+        <a class="ev-logo" href="/">
+          <img class="ev-logo__icon" src="/logo-dtr.png" alt="" onerror="this.style.display='none'" />
+          <span class="ev-logo__wordmark">Evidencia</span>
+        </a>
+        <nav class="ev-header__nav">
+          <a href="/demo.html" class="is-active">Démonstration</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/api-client.html">API</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="ev-wrap">
+      <div class="demo-layout">
+
+        <!-- Titre -->
+        <div class="demo-header">
+          <p class="demo-eyebrow">Démonstration</p>
+          <h1 class="demo-title">Capturez. Certifiez.<br/>Prouvez.</h1>
+          <p class="demo-sub">Prenez une photo ou filmez une scène. Evidencia certifie instantanément que ce moment a bien existé — par signature cryptographique.</p>
+        </div>
+
+        <!-- Étapes de progression -->
+        <div class="progress-steps" id="progressSteps">
+          <div class="progress-step">
+            <div class="progress-step__dot is-active" id="dot1">1</div>
+            <span class="progress-step__label is-active" id="lbl1">Capturer</span>
+          </div>
+          <div class="progress-sep"></div>
+          <div class="progress-step">
+            <div class="progress-step__dot" id="dot2">2</div>
+            <span class="progress-step__label" id="lbl2">Certifier</span>
+          </div>
+          <div class="progress-sep"></div>
+          <div class="progress-step">
+            <div class="progress-step__dot" id="dot3">3</div>
+            <span class="progress-step__label" id="lbl3">Résultat</span>
+          </div>
+        </div>
+
+        <!-- ── Phase 1 : Import ──────────────────────────────────── -->
+        <div class="phase is-active" id="phase1">
+          <div class="phase-card ev-card">
+
+            <div class="phase-card__body">
+
+              <!-- Aperçu de la capture (masqué par défaut) -->
+              <div class="capture-preview" id="capturePreview">
+                <div class="capture-preview__thumb" id="captureThumb">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="capture-preview__info">
+                  <div class="capture-preview__name" id="captureName"></div>
+                  <div class="capture-preview__type" id="captureType"></div>
+                  <div class="capture-preview__hash" id="captureHash"></div>
+                </div>
+                <button class="capture-preview__clear" onclick="clearCapture()" title="Recommencer">×</button>
+              </div>
+
+              <!-- Boutons de capture principaux -->
+              <div class="capture-grid" id="captureGrid">
+
+                <!-- Prendre une photo -->
+                <div class="capture-btn" id="btnPhoto" onclick="onCaptureClick('photo')">
+                  <input type="file" id="inputPhoto" accept="image/*" capture="environment"
+                         onchange="handleCapture(this,'photo')" style="display:none" />
+                  <div class="capture-btn__ring">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                  </div>
+                  <div class="capture-btn__label">Prendre une photo</div>
+                  <div class="capture-btn__sub">Ouvre directement l'appareil photo</div>
+                </div>
+
+                <!-- Capturer une vidéo -->
+                <div class="capture-btn" id="btnVideo" onclick="onCaptureClick('video')">
+                  <input type="file" id="inputVideo" accept="video/*" capture="environment"
+                         onchange="handleCapture(this,'video')" style="display:none" />
+                  <div class="capture-btn__ring">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <polygon points="23 7 16 12 23 17 23 7"/>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                  </div>
+                  <div class="capture-btn__label">Capturer une vidéo</div>
+                  <div class="capture-btn__sub">Ouvre directement la caméra</div>
+                </div>
+
+              </div>
+
+              <!-- Référence facultative -->
+              <div class="field-group" style="margin-top:20px">
+                <label for="labelInput">Référence (facultatif)</label>
+                <input class="ev-input" id="labelInput" type="text" placeholder="ex. Sinistre #9821, Constat du 10/03/2025…" />
+                <div class="field-hint">Cette référence sera incluse dans les métadonnées de la preuve.</div>
+              </div>
+
+            </div>
+
+            <!-- Erreur -->
+            <div style="padding:0 28px">
+              <div class="ev-error" id="errorBar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="errorMsg"></span>
+              </div>
+            </div>
+
+            <!-- Pied -->
+            <div class="phase-card__footer">
+              <div class="footer-note">
+                L'empreinte SHA-256 est calculée localement.<br/>Le fichier n'est jamais envoyé à Evidencia.
+              </div>
+              <button class="ev-btn ev-btn--primary" id="certifyBtn" onclick="startCertify()" disabled>
+                Certifier la preuve →
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Phase 2 : Certification en cours ─────────────────── -->
+        <div class="phase" id="phase2">
+          <div class="phase-card ev-card">
+            <div class="certifying-overlay is-visible">
+              <div class="ev-spinner" style="width:44px;height:44px;border-width:3px;border-top-color:var(--green)"></div>
+              <div class="certifying-overlay__title">Certification en cours…</div>
+              <div class="certifying-overlay__sub" id="certStep">Envoi de l'empreinte au serveur</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Phase 3 : Résultat ───────────────────────────────── -->
+        <div class="phase" id="phase3">
+
+          <div class="result-burst ev-anim-scale">
+            <div class="result-burst__ring">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="result-burst__title">Preuve certifiée.</div>
+            <div class="result-burst__sub">Ce fichier a été horodaté et signé cryptographiquement par Evidencia.</div>
+          </div>
+
+          <!-- Carte résultat -->
+          <div class="ev-anim-up" style="animation-delay:0.1s">
+
+            <!-- Bannière ID -->
+            <div class="proof-banner">
+              <div>
+                <div class="proof-banner__label">Identifiant de preuve</div>
+                <div class="proof-banner__id" id="resultId">—</div>
+              </div>
+              <div class="ev-badge ev-badge--green">
+                <div class="ev-badge__dot"></div>
+                Actif
+              </div>
+            </div>
+
+            <!-- Corps -->
+            <div class="result-body">
+
+              <!-- ── Média capturé ── -->
+              <div class="result-media" id="resultMediaSection">
+                <div class="result-media__inner">
+                  <div class="result-media__preview" id="resultMediaPreview">
+                    <span class="result-media__badge" id="resultMediaBadge">Photo certifiée</span>
+                  </div>
+                  <div class="result-media__info">
+                    <div class="result-media__title">Média certifié</div>
+                    <div class="result-media__note">
+                      <strong>Ce fichier n'a pas été envoyé à Evidencia.</strong>
+                      Il reste uniquement sur votre appareil. La preuve repose sur son empreinte SHA-256,
+                      signée ci-dessous. Conservez ce fichier : il sera nécessaire pour toute vérification ultérieure.
+                    </div>
+                    <button class="result-media__save" onclick="downloadReceipt()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Sauvegarder le reçu JSON
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-cols">
+
+                <!-- Détails -->
+                <div class="result-details">
+                  <span class="ev-label">Détails de la preuve</span>
+                  <div class="ev-detail-grid" id="resultDetails"></div>
+                  <div id="resultHashBox"></div>
+                </div>
+
+                <!-- QR code -->
+                <div class="result-qr">
+                  <div class="ev-qr-frame" id="resultQr"></div>
+                  <div class="result-qr__caption">Scanner pour vérifier sur n'importe quel appareil</div>
+                </div>
+
+              </div><!-- /result-cols -->
+
+            </div><!-- /result-body -->
+
+            <!-- Pied -->
+            <div class="result-footer">
+              <div class="result-footer__actions">
+                <a class="ev-btn ev-btn--primary ev-btn--sm" id="openVerifyBtn" href="#">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Ouvrir la vérification
+                </a>
+                <button class="ev-btn ev-btn--outline ev-btn--sm" onclick="copyLink()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                  <span id="copyLinkLabel">Copier le lien</span>
+                </button>
+                <button class="ev-btn ev-btn--ghost ev-btn--sm" onclick="downloadOriginal()" id="btnDlOriginal" style="display:none">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Télécharger l'original
+                </button>
+                <button class="ev-btn ev-btn--ghost ev-btn--sm" onclick="downloadCertified(this)" id="btnDlCertified" style="display:none">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span id="certifiedBtnLabel">Version certifiée</span>
+                </button>
+                <button class="ev-btn ev-btn--ghost ev-btn--sm" onclick="downloadReceipt()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  Reçu JSON
+                </button>
+              </div>
+              <div class="result-footer__issuer">Émis par Evidencia · evidencia.io</div>
+            </div>
+
+          </div><!-- /ev-anim-up -->
+
+          <!-- Prochaines étapes -->
+          <div class="next-section ev-anim-up" style="animation-delay:0.25s">
+            <span class="ev-label">Que faire ensuite ?</span>
+            <div class="next-grid">
+              <a class="next-card" id="nextVerifyCard" href="#">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </div>
+                <div class="next-card__title">Vérifier cette preuve</div>
+                <div class="next-card__desc">Ouvrir la page de vérification publique pour cet identifiant</div>
+              </a>
+              <div class="next-card" onclick="downloadReceipt()">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="next-card__title">Sauvegarder le reçu</div>
+                <div class="next-card__desc">Télécharger le reçu JSON pour vos archives ou votre dossier</div>
+              </div>
+              <div class="next-card" onclick="resetDemo()">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <div class="next-card__title">Certifier un autre fichier</div>
+                <div class="next-card__desc">Recommencer avec un nouveau document</div>
+              </div>
+              <div class="next-card" onclick="shareProof()">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                </div>
+                <div class="next-card__title">Partager le QR code</div>
+                <div class="next-card__desc">N'importe qui peut scanner pour vérifier indépendamment</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /phase3 -->
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Pied de page -->
+  <footer class="ev-footer">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-footer__inner">
+        <span class="ev-footer__copy">© 2025 Evidencia · Infrastructure de preuve numérique</span>
+        <div class="ev-footer__links">
+          <a href="/">Accueil</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+<!-- ── Modal : capture depuis mobile requise ─────────────────────────────── -->
+<div class="desktop-overlay" id="desktopOverlay" onclick="closeDesktopModal(event)">
+  <div class="desktop-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+    <div class="desktop-modal__header">
+      <div class="desktop-modal__icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+          <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="desktop-modal__title" id="modalTitle">Capture requise depuis un téléphone</div>
+        <div class="desktop-modal__text">
+          Pour garantir l'authenticité de la preuve, la capture doit être réalisée directement depuis l'appareil photo d'un téléphone. Ouvrez cette page sur votre smartphone pour prendre la photo ou filmer la scène.
+        </div>
+      </div>
+    </div>
+
+    <div class="desktop-modal__qr-section">
+      <div class="desktop-modal__qr-wrap">
+        <div id="desktopQr"></div>
+      </div>
+      <div class="desktop-modal__qr-label">Scannez ce code avec votre téléphone pour continuer</div>
+    </div>
+
+    <div class="desktop-modal__actions">
+      <button class="ev-btn ev-btn--outline ev-btn--sm" onclick="copyDemoLink(this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        Copier le lien
+      </button>
+      <button class="ev-btn ev-btn--ghost ev-btn--sm" onclick="closeDesktopModal()">Fermer</button>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /ev-page -->
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const API_BASE    = `${window.location.protocol}//${window.location.host}`;
+const VERIFY_BASE = `${window.location.protocol}//${window.location.host}/verify.html`;
+const DEMO_URL    = `${API_BASE}/v1/demo/proofs`;
+
+// ── État ──────────────────────────────────────────────────────────────────────
+let pendingHash      = null;
+let currentReceipt   = null;
+let currentId        = null;
+let qrModalRendered  = false;
+let capturedMediaURL  = null;   // objectURL local — jamais envoyé au serveur
+let capturedMediaType = null;   // 'image' | 'video'
+
+// ── Détection desktop ─────────────────────────────────────────────────────────
+// "Desktop" = pas de pointeur tactile ET pas d'indicateur mobile dans le UA.
+// On accepte les tablettes avec caméra (ex. iPad) comme "mobile" pour ne pas
+// bloquer des appareils légitimes.
+function isDesktop() {
+  const ua = navigator.userAgent || '';
+  const hasTouchScreen = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+  const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
+  // Si l'un des deux signaux indique un appareil tactile/mobile → OK
+  return !hasTouchScreen && !mobileUA;
+}
+
+// ── Interception du clic sur les boutons de capture ───────────────────────────
+function onCaptureClick(mode) {
+  if (isDesktop()) {
+    openDesktopModal();
+    return;
+  }
+  // Mobile → déclencher normalement l'input file caché
+  const inputId = mode === 'photo' ? 'inputPhoto' : 'inputVideo';
+  document.getElementById(inputId).click();
+}
+
+// ── Modal desktop ─────────────────────────────────────────────────────────────
+function openDesktopModal() {
+  const overlay = document.getElementById('desktopOverlay');
+  overlay.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+
+  // Générer le QR une seule fois
+  if (!qrModalRendered) {
+    qrModalRendered = true;
+    const qrEl = document.getElementById('desktopQr');
+    qrEl.innerHTML = '';
+    try {
+      new QRCode(qrEl, {
+        text:         window.location.href,
+        width:        160,
+        height:       160,
+        colorDark:    '#1a1814',
+        colorLight:   '#f0ede6',
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+    } catch(e) {
+      qrEl.textContent = window.location.href;
+    }
+  }
+}
+
+function closeDesktopModal(e) {
+  // Fermer si clic sur l'overlay (fond) ou via le bouton Fermer
+  if (e && e.target !== document.getElementById('desktopOverlay')) return;
+  document.getElementById('desktopOverlay').classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
+// Fermeture clavier (Échap)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDesktopModal();
+});
+
+function copyDemoLink(btn) {
+  navigator.clipboard?.writeText(window.location.href).then(() => {
+    const orig = btn.innerHTML;
+    btn.textContent = 'Copié !';
+    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+  });
+}
+
+// ── Gestion de la capture (mobile uniquement à ce stade) ─────────────────────
+async function handleCapture(input, mode) {
+  const file = input.files[0];
+  if (!file) return;
+  await processCapture(file, mode);
+}
+
+async function processCapture(file, mode) {
+  hideError();
+
+  // Libérer l'objectURL précédent si existant
+  if (capturedMediaURL) { URL.revokeObjectURL(capturedMediaURL); capturedMediaURL = null; }
+
+  const buffer  = await file.arrayBuffer();
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  const hex     = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  pendingHash   = `sha256:${hex}`;
+
+  // Créer l'objectURL et mémoriser le type pour le résultat
+  capturedMediaURL  = URL.createObjectURL(file);
+  capturedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+
+  // Aperçu miniature (phase 1)
+  const thumb = document.getElementById('captureThumb');
+  thumb.innerHTML = '';
+  if (capturedMediaType === 'image') {
+    const img = new Image();
+    img.src = capturedMediaURL;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    thumb.appendChild(img);
+  } else {
+    const vid = document.createElement('video');
+    vid.src = capturedMediaURL;
+    vid.muted = true;
+    vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    thumb.appendChild(vid);
+  }
+
+  const typeLabels = { photo: '📷 Photo', video: '🎥 Vidéo' };
+  document.getElementById('captureName').textContent = file.name;
+  document.getElementById('captureType').textContent = typeLabels[mode] || '📷 Capture';
+  document.getElementById('captureHash').textContent = pendingHash.slice(0, 24) + '…';
+
+  document.getElementById('captureGrid').style.display = 'none';
+  document.getElementById('capturePreview').classList.add('is-visible');
+  document.getElementById('certifyBtn').disabled = false;
+}
+
+function clearCapture() {
+  pendingHash = null;
+  if (capturedMediaURL) { URL.revokeObjectURL(capturedMediaURL); capturedMediaURL = null; }
+  capturedMediaType = null;
+  ['inputPhoto', 'inputVideo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('capturePreview').classList.remove('is-visible');
+  document.getElementById('captureGrid').style.display = '';
+  document.getElementById('certifyBtn').disabled = true;
+  hideError();
+}
+
+// ── Certification ─────────────────────────────────────────────────────────────
+async function startCertify() {
+  if (!pendingHash) return;
+
+  const label = document.getElementById('labelInput').value.trim();
+
+  setPhase(2);
+  setCertStep('Envoi de l\'empreinte au serveur…');
+
+  try {
+    await sleep(300);
+    setCertStep('Signature cryptographique en cours…');
+
+    const resp = await fetch(DEMO_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileHash:      pendingHash,
+        captureMethod: 'demo_web',
+        metadata:      JSON.stringify(label ? { reference: label } : {}),
+      }),
+    });
+
+    await sleep(200);
+    setCertStep('Génération du reçu…');
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data?.error?.message || `Erreur ${resp.status}`);
+
+    currentReceipt = data.receipt;
+    currentId      = data.id || data.receipt?.proofId;
+
+    await sleep(200);
+    setPhase(3);
+    renderResult(data);
+
+  } catch (err) {
+    setPhase(1);
+    showError('Impossible de créer la preuve : ' + err.message);
+  }
+}
+
+// ── Rendu du résultat ─────────────────────────────────────────────────────────
+function renderResult(data) {
+  const receipt   = data.receipt || {};
+  const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
+
+  document.getElementById('resultId').textContent = currentId;
+
+  // ── Média capturé — vignette pleine taille dans le résultat ──────
+  const mediaSection = document.getElementById('resultMediaSection');
+  const mediaPreview = document.getElementById('resultMediaPreview');
+  const mediaBadge   = document.getElementById('resultMediaBadge');
+
+  if (capturedMediaURL) {
+    mediaSection.style.display = '';
+    // Vider le contenu sauf le badge
+    Array.from(mediaPreview.children).forEach(el => {
+      if (!el.classList.contains('result-media__badge')) el.remove();
+    });
+    if (capturedMediaType === 'image') {
+      const img = new Image();
+      img.src = capturedMediaURL;
+      img.alt = 'Capture certifiée';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0';
+      mediaPreview.appendChild(img);
+      mediaBadge.textContent = '📷 Photo certifiée';
+    } else {
+      const vid = document.createElement('video');
+      vid.src      = capturedMediaURL;
+      vid.muted    = true;
+      vid.controls = true;
+      vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0';
+      mediaPreview.appendChild(vid);
+      mediaBadge.textContent = '🎥 Vidéo certifiée';
+    }
+  } else {
+    mediaSection.style.display = 'none';
+  }
+
+  const fields = [
+    { label: 'Émis le',              val: formatDate(receipt.timestamp),           mono: false },
+    { label: 'Méthode de capture',   val: receipt.captureMethod || '—',            mono: true  },
+    { label: 'Algorithme',           val: receipt.signatureAlgorithm || 'ed25519', mono: true  },
+    { label: 'Identifiant de clé',   val: receipt.publicKeyId || '—',              mono: true  },
+  ];
+
+  document.getElementById('resultDetails').innerHTML = fields.map(f => `
+    <div class="ev-detail">
+      <label>${f.label}</label>
+      <div class="val ${f.mono ? 'mono' : ''}">${f.val}</div>
+    </div>
+  `).join('');
+
+  if (receipt.fileHash) {
+    document.getElementById('resultHashBox').innerHTML = `
+      <div class="ev-hash-box" style="margin-top:16px">
+        <div>
+          <span class="ev-hash-box__label">Empreinte du fichier (SHA-256)</span>
+          <div class="ev-hash-box__val" id="hashVal">${receipt.fileHash}</div>
+        </div>
+        <button class="ev-copy-btn" id="hashCopyBtn" onclick="copyHash('${receipt.fileHash}')">Copier</button>
+      </div>
+    `;
+  }
+
+  const qrFrame = document.getElementById('resultQr');
+  qrFrame.innerHTML = '';
+  try {
+    new QRCode(qrFrame, { text: verifyUrl, width: 120, height: 120, colorDark: '#1a1814', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  } catch(e) {}
+
+  document.getElementById('openVerifyBtn').href  = verifyUrl;
+  document.getElementById('nextVerifyCard').href = verifyUrl;
+
+  // Afficher les boutons de téléchargement si un média est disponible
+  if (capturedMediaURL) {
+    document.getElementById('btnDlOriginal').style.display  = '';
+    document.getElementById('btnDlCertified').style.display = '';
+  }
+
+  markDone(1); markDone(2); markActive(3);
+}
+
+// ── Actions résultat ──────────────────────────────────────────────────────────
+function copyHash(hash) {
+  navigator.clipboard?.writeText(hash).then(() => {
+    const btn = document.getElementById('hashCopyBtn');
+    if (btn) { btn.textContent = 'Copié !'; btn.classList.add('is-done'); setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('is-done'); }, 1800); }
+  });
+}
+
+function copyLink() {
+  const url = `${VERIFY_BASE}?id=${currentId}`;
+  navigator.clipboard?.writeText(url).then(() => {
+    const lbl = document.getElementById('copyLinkLabel');
+    lbl.textContent = 'Copié !';
+    setTimeout(() => lbl.textContent = 'Copier le lien', 1800);
+  });
+}
+
+function downloadReceipt() {
+  if (!currentReceipt) return;
+  const blob = new Blob([JSON.stringify(currentReceipt, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `evidencia-recu-${currentId}.json`;
+  a.click();
+}
+
+function shareProof() {
+  const url = `${VERIFY_BASE}?id=${currentId}`;
+  if (navigator.share) { navigator.share({ title: 'Preuve Evidencia', text: `Vérifier la preuve ${currentId}`, url }); }
+  else copyLink();
+}
+
+function resetDemo() {
+  currentReceipt = null; currentId = null;
+  document.getElementById('labelInput').value = '';
+  clearCapture();   // libère aussi capturedMediaURL
+  setPhase(1);
+  markActive(1);
+  [2,3].forEach(n => {
+    document.getElementById(`dot${n}`).className = 'progress-step__dot';
+    document.getElementById(`dot${n}`).textContent = n;
+    document.getElementById(`lbl${n}`).className = 'progress-step__label';
+  });
+}
+
+// ── Phases ────────────────────────────────────────────────────────────────────
+function setPhase(n) {
+  document.querySelectorAll('.phase').forEach((el, i) => el.classList.toggle('is-active', i + 1 === n));
+}
+function setCertStep(txt) { document.getElementById('certStep').textContent = txt; }
+function markActive(n) {
+  document.getElementById(`dot${n}`).className = 'progress-step__dot is-active';
+  document.getElementById(`lbl${n}`).className = 'progress-step__label is-active';
+}
+function markDone(n) {
+  const dot = document.getElementById(`dot${n}`);
+  dot.className = 'progress-step__dot is-done';
+  dot.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+  document.getElementById(`lbl${n}`).className = 'progress-step__label is-done';
+}
+
+// ── Utilitaires ───────────────────────────────────────────────────────────────
+function showError(msg) { const b = document.getElementById('errorBar'); document.getElementById('errorMsg').textContent = msg; b.classList.add('is-visible'); }
+function hideError()    { document.getElementById('errorBar').classList.remove('is-visible'); }
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'UTC' }) + ' UTC';
+  } catch { return iso; }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Téléchargement original ───────────────────────────────────────────────────
+function downloadOriginal() {
+  if (!capturedMediaURL) return;
+  const a      = document.createElement('a');
+  a.href       = capturedMediaURL;
+  a.download   = `evidencia-capture-${currentId}.${capturedMediaType === 'video' ? 'mp4' : 'jpg'}`;
+  a.click();
+}
+
+// ── Téléchargement version certifiée (Canvas) ─────────────────────────────────
+async function downloadCertified(btn) {
+  if (!capturedMediaURL || !currentId) return;
+
+  const label    = document.getElementById('certifiedBtnLabel');
+  const origText = label.textContent;
+  label.textContent = 'Génération…';
+  btn.disabled = true;
+
+  try {
+    const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
+
+    // ── 1. Source image / frame vidéo ────────────────────────────────
+    let sourceW, sourceH, drawSource;
+
+    if (capturedMediaType === 'video') {
+      const vid   = document.createElement('video');
+      vid.muted   = true;
+      vid.preload = 'auto';
+      await new Promise((resolve) => {
+        vid.onloadeddata = () => { vid.onseeked = resolve; vid.currentTime = 0.001; };
+        vid.onerror = resolve;
+        vid.src = capturedMediaURL;
+        vid.load();
+        setTimeout(resolve, 5000);
+      });
+      sourceW    = vid.videoWidth  || 640;
+      sourceH    = vid.videoHeight || 480;
+      drawSource = vid;
+    } else {
+      const img = new Image();
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = capturedMediaURL; });
+      sourceW    = img.naturalWidth;
+      sourceH    = img.naturalHeight;
+      drawSource = img;
+    }
+
+    // ── 2. Canvas principal ──────────────────────────────────────────
+    const canvas = document.createElement('canvas');
+    canvas.width  = sourceW;
+    canvas.height = sourceH;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(drawSource, 0, 0, sourceW, sourceH);
+
+    const w = sourceW;
+    const h = sourceH;
+
+    // ── 3. Logo (facultatif) ─────────────────────────────────────────
+    let logoImg = null;
+    try { logoImg = await loadImageSafe('/logo-dtr.png'); } catch(e) {}
+
+    // ── 4. QR canvas ─────────────────────────────────────────────────
+    const qrCanvas = await buildQRCanvas(verifyUrl, Math.max(60, Math.round(Math.min(w, h) * 0.13)));
+
+    // ── 5. Badge — proportions identiques au prototype ───────────────
+    const pad  = Math.round(w * 0.02);
+    const boxW = Math.round(w * 0.42);
+    const boxH = Math.round(boxW * 0.32);
+    const bx   = w - boxW - pad;
+    const by   = h - boxH - pad;
+
+    // Fond dark navy, légèrement transparent
+    ctx.save();
+    ctx.globalAlpha = 0.94;
+    ctx.fillStyle   = '#0b1220';
+    roundRect(ctx, bx, by, boxW, boxH, Math.round(boxH * 0.18));
+    ctx.fill();
+    ctx.restore();
+
+    // ── 5a. Logo ─────────────────────────────────────────────────────
+    const innerPad = Math.round(boxW * 0.06);
+    let textLeft   = bx + innerPad;
+
+    if (logoImg) {
+      const logoSize = Math.round(boxH * 0.8);
+      const lx = bx + innerPad;
+      const ly = by + Math.round((boxH - logoSize) / 2);
+      ctx.save();
+      ctx.globalAlpha = 0.98;
+      ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+      ctx.restore();
+      textLeft = lx + logoSize + Math.round(boxW * 0.04);
+    }
+
+    // ── 5b. QR (réserver l'espace d'abord) ───────────────────────────
+    const qrSize = Math.round(boxH * 0.78);
+    const gap    = Math.round(boxW * 0.04);
+    const qx     = bx + boxW - innerPad - qrSize;
+    const qy     = by + Math.round((boxH - qrSize) / 2);
+
+    // ── 5c. Texte clipé (jamais de chevauchement avec le QR) ─────────
+    const textMaxRight = qx - gap;
+    const maxTextWidth = Math.max(10, textMaxRight - textLeft);
+
+    function fitFont(text, basePx, weight, family) {
+      let px = basePx;
+      ctx.font = `${weight} ${px}px ${family}`;
+      while (ctx.measureText(text).width > maxTextWidth && px > 8) {
+        px -= 1;
+        ctx.font = `${weight} ${px}px ${family}`;
+      }
+      return px;
+    }
+
+    const line1 = by + Math.round(boxH * 0.42);
+    const line2 = by + Math.round(boxH * 0.78);
+    const shortId = currentId.replace('prf_', '').slice(-10);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(textLeft, by, maxTextWidth, boxH);
+    ctx.clip();
+
+    ctx.fillStyle = '#ffffff';
+    const t1 = fitFont('CERTIFIÉ', Math.round(boxH * 0.26), 700, 'Inter, Arial, sans-serif');
+    ctx.font = `700 ${t1}px Inter, Arial, sans-serif`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('CERTIFIÉ', textLeft, line1);
+
+    ctx.fillStyle = '#cbd5e1';
+    const idText = `ID: ${shortId}`;
+    const t2 = fitFont(idText, Math.round(boxH * 0.20), 400, 'ui-monospace, Menlo, monospace');
+    ctx.font = `${t2}px ui-monospace, Menlo, monospace`;
+    ctx.fillText(idText, textLeft, line2);
+
+    ctx.restore();
+
+    // ── 5d. QR en dernier (par-dessus tout) ──────────────────────────
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.drawImage(qrCanvas, qx, qy, qrSize, qrSize);
+    ctx.restore();
+
+    // ── 6. Export PNG ────────────────────────────────────────────────
+    const pngBlob = await new Promise((resolve, reject) => {
+      try {
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null — canvas tainté ?')), 'image/png');
+      } catch(e) { reject(e); }
+    });
+
+    const dlUrl = URL.createObjectURL(pngBlob);
+    const a     = document.createElement('a');
+    a.href      = dlUrl;
+    a.download  = `evidencia-certifie-${currentId}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(dlUrl), 3000);
+
+  } catch (err) {
+    console.error('[Evidencia] Export certifié :', err);
+    alert(`Erreur lors de la génération : ${err.message}`);
+  } finally {
+    label.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+// ── Charge une image sans crossOrigin (objectURL ou même-origine) ─────────────
+function loadImageSafe(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload  = () => resolve(img);
+    img.onerror = reject;
+    img.src     = src;
+  });
+}
+
+// ── Utilitaire : rectangle arrondi ────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h,     x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y,         x + r, y);
+  ctx.closePath();
+}
+
+// ── Génère un canvas QR blanc sur fond navy ───────────────────────────────────
+function buildQRCanvas(text, size) {
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;visibility:hidden';
+    document.body.appendChild(wrap);
+    try {
+      new QRCode(wrap, { text, width: size, height: size, colorDark: '#ffffff', colorLight: '#0b1220', correctLevel: QRCode.CorrectLevel.M });
+    } catch(e) {
+      document.body.removeChild(wrap);
+      const fb = document.createElement('canvas');
+      fb.width = fb.height = size;
+      fb.getContext('2d').fillStyle = '#0b1220';
+      fb.getContext('2d').fillRect(0, 0, size, size);
+      resolve(fb); return;
+    }
+    setTimeout(() => {
+      const qrEl = wrap.querySelector('canvas') || wrap.querySelector('img');
+      const out  = document.createElement('canvas');
+      out.width  = out.height = size;
+      const octx = out.getContext('2d');
+      octx.fillStyle = '#0b1220';
+      octx.fillRect(0, 0, size, size);
+      if (qrEl) { try { octx.drawImage(qrEl, 0, 0, size, size); } catch(e) {} }
+      document.body.removeChild(wrap);
+      resolve(out);
+    }, 150);
+  });
+}
+</script>
+
+</body>
+</html>

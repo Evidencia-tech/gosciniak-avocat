@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencia — Preuve certifiée</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/ev-system.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    .result-layout {
+      padding: 52px 0 80px;
+    }
+
+    /* ── Burst de succès ───────────────────────────────────────────── */
+    .success-burst {
+      text-align:    center;
+      margin-bottom: 36px;
+      animation:     ev-scaleIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .burst-ring {
+      width:         72px;
+      height:        72px;
+      background:    var(--green-bg);
+      border:        2px solid var(--green-ring);
+      border-radius: 50%;
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      margin:        0 auto 18px;
+      color:         var(--green);
+      animation:     ring-pulse 2s ease-out 0.5s both;
+    }
+    @keyframes ring-pulse {
+      0%   { box-shadow: 0 0 0 0    rgba(14,127,90,.30); }
+      70%  { box-shadow: 0 0 0 18px rgba(14,127,90,.00); }
+      100% { box-shadow: 0 0 0 0    rgba(14,127,90,.00); }
+    }
+
+    .burst-title {
+      font-family:    var(--serif);
+      font-size:      30px;
+      color:          var(--ink);
+      letter-spacing: -0.02em;
+      margin-bottom:  6px;
+    }
+
+    .burst-sub {
+      font-size:   15px;
+      color:       var(--ink-mid);
+      line-height: 1.6;
+      max-width:   420px;
+      margin:      0 auto;
+    }
+
+    /* ── Carte principale ──────────────────────────────────────────── */
+    .result-card {
+      animation: ev-fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.12s both;
+    }
+
+    /* Bandeau identifiant */
+    .proof-id-banner {
+      background:    var(--green-bg);
+      border:        1.5px solid var(--green-ring);
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      padding:       20px 28px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      flex-wrap:     wrap;
+      gap:           12px;
+    }
+
+    .proof-id-banner__label {
+      font-family:    var(--mono);
+      font-size:      10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--green);
+      margin-bottom:  4px;
+    }
+
+    .proof-id-banner__value {
+      font-family:    var(--mono);
+      font-size:      15px;
+      font-weight:    500;
+      color:          var(--green-deep);
+      letter-spacing: 0.02em;
+      word-break:     break-all;
+    }
+
+    /* Corps de la carte */
+    .result-card__body {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-top:    none;
+    }
+
+    /* Colonnes : détails + QR */
+    .result-cols {
+      display:               grid;
+      grid-template-columns: 1fr auto;
+    }
+    @media (max-width: 520px) { .result-cols { grid-template-columns: 1fr; } }
+
+    .result-details {
+      padding:      24px 28px;
+      border-right: 1px solid var(--border);
+    }
+    @media (max-width: 520px) {
+      .result-details { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    .result-qr {
+      padding:        24px 20px;
+      display:        flex;
+      flex-direction: column;
+      align-items:    center;
+      justify-content: center;
+      gap:            10px;
+      min-width:      172px;
+    }
+
+    .result-qr__caption {
+      font-size:   11px;
+      color:       var(--ink-dim);
+      text-align:  center;
+      max-width:   136px;
+      line-height: 1.5;
+    }
+
+    /* Section empreinte */
+    .hash-section {
+      padding:       0 28px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Pied de carte */
+    .result-card__footer {
+      background:    var(--panel);
+      border-radius: 0 0 var(--r-lg) var(--r-lg);
+      padding:       16px 28px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      flex-wrap:     wrap;
+      gap:           12px;
+    }
+
+    .result-card__footer__actions {
+      display:   flex;
+      gap:       8px;
+      flex-wrap: wrap;
+    }
+
+    .result-card__footer__issuer {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      font-style:  italic;
+    }
+
+    /* ── Section "Que faire maintenant" ────────────────────────────── */
+    .next-section {
+      margin-top: 28px;
+      animation:  ev-fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.28s both;
+    }
+
+    .next-grid {
+      display:               grid;
+      grid-template-columns: 1fr 1fr;
+      gap:                   10px;
+      margin-top:            14px;
+    }
+    @media (max-width: 440px) { .next-grid { grid-template-columns: 1fr; } }
+
+    .next-card {
+      background:      var(--surface);
+      border:          1px solid var(--border);
+      border-radius:   var(--r-md);
+      padding:         16px;
+      cursor:          pointer;
+      transition:      all 0.15s;
+      text-decoration: none;
+      display:         block;
+    }
+    .next-card:hover { border-color: var(--border-hi); box-shadow: var(--shadow-sm); }
+
+    .next-card__icon {
+      width:         32px;
+      height:        32px;
+      background:    var(--panel);
+      border-radius: var(--r-sm);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--ink-mid);
+      margin-bottom: 10px;
+    }
+
+    .next-card__title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+    .next-card__desc  { font-size: 11px; color: var(--ink-dim); line-height: 1.5; }
+
+    /* ── Section : créer une nouvelle preuve ───────────────────────── */
+    .new-proof-section {
+      margin-top:    48px;
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow:    var(--shadow-md);
+      overflow:      hidden;
+      animation:     ev-fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.4s both;
+    }
+
+    .new-proof-section__header {
+      padding:       24px 28px 0;
+    }
+
+    .new-proof-section__title {
+      font-family:    var(--serif);
+      font-size:      20px;
+      color:          var(--ink);
+      letter-spacing: -0.01em;
+      margin-bottom:  4px;
+    }
+
+    .new-proof-section__sub {
+      font-size:   13px;
+      color:       var(--ink-mid);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    .new-proof-section__body {
+      padding: 20px 28px 0;
+    }
+
+    /* Fichier sélectionné */
+    .file-ready {
+      display:       none;
+      align-items:   center;
+      gap:           12px;
+      background:    var(--green-bg);
+      border:        1px solid var(--green-ring);
+      border-radius: var(--r-md);
+      padding:       14px 16px;
+      margin-bottom: 16px;
+    }
+    .file-ready.is-visible { display: flex; }
+
+    .file-ready__icon {
+      width:         38px;
+      height:        38px;
+      background:    var(--green-ring);
+      border-radius: var(--r-sm);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--green);
+      flex-shrink:   0;
+    }
+
+    .file-ready__name {
+      flex:          1;
+      font-size:     13px;
+      font-weight:   600;
+      color:         var(--green-deep);
+      overflow:      hidden;
+      text-overflow: ellipsis;
+      white-space:   nowrap;
+    }
+
+    .file-ready__hash {
+      font-family: var(--mono);
+      font-size:   11px;
+      color:       var(--green);
+      white-space: nowrap;
+    }
+
+    .file-clear-btn {
+      background:  none;
+      border:      none;
+      color:       var(--ink-dim);
+      cursor:      pointer;
+      font-size:   20px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .file-clear-btn:hover { color: var(--red); }
+
+    .field-label {
+      display:        block;
+      font-size:      12px;
+      font-weight:    500;
+      color:          var(--ink-mid);
+      margin-bottom:  6px;
+    }
+
+    .field-hint {
+      font-size:   11px;
+      color:       var(--ink-dim);
+      margin-top:  5px;
+    }
+
+    /* Barre clé API */
+    .api-key-bar {
+      display:     flex;
+      align-items: center;
+      gap:         10px;
+      padding:     14px 28px;
+      background:  var(--panel);
+      border-top:  1px solid var(--border);
+      flex-wrap:   wrap;
+      margin-top:  20px;
+    }
+
+    .api-key-bar label { font-size: 12px; color: var(--ink-dim); flex-shrink: 0; }
+    .api-key-bar input {
+      background:    var(--surface);
+      border:        1px solid var(--border);
+      border-radius: var(--r-sm);
+      color:         var(--ink-mid);
+      font-family:   var(--mono);
+      font-size:     12px;
+      padding:       6px 10px;
+      outline:       none;
+      flex:          1;
+      min-width:     150px;
+    }
+
+    /* Pied du formulaire */
+    .new-proof-section__footer {
+      padding:         16px 28px 24px;
+      display:         flex;
+      align-items:     center;
+      justify-content: space-between;
+      flex-wrap:       wrap;
+      gap:             12px;
+    }
+
+    .new-proof-section__note {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      line-height: 1.5;
+    }
+
+    /* Spinner certification */
+    .certifying {
+      display:        none;
+      flex-direction: column;
+      align-items:    center;
+      gap:            14px;
+      padding:        40px 28px;
+      text-align:     center;
+    }
+    .certifying.is-visible { display: flex; }
+    .certifying__title { font-family: var(--serif); font-size: 20px; color: var(--ink); }
+    .certifying__step  { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+<div class="ev-page">
+
+  <!-- En-tête -->
+  <header class="ev-header">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-header__inner">
+        <a class="ev-logo" href="/">
+          <img class="ev-logo__icon" src="/icon-evidencia.png" alt="" onerror="this.style.display='none'" />
+          <span class="ev-logo__wordmark">Evidencia</span>
+        </a>
+        <nav class="ev-header__nav">
+          <a href="/demo.html">Démonstration</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/api-client.html">API</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="ev-wrap">
+      <div class="result-layout">
+
+        <!-- ── Zone résultat (masquée jusqu'à création) ─────────── -->
+        <div id="resultZone" style="display:none">
+
+          <!-- Burst de succès -->
+          <div class="success-burst">
+            <div class="burst-ring">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="burst-title">Preuve certifiée.</div>
+            <div class="burst-sub">Ce fichier a été horodaté et signé cryptographiquement par Evidencia. La preuve est vérifiable indépendamment, pour toujours.</div>
+          </div>
+
+          <!-- Carte résultat -->
+          <div class="result-card">
+
+            <!-- Bannière ID -->
+            <div class="proof-id-banner">
+              <div>
+                <div class="proof-id-banner__label">Identifiant de preuve</div>
+                <div class="proof-id-banner__value" id="resultId">—</div>
+              </div>
+              <div class="ev-badge ev-badge--green">
+                <div class="ev-badge__dot"></div>
+                Actif
+              </div>
+            </div>
+
+            <!-- Corps -->
+            <div class="result-card__body">
+
+              <div class="result-cols">
+                <!-- Détails -->
+                <div class="result-details">
+                  <span class="ev-label">Détails de la preuve</span>
+                  <div class="ev-detail-grid" id="resultDetailGrid"></div>
+                </div>
+
+                <!-- QR code -->
+                <div class="result-qr">
+                  <div class="ev-qr-frame" id="resultQrFrame"></div>
+                  <div class="result-qr__caption">Scanner pour vérifier sur n'importe quel appareil</div>
+                </div>
+              </div>
+
+              <!-- Empreinte -->
+              <div class="hash-section">
+                <div id="resultHashBox"></div>
+              </div>
+
+            </div>
+
+            <!-- Pied -->
+            <div class="result-card__footer">
+              <div class="result-card__footer__actions">
+                <a class="ev-btn ev-btn--primary ev-btn--sm" id="openVerifyBtn" href="#">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Ouvrir la vérification
+                </a>
+                <button class="ev-btn ev-btn--outline ev-btn--sm" onclick="copyVerifyLink()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                  </svg>
+                  <span id="copyLinkLabel">Copier le lien</span>
+                </button>
+                <button class="ev-btn ev-btn--ghost ev-btn--sm" onclick="downloadReceipt()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Télécharger le reçu
+                </button>
+              </div>
+              <div class="result-card__footer__issuer">Émis par Evidencia · evidencia.io</div>
+            </div>
+
+          </div><!-- /result-card -->
+
+          <!-- Que faire maintenant -->
+          <div class="next-section">
+            <span class="ev-label">Que faire maintenant ?</span>
+            <div class="next-grid">
+              <a class="next-card" id="nextVerifyLink" href="#">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                </div>
+                <div class="next-card__title">Vérifier cette preuve</div>
+                <div class="next-card__desc">Ouvrir la page de vérification publique pour cet identifiant</div>
+              </a>
+              <div class="next-card" onclick="downloadReceipt()">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+                <div class="next-card__title">Sauvegarder le reçu</div>
+                <div class="next-card__desc">Télécharger le reçu JSON pour vos archives</div>
+              </div>
+              <div class="next-card" onclick="scrollToNewProof()">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </div>
+                <div class="next-card__title">Certifier un autre fichier</div>
+                <div class="next-card__desc">Recommencer avec un nouveau document</div>
+              </div>
+              <div class="next-card" onclick="shareProof()">
+                <div class="next-card__icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                    <polyline points="16 6 12 2 8 6"/>
+                    <line x1="12" y1="2" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="next-card__title">Partager le QR code</div>
+                <div class="next-card__desc">N'importe qui peut scanner pour vérifier de façon indépendante</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /resultZone -->
+
+        <!-- ── Formulaire : nouvelle preuve ─────────────────────── -->
+        <div class="new-proof-section" id="newProofSection">
+
+          <div class="new-proof-section__header">
+            <div class="new-proof-section__title">Certifier un fichier</div>
+            <div class="new-proof-section__sub">Sélectionnez n'importe quel fichier. L'empreinte SHA-256 est calculée dans votre navigateur — le fichier ne quitte jamais votre appareil.</div>
+          </div>
+
+          <div class="new-proof-section__body">
+
+            <!-- Fichier prêt -->
+            <div class="file-ready" id="fileReady">
+              <div class="file-ready__icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <span class="file-ready__name" id="fileReadyName"></span>
+              <span class="file-ready__hash" id="fileReadyHash"></span>
+              <button class="file-clear-btn" onclick="clearFile()">×</button>
+            </div>
+
+            <!-- Zone de dépôt -->
+            <div class="ev-dropzone" id="dropZone">
+              <input type="file" id="fileInput" onchange="handleFile()" />
+              <svg class="ev-dropzone__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+              </svg>
+              <div class="ev-dropzone__title">Déposer un fichier ou cliquer pour parcourir</div>
+              <div class="ev-dropzone__sub">Photo, PDF, document — tout format · Jamais envoyé au serveur</div>
+            </div>
+
+            <!-- Référence -->
+            <div style="margin-top:18px">
+              <label class="field-label" for="labelInput">Référence (facultatif)</label>
+              <input class="ev-input" id="labelInput" type="text"
+                     placeholder="ex. Dossier sinistre #9821, Contrat v3…" />
+              <div class="field-hint">Incluse dans les métadonnées de la preuve.</div>
+            </div>
+
+            <!-- Erreur -->
+            <div class="ev-error" id="errorBar" style="margin-top:14px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span id="errorMsg"></span>
+            </div>
+
+            <!-- Certification en cours -->
+            <div class="certifying" id="certifying">
+              <div class="ev-spinner" style="width:40px;height:40px;border-width:3px;border-top-color:var(--green)"></div>
+              <div class="certifying__title">Certification en cours…</div>
+              <div class="certifying__step" id="certStep">Envoi de l'empreinte au serveur</div>
+            </div>
+
+          </div>
+
+          <!-- Clé API -->
+          <div class="api-key-bar">
+            <label for="apiKeyInput">Clé API :</label>
+            <input type="password" id="apiKeyInput" placeholder="evd_sk_dev_…" />
+            <span style="font-size:11px;color:var(--ink-dim)">Requise pour créer une preuve</span>
+          </div>
+
+          <!-- Pied -->
+          <div class="new-proof-section__footer">
+            <div class="new-proof-section__note">
+              L'empreinte SHA-256 est calculée localement.<br/>
+              Le fichier n'est jamais envoyé à Evidencia.
+            </div>
+            <button class="ev-btn ev-btn--primary" id="certifyBtn" onclick="startCertify()" disabled>
+              Certifier la preuve →
+            </button>
+          </div>
+
+        </div><!-- /new-proof-section -->
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Pied de page -->
+  <footer class="ev-footer">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-footer__inner">
+        <span class="ev-footer__copy">© 2025 Evidencia · Infrastructure de preuve numérique</span>
+        <div class="ev-footer__links">
+          <a href="/">Accueil</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /ev-page -->
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const API_BASE    = `${window.location.protocol}//${window.location.host}`;
+const VERIFY_BASE = `${window.location.protocol}//${window.location.host}/verify.html`;
+
+// ── État ──────────────────────────────────────────────────────────────────────
+let pendingHash    = null;
+let currentReceipt = null;
+let currentId      = null;
+
+// ── Zone de dépôt ─────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('is-drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('is-drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('is-drag');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+
+async function handleFile() {
+  const file = document.getElementById('fileInput').files[0];
+  if (file) await processFile(file);
+}
+
+async function processFile(file) {
+  const buffer  = await file.arrayBuffer();
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  const hex     = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  pendingHash   = `sha256:${hex}`;
+
+  dropZone.style.display = 'none';
+  document.getElementById('fileReady').classList.add('is-visible');
+  document.getElementById('fileReadyName').textContent = file.name;
+  document.getElementById('fileReadyHash').textContent = pendingHash.slice(0, 20) + '…';
+  document.getElementById('certifyBtn').disabled = false;
+  hideError();
+}
+
+function clearFile() {
+  pendingHash = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileReady').classList.remove('is-visible');
+  dropZone.style.display = 'block';
+  document.getElementById('certifyBtn').disabled = true;
+}
+
+// ── Certification ─────────────────────────────────────────────────────────────
+async function startCertify() {
+  if (!pendingHash) return;
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  const label  = document.getElementById('labelInput').value.trim();
+
+  if (!apiKey) { showError('Veuillez entrer votre clé API pour créer une preuve.'); return; }
+
+  // Masquer formulaire, afficher spinner
+  document.getElementById('certifyBtn').disabled = true;
+  document.getElementById('dropZone').style.display = 'none';
+  document.getElementById('fileReady').classList.remove('is-visible');
+  document.getElementById('certifying').classList.add('is-visible');
+  hideError();
+
+  try {
+    await sleep(300);
+    setCertStep('Signature cryptographique en cours…');
+
+    const resp = await fetch(`${API_BASE}/v1/proofs`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        fileHash:      pendingHash,
+        captureMethod: 'sdk_web',
+        metadata:      JSON.stringify(label ? { reference: label } : {}),
+      }),
+    });
+
+    await sleep(200);
+    setCertStep('Génération du reçu…');
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data?.error?.message || `Erreur ${resp.status}`);
+
+    currentReceipt = data.receipt;
+    currentId      = data.id || data.receipt?.proofId;
+
+    await sleep(200);
+    document.getElementById('certifying').classList.remove('is-visible');
+    renderResult(data);
+
+  } catch (err) {
+    document.getElementById('certifying').classList.remove('is-visible');
+    dropZone.style.display = 'block';
+    document.getElementById('certifyBtn').disabled = false;
+    showError('Impossible de créer la preuve : ' + err.message);
+  }
+}
+
+// ── Rendu du résultat ─────────────────────────────────────────────────────────
+function renderResult(data) {
+  const receipt   = data.receipt || {};
+  const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
+
+  // Afficher la zone résultat
+  document.getElementById('resultZone').style.display = 'block';
+
+  // ID
+  document.getElementById('resultId').textContent = currentId;
+
+  // Grille de détails
+  const fields = [
+    { label: 'Émis le',              val: formatDate(receipt.timestamp),              mono: false },
+    { label: 'Méthode de capture',   val: receipt.captureMethod || '—',               mono: true },
+    { label: 'Algorithme',           val: receipt.signatureAlgorithm || 'ed25519',    mono: true },
+    { label: 'Identifiant de clé',   val: receipt.publicKeyId || '—',                 mono: true },
+  ];
+  document.getElementById('resultDetailGrid').innerHTML = fields.map(f => `
+    <div class="ev-detail">
+      <label>${f.label}</label>
+      <div class="val ${f.mono ? 'mono' : ''}">${f.val}</div>
+    </div>
+  `).join('');
+
+  // Empreinte
+  if (receipt.fileHash) {
+    document.getElementById('resultHashBox').innerHTML = `
+      <div class="ev-hash-box">
+        <div>
+          <span class="ev-hash-box__label">Empreinte du fichier (SHA-256)</span>
+          <div class="ev-hash-box__val">${receipt.fileHash}</div>
+        </div>
+        <button class="ev-copy-btn" id="hashCopyBtn" onclick="copyHash('${receipt.fileHash}')">Copier</button>
+      </div>
+    `;
+  }
+
+  // QR code
+  const qrFrame = document.getElementById('resultQrFrame');
+  qrFrame.innerHTML = '';
+  try {
+    new QRCode(qrFrame, {
+      text: verifyUrl, width: 120, height: 120,
+      colorDark: '#1a1814', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  } catch(e) { qrFrame.textContent = 'QR indisponible'; }
+
+  // Liens
+  document.getElementById('openVerifyBtn').href  = verifyUrl;
+  document.getElementById('nextVerifyLink').href = verifyUrl;
+
+  // Scroll vers le haut
+  document.getElementById('resultZone').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function copyHash(hash) {
+  navigator.clipboard?.writeText(hash).then(() => {
+    const btn = document.getElementById('hashCopyBtn');
+    if (btn) {
+      btn.textContent = 'Copié !';
+      btn.classList.add('is-done');
+      setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('is-done'); }, 1800);
+    }
+  });
+}
+
+function copyVerifyLink() {
+  navigator.clipboard?.writeText(`${VERIFY_BASE}?id=${currentId}`).then(() => {
+    const lbl = document.getElementById('copyLinkLabel');
+    lbl.textContent = 'Copié !';
+    setTimeout(() => lbl.textContent = 'Copier le lien', 1800);
+  });
+}
+
+function downloadReceipt() {
+  if (!currentReceipt) return;
+  const blob = new Blob([JSON.stringify(currentReceipt, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `evidencia-recu-${currentId}.json`;
+  a.click();
+}
+
+function shareProof() {
+  const url = `${VERIFY_BASE}?id=${currentId}`;
+  if (navigator.share) {
+    navigator.share({ title: 'Preuve Evidencia', text: `Vérifier la preuve ${currentId}`, url });
+  } else {
+    copyVerifyLink();
+  }
+}
+
+function scrollToNewProof() {
+  document.getElementById('newProofSection').scrollIntoView({ behavior: 'smooth' });
+  // Réinitialiser le formulaire
+  clearFile();
+  document.getElementById('labelInput').value = '';
+  dropZone.style.display = 'block';
+}
+
+// ── Utilitaires ───────────────────────────────────────────────────────────────
+function showError(msg) {
+  const b = document.getElementById('errorBar');
+  document.getElementById('errorMsg').textContent = msg;
+  b.classList.add('is-visible');
+}
+function hideError() { document.getElementById('errorBar').classList.remove('is-visible'); }
+function setCertStep(t) { document.getElementById('certStep').textContent = t; }
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('fr-FR', {
+      day: '2-digit', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    }) + ' UTC';
+  } catch { return iso; }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+
+</body>
+</html>

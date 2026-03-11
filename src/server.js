@@ -24,6 +24,7 @@ const { ready } = require('./modules/crypto');
 const proofsRouter    = require('./routes/proofs');
 const verifyRouter    = require('./routes/verify');
 const publicKeyRouter = require('./routes/publicKey');
+const demoRouter      = require('./routes/demo');
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -64,9 +65,10 @@ app.get('/api', (_req, res) => {
   });
 });
 
-app.use('/v1/proofs',      proofsRouter);
-app.use('/v1/verify',      verifyRouter);
-app.use('/v1/public-key',  publicKeyRouter);
+app.use('/v1/proofs',       proofsRouter);
+app.use('/v1/verify',       verifyRouter);
+app.use('/v1/public-key',   publicKeyRouter);
+app.use('/v1/demo/proofs',  demoRouter);   // démo publique — sans clé API
 
 // 404 for unmatched routes
 app.use((req, res) => {

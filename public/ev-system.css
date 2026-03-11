@@ -1,0 +1,502 @@
+/*
+ * ev-system.css — Système de design partagé Evidencia
+ * Inclus dans toutes les pages publiques.
+ * Ne pas modifier sans mettre à jour toutes les pages.
+ */
+
+/* ── Google Fonts ────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Variables ───────────────────────────────────────────────────────────── */
+:root {
+  /* Fond */
+  --bg:           #f4f1eb;
+  --surface:      #fdfcf9;
+  --panel:        #f0ede6;
+  --panel-hi:     #e8e4dc;
+
+  /* Bordures */
+  --border:       #e2ddd4;
+  --border-hi:    #c8c2b4;
+
+  /* Texte */
+  --ink:          #1a1814;
+  --ink-mid:      #4a4640;
+  --ink-dim:      #8a8580;
+
+  /* Bleu */
+  --blue:         #1a52cc;
+  --blue-mid:     #1a45a8;
+  --blue-bg:      #eef2fc;
+  --blue-ring:    #c5d4f5;
+
+  /* Vert — succès / valide */
+  --green:        #0e7f5a;
+  --green-deep:   #0a5c40;
+  --green-bg:     #edfaf4;
+  --green-ring:   #a8dfc8;
+
+  /* Rouge — erreur / invalide */
+  --red:          #c0302a;
+  --red-bg:       #fdf0ef;
+  --red-ring:     #f0c4c2;
+
+  /* Ambre — avertissement */
+  --amber:        #92600a;
+  --amber-bg:     #fdf6e8;
+  --amber-ring:   #f0d8a8;
+
+  /* Typographie */
+  --serif:        'DM Serif Display', Georgia, serif;
+  --sans:         'DM Sans', system-ui, sans-serif;
+  --mono:         'DM Mono', 'Courier New', monospace;
+
+  /* Ombres */
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:    0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg:    0 8px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05);
+
+  /* Rayons */
+  --r-sm:         6px;
+  --r-md:         10px;
+  --r-lg:         14px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+img  { display: block; max-width: 100%; }
+
+body {
+  background:  var(--bg);
+  color:       var(--ink);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height:  100vh;
+}
+
+/* Texture papier subtile */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Mise en page ────────────────────────────────────────────────────────── */
+.ev-page {
+  position:        relative;
+  z-index:         1;
+  min-height:      100vh;
+  display:         flex;
+  flex-direction:  column;
+}
+
+.ev-wrap {
+  max-width: 700px;
+  margin:    0 auto;
+  padding:   0 24px;
+  width:     100%;
+}
+
+.ev-wrap--wide {
+  max-width: 880px;
+}
+
+/* ── En-tête partagé ─────────────────────────────────────────────────────── */
+.ev-header {
+  padding:       24px 0;
+  border-bottom: 1px solid var(--border);
+  background:    var(--surface);
+  position:      sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.ev-header__inner {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             16px;
+}
+
+/* ── Logo complet : icône + wordmark ─────────────────────────────────────── */
+.ev-logo {
+  display:         flex;
+  align-items:     center;
+  gap:             9px;
+  text-decoration: none;
+  flex-shrink:     0;
+}
+
+/* Icône seule — /icon-evidencia.png (carré, 1:1, fond transparent) */
+.ev-logo__icon {
+  height:        28px;
+  width:         28px;
+  display:       block;
+  flex-shrink:   0;
+  border-radius: 6px;   /* optionnel — à retirer si le logo a déjà un bord */
+}
+
+/* Wordmark texte — toujours affiché */
+.ev-logo__wordmark {
+  font-family:    var(--serif);
+  font-size:      21px;
+  color:          var(--ink);
+  letter-spacing: -0.02em;
+  line-height:    1;
+  white-space:    nowrap;
+}
+
+/* Ancien sélecteur conservé pour compatibilité (logo pleine image) */
+.ev-logo__img {
+  height:    28px;
+  width:     auto;
+  display:   block;
+}
+
+/* Texte de secours si logo-evidencia.png absent */
+.ev-logo__fallback {
+  font-family:     var(--serif);
+  font-size:       21px;
+  color:           var(--ink);
+  letter-spacing:  -0.02em;
+  line-height:     1;
+}
+
+.ev-logo__badge {
+  font-family:     var(--mono);
+  font-size:       10px;
+  color:           var(--ink-dim);
+  letter-spacing:  0.1em;
+  text-transform:  uppercase;
+  background:      var(--panel);
+  border:          1px solid var(--border);
+  padding:         3px 8px;
+  border-radius:   3px;
+}
+
+.ev-header__nav {
+  display:     flex;
+  align-items: center;
+  gap:         24px;
+}
+
+.ev-header__nav a {
+  font-size:       13px;
+  color:           var(--ink-dim);
+  text-decoration: none;
+  transition:      color 0.15s;
+}
+.ev-header__nav a:hover      { color: var(--ink); }
+.ev-header__nav a.is-active  { color: var(--ink); font-weight: 500; }
+
+/* ── Pied de page partagé ────────────────────────────────────────────────── */
+.ev-footer {
+  margin-top:    auto;
+  padding:       24px 0;
+  border-top:    1px solid var(--border);
+  background:    var(--surface);
+}
+
+.ev-footer__inner {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  flex-wrap:       wrap;
+  gap:             12px;
+}
+
+.ev-footer__copy  { font-size: 12px; color: var(--ink-dim); }
+.ev-footer__links { display: flex; gap: 20px; }
+.ev-footer__links a {
+  font-size:       12px;
+  color:           var(--ink-dim);
+  text-decoration: none;
+}
+.ev-footer__links a:hover { color: var(--ink); }
+
+/* ── Boutons ─────────────────────────────────────────────────────────────── */
+.ev-btn {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             7px;
+  border-radius:   var(--r-sm);
+  font-family:     var(--sans);
+  font-size:       14px;
+  font-weight:     500;
+  padding:         10px 20px;
+  cursor:          pointer;
+  transition:      all 0.15s;
+  text-decoration: none;
+  border:          none;
+  white-space:     nowrap;
+  line-height:     1;
+}
+
+.ev-btn--primary {
+  background: var(--ink);
+  color:      #fff;
+}
+.ev-btn--primary:hover { opacity: 0.85; }
+
+.ev-btn--blue {
+  background: var(--blue);
+  color:      #fff;
+}
+.ev-btn--blue:hover { background: var(--blue-mid); }
+
+.ev-btn--outline {
+  background: var(--surface);
+  color:      var(--ink-mid);
+  border:     1px solid var(--border);
+}
+.ev-btn--outline:hover { border-color: var(--border-hi); color: var(--ink); }
+
+.ev-btn--ghost {
+  background: transparent;
+  color:      var(--ink-dim);
+  border:     1px solid var(--border);
+}
+.ev-btn--ghost:hover { color: var(--ink); border-color: var(--border-hi); }
+
+.ev-btn:disabled {
+  opacity: 0.4;
+  cursor:  not-allowed;
+}
+
+.ev-btn--sm {
+  font-size: 12px;
+  padding:   7px 14px;
+}
+
+/* ── Cartes ──────────────────────────────────────────────────────────────── */
+.ev-card {
+  background:    var(--surface);
+  border:        1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow:    var(--shadow-md);
+}
+
+/* ── Étiquette de section ────────────────────────────────────────────────── */
+.ev-label {
+  font-family:     var(--mono);
+  font-size:       10px;
+  letter-spacing:  0.12em;
+  text-transform:  uppercase;
+  color:           var(--ink-dim);
+  margin-bottom:   14px;
+  display:         block;
+}
+
+/* ── Saisie de texte ─────────────────────────────────────────────────────── */
+.ev-input {
+  width:       100%;
+  background:  var(--panel);
+  border:      1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  color:       var(--ink);
+  font-family: var(--sans);
+  font-size:   14px;
+  padding:     12px 16px;
+  outline:     none;
+  transition:  border-color 0.2s, box-shadow 0.2s;
+}
+.ev-input::placeholder { color: var(--ink-dim); }
+.ev-input:focus {
+  border-color: var(--blue);
+  box-shadow:   0 0 0 3px rgba(26,82,204,0.10);
+}
+
+/* ── Badges d'état ───────────────────────────────────────────────────────── */
+.ev-badge {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             5px;
+  font-size:       12px;
+  font-weight:     500;
+  padding:         4px 12px;
+  border-radius:   20px;
+  white-space:     nowrap;
+}
+.ev-badge--green  { background: var(--green-bg);  color: var(--green-deep); border: 1px solid var(--green-ring); }
+.ev-badge--red    { background: var(--red-bg);    color: var(--red);        border: 1px solid var(--red-ring); }
+.ev-badge--blue   { background: var(--blue-bg);   color: var(--blue);       border: 1px solid var(--blue-ring); }
+.ev-badge--amber  { background: var(--amber-bg);  color: var(--amber);      border: 1px solid var(--amber-ring); }
+
+.ev-badge__dot {
+  width:         6px;
+  height:        6px;
+  border-radius: 50%;
+  background:    currentColor;
+  flex-shrink:   0;
+}
+
+/* ── Barre d'erreur ──────────────────────────────────────────────────────── */
+.ev-error {
+  display:       none;
+  align-items:   center;
+  gap:           10px;
+  background:    var(--red-bg);
+  border:        1px solid var(--red-ring);
+  border-radius: var(--r-sm);
+  padding:       12px 16px;
+  font-size:     13px;
+  color:         var(--red);
+  margin-top:    14px;
+}
+.ev-error.is-visible { display: flex; }
+
+/* ── Spinner de chargement ───────────────────────────────────────────────── */
+.ev-spinner {
+  width:         32px;
+  height:        32px;
+  border:        2.5px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation:     ev-spin 0.8s linear infinite;
+}
+@keyframes ev-spin { to { transform: rotate(360deg); } }
+
+/* ── Zone de dépôt de fichier ────────────────────────────────────────────── */
+.ev-dropzone {
+  border:        1.5px dashed var(--border-hi);
+  border-radius: var(--r-md);
+  padding:       36px 24px;
+  text-align:    center;
+  cursor:        pointer;
+  transition:    all 0.2s;
+  position:      relative;
+}
+.ev-dropzone:hover,
+.ev-dropzone.is-drag { border-color: var(--blue); background: var(--blue-bg); }
+
+.ev-dropzone input {
+  position: absolute;
+  inset:    0;
+  opacity:  0;
+  cursor:   pointer;
+  width:    100%;
+  height:   100%;
+}
+
+.ev-dropzone__icon  { color: var(--ink-dim); margin: 0 auto 12px; display: block; }
+.ev-dropzone__title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.ev-dropzone__sub   { font-size: 12px; color: var(--ink-dim); }
+
+/* ── Lignes de détail ────────────────────────────────────────────────────── */
+.ev-detail-grid {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   20px;
+}
+@media (max-width: 480px) { .ev-detail-grid { grid-template-columns: 1fr; } }
+
+.ev-detail label {
+  display:        block;
+  font-size:      10px;
+  font-family:    var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--ink-dim);
+  margin-bottom:  4px;
+}
+.ev-detail .val      { font-size: 13px; color: var(--ink); word-break: break-all; }
+.ev-detail .val.mono { font-family: var(--mono); font-size: 12px; color: var(--ink-mid); }
+
+/* ── Empreinte de fichier ────────────────────────────────────────────────── */
+.ev-hash-box {
+  background:    var(--panel);
+  border:        1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding:       14px 16px;
+  display:       flex;
+  align-items:   flex-start;
+  justify-content: space-between;
+  gap:           12px;
+  margin-top:    20px;
+}
+.ev-hash-box__label {
+  font-size:      10px;
+  font-family:    var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--ink-dim);
+  margin-bottom:  4px;
+  display:        block;
+}
+.ev-hash-box__val {
+  font-family: var(--mono);
+  font-size:   11px;
+  color:       var(--ink-mid);
+  word-break:  break-all;
+  line-height: 1.5;
+}
+
+/* ── Bouton copier ───────────────────────────────────────────────────────── */
+.ev-copy-btn {
+  background:    var(--surface);
+  border:        1px solid var(--border);
+  border-radius: 5px;
+  color:         var(--ink-dim);
+  font-family:   var(--mono);
+  font-size:     10px;
+  padding:       5px 10px;
+  cursor:        pointer;
+  flex-shrink:   0;
+  transition:    all 0.15s;
+  white-space:   nowrap;
+}
+.ev-copy-btn:hover    { border-color: var(--border-hi); color: var(--ink); }
+.ev-copy-btn.is-done  { color: var(--green); border-color: var(--green-ring); }
+
+/* ── Cadre QR code ───────────────────────────────────────────────────────── */
+.ev-qr-frame {
+  width:         136px;
+  height:        136px;
+  background:    #fff;
+  border:        1px solid var(--border);
+  border-radius: var(--r-sm);
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  padding:       8px;
+  box-shadow:    var(--shadow-sm);
+  flex-shrink:   0;
+}
+.ev-qr-frame canvas,
+.ev-qr-frame img { width: 100% !important; height: 100% !important; }
+
+/* ── Animations d'entrée ─────────────────────────────────────────────────── */
+@keyframes ev-fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ev-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ev-scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.ev-anim-up   { animation: ev-fadeUp   0.5s cubic-bezier(0.16,1,0.3,1) both; }
+.ev-anim-in   { animation: ev-fadeIn   0.4s ease both; }
+.ev-anim-scale{ animation: ev-scaleIn  0.5s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Utilitaires responsive ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .ev-header__nav { display: none; }
+  .ev-wrap        { padding: 0 16px; }
+}
+
+@media print {
+  .ev-header, .ev-footer, .no-print { display: none !important; }
+  body::before { display: none; }
+  body { background: #fff; }
+  .ev-card { box-shadow: none; border: 1px solid #ccc; }
+}
