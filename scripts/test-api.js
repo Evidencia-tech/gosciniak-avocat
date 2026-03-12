@@ -163,6 +163,63 @@ async function run() {
     assert(body.error && body.error.code === 'INVALID_INPUT', `expected INVALID_INPUT, got ${JSON.stringify(body.error)}`);
   });
 
+  // 10. Contact — missing fields returns 400
+  await test('POST /v1/contact — missing fields returns 400', async () => {
+    const res = await fetch(`${BASE}/v1/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const body = await res.json();
+    assert(res.status === 400, `expected 400, got ${res.status}`);
+    assert(body.error && body.error.code === 'VALIDATION_ERROR', `expected VALIDATION_ERROR, got ${JSON.stringify(body.error)}`);
+  });
+
+  // 11. Contact — invalid email returns 400
+  await test('POST /v1/contact — invalid email returns 400', async () => {
+    const res = await fetch(`${BASE}/v1/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenom: 'Jean', nom: 'Dupont', email: 'not-an-email', message: 'Test' }),
+    });
+    const body = await res.json();
+    assert(res.status === 400, `expected 400, got ${res.status}`);
+    assert(body.error && body.error.code === 'VALIDATION_ERROR', `expected VALIDATION_ERROR, got ${JSON.stringify(body.error)}`);
+  });
+
+  // 12. Contact — missing message returns 400
+  await test('POST /v1/contact — missing message returns 400', async () => {
+    const res = await fetch(`${BASE}/v1/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenom: 'Jean', nom: 'Dupont', email: 'jean@test.com' }),
+    });
+    const body = await res.json();
+    assert(res.status === 400, `expected 400, got ${res.status}`);
+    assert(body.error && body.error.code === 'VALIDATION_ERROR', `expected VALIDATION_ERROR, got ${JSON.stringify(body.error)}`);
+  });
+
+  // 13. Contact — valid input calls Resend (expect 503 if RESEND_API_KEY is invalid, or 200 if valid)
+  await test('POST /v1/contact — valid input accepted', async () => {
+    const res = await fetch(`${BASE}/v1/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prenom: 'Test', nom: 'User', email: 'test@example.com',
+        sujet: 'API test', message: 'Automated test — please ignore.',
+      }),
+    });
+    const body = await res.json();
+    // Passes validation — either email sent (200) or Resend error (503)
+    assert(res.status === 200 || res.status === 503,
+      `expected 200 or 503, got ${res.status}: ${JSON.stringify(body)}`);
+    if (res.status === 200) {
+      assert(body.data && body.data.sent === true, 'expected sent=true');
+    } else {
+      assert(body.error && body.error.code === 'EMAIL_ERROR', `expected EMAIL_ERROR, got ${JSON.stringify(body.error)}`);
+    }
+  });
+
   // ── Summary ─────────────────────────────────────────────────────────────
   const passed = results.filter(r => r.pass).length;
   const failed = results.filter(r => !r.pass).length;
