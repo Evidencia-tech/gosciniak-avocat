@@ -34,6 +34,13 @@ Evidencia is a proof-of-existence API that cryptographically certifies file hash
 - **src/middleware/errorHandler.js** — Centralized error handler with `createError()` factory
 - **src/lib/apiResponse.js** — `ok(res, data)` / `fail(res, status, code, message)` — all JSON responses use this envelope: `{ requestId, data }` or `{ requestId, error: { code, message } }`
 
+### sdk/ (client SDKs)
+
+- **sdk/js/** — JavaScript/TypeScript SDK (`evidencia` npm package). Works in Node.js >= 18 and browsers. Dual CJS/ESM export. Files are hashed client-side via WebCrypto or Node crypto — never uploaded. Includes TypeScript definitions (`index.d.ts`).
+- **sdk/flutter/** — Flutter/Dart SDK. Same client-side hashing approach using `package:crypto`. Targets Dart >= 3.0 / Flutter >= 3.10. Includes `CaptureMethod` enum for mobile capture contexts.
+
+Both SDKs expose `proofs.create()`, `proofs.retrieve()`, `proofs.verify()`, and `publicKey.retrieve()`. Default base URL is `https://api.evidencia.io`.
+
 ### Key data flow
 
 1. `POST /v1/proofs` — file/hash in → `hashing.computeHash()` → `receipts.buildSigningPayload()` → `signing.sign()` → `receipts.buildReceipt()` → `persistence.proofs.create()` → receipt out
