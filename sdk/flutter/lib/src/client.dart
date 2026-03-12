@@ -245,7 +245,7 @@ class PublicKeyResource {
   final _HttpClient _http;
 
   /// Retrieve the active public signing key.
-  Future<Map<String, dynamic>> retrieve() => _http.getJson('/v1/public-key');
+  Future<Map<String, dynamic>> retrieve() => _http.getJson('/v1/publicKey');
 }
 
 // ─── EvidenciaClient ──────────────────────────────────────────────────────────

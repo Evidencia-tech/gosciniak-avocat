@@ -270,7 +270,7 @@ class PublicKeyResource {
 
   /** Retrieve the active public signing key. */
   async retrieve() {
-    return this._http.get('/v1/public-key');
+    return this._http.get('/v1/publicKey');
   }
 }
 
