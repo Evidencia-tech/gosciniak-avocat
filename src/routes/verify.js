@@ -1,125 +1,75 @@
 'use strict';
 
 /**
- * verify.js — Public proof verification route
+ * src/routes/verify.js
  *
- * POST /v1/verify
- *   No authentication required — this endpoint is public.
- *
- *   Accepts:
- *     { proofId, fileHash? }
- *     OR
- *     { receipt: <full receipt object>, fileHash? }
- *
- *   Performs:
- *     1. Retrieve stored receipt (if proofId given) or use inline receipt
- *     2. Reconstruct the canonical signing payload
- *     3. Verify Ed25519 signature
- *     4. Optionally verify file hash (if caller provides fileHash)
- *
- *   Returns a structured verification result — every check is explicit.
+ * POST /v1/verify  — public proof verification
  */
 
-const express = require('express');
-const multer = require('multer');
+const express  = require('express');
+const multer   = require('multer');
 
-const crypto = require('../modules/crypto');
-const { getProofById } = require('../modules/db');
-const { createError } = require('../middleware/errorHandler');
+const { computeHash }  = require('../../packages/hashing');
+const { verifyProof }  = require('../../packages/verification');
+const { createError }  = require('../middleware/errorHandler');
+const { ok }           = require('../lib/apiResponse');
 
 const router = express.Router();
 
-// Accept both JSON and multipart (so callers can upload the original file)
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits:  { fileSize: 50 * 1024 * 1024 },
+});
 
 router.post('/', upload.single('file'), async (req, res, next) => {
   try {
-    // ── Resolve receipt ──────────────────────────────────────────────────────
-    let receipt = null;
+    let inlineReceipt = null;
+    const proofId  = req.body && req.body.proofId  ? req.body.proofId  : null;
+    const fileHash = req.body && req.body.fileHash  ? req.body.fileHash : null;
 
-    if (req.body && req.body.proofId) {
-      receipt = getProofById(req.body.proofId);
-      if (!receipt) {
-        return next(createError(404, 'proof_not_found',
-          `No proof found with id: ${req.body.proofId}`));
-      }
-    } else if (req.body && req.body.receipt) {
+    if (!proofId && !fileHash && req.body && req.body.receipt) {
       try {
-        receipt = typeof req.body.receipt === 'string'
+        inlineReceipt = typeof req.body.receipt === 'string'
           ? JSON.parse(req.body.receipt)
           : req.body.receipt;
       } catch {
-        return next(createError(400, 'invalid_receipt',
-          'Could not parse "receipt" field as JSON.', 'receipt'));
-      }
-    } else {
-      return next(createError(400, 'missing_proof_id_or_receipt',
-        'Provide either "proofId" or a full "receipt" object.'));
-    }
-
-    // ── Check receipt structure ──────────────────────────────────────────────
-    const required = ['proofId', 'fileHash', 'timestamp', 'captureMethod',
-                      'signature', 'publicKey', 'schemaVersion'];
-    for (const field of required) {
-      if (!receipt[field]) {
-        return next(createError(422, 'malformed_receipt',
-          `Receipt is missing required field: ${field}`, field));
+        return next(createError(400, 'INVALID_INPUT',
+          'Could not parse "receipt" field as JSON.'));
       }
     }
 
-    const checks = {};
+    if (!proofId && !fileHash && !inlineReceipt) {
+      return next(createError(400, 'INVALID_INPUT',
+        'Provide either "proofId", "fileHash", or a full "receipt" object.'));
+    }
 
-    // ── Check 1: Signature ───────────────────────────────────────────────────
-    const signingPayload = crypto.buildSigningPayload(
-      receipt.proofId,
-      receipt.fileHash,
-      receipt.timestamp,
-      receipt.captureMethod,
-    );
-
-    checks.signatureValid = await crypto.verify(
-      signingPayload,
-      receipt.signature,
-      receipt.publicKey,
-    );
-
-    // ── Check 2: File hash (if caller provides the original file) ─────────────
-    let callerHash = req.body && req.body.fileHash ? req.body.fileHash : null;
-
-    // If a file was uploaded, compute its hash
+    let submittedHash = fileHash;
     if (req.file) {
-      callerHash = crypto.hashBuffer(req.file.buffer);
+      submittedHash = computeHash(req.file.buffer);
     }
 
-    if (callerHash) {
-      checks.fileHashMatch = callerHash === receipt.fileHash;
-    } else {
-      checks.fileHashMatch = null; // not checked — no file provided
-    }
+    const result  = await verifyProof({
+      proofId,
+      fileHash:      submittedHash,
+      receipt:       inlineReceipt,
+      submittedHash: submittedHash || null,
+    });
 
-    // ── Check 3: Timestamp plausibility ─────────────────────────────────────
-    // Proof timestamp must not be in the future (more than 5 min clock drift)
-    const proofTime = new Date(receipt.timestamp).getTime();
-    const now = Date.now();
-    checks.timestampPlausible = !isNaN(proofTime) && proofTime <= now + 5 * 60 * 1000;
+    const receipt = result.receipt;
 
-    // ── Overall validity ─────────────────────────────────────────────────────
-    const valid = checks.signatureValid
-      && (checks.fileHashMatch === null || checks.fileHashMatch)
-      && checks.timestampPlausible;
-
-    return res.json({
-      valid,
-      proofId: receipt.proofId,
-      checks,
-      proof: {
-        fileHash: receipt.fileHash,
-        timestamp: receipt.timestamp,
-        captureMethod: receipt.captureMethod,
-        publicKeyId: receipt.publicKeyId,
+    return ok(res, {
+      valid:     result.valid,
+      result:    result.result,
+      proofId:   receipt ? receipt.proofId : (proofId || null),
+      checks:    result.checks,
+      proof:     receipt ? {
+        fileHash:           receipt.fileHash,
+        timestamp:          receipt.timestamp,
+        captureMethod:      receipt.captureMethod,
+        publicKeyId:        receipt.publicKeyId,
         signatureAlgorithm: receipt.signatureAlgorithm,
-      },
-      verifiedAt: new Date().toISOString(),
+      } : null,
+      verifiedAt: result.verifiedAt,
     });
 
   } catch (err) {

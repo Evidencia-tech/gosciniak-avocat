@@ -1,60 +1,81 @@
 'use strict';
 
 /**
- * errorHandler.js — centralised error response middleware
+ * src/middleware/errorHandler.js
  *
- * All thrown errors in routes are caught here and formatted as
- * structured Evidencia API error objects (Stripe-style).
+ * Centralized error middleware.
+ *
+ * Error codes and HTTP mappings:
+ *   INVALID_INPUT       -> 400
+ *   PROOF_NOT_FOUND     -> 404
+ *   HASH_MISMATCH       -> 400
+ *   SIGNATURE_INVALID   -> 400
+ *   UNSUPPORTED_MEDIA   -> 415
+ *   PAYLOAD_TOO_LARGE   -> 413
+ *   RATE_LIMITED        -> 429
+ *   INTERNAL_ERROR      -> 500
+ *
+ * All error responses use the standard envelope:
+ *   { "ok": false, "requestId": "...", "error": { "code": "...", "message": "..." } }
+ *
+ * Stack traces are never included in responses.
+ * In production, internal error details are suppressed entirely.
  */
+
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 function errorHandler(err, req, res, _next) {
-  // multer file-size or unexpected-field errors
+  // Multer: file too large
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json(apiError('invalid_request_error', 'file_too_large',
-      'File exceeds the maximum allowed size of 50 MB.', 'file'));
+    return sendError(req, res, 413, 'PAYLOAD_TOO_LARGE',
+      'File exceeds the maximum allowed size.');
   }
+
+  // Multer: unexpected field name
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-    return res.status(400).json(apiError('invalid_request_error', 'unexpected_field',
-      `Unexpected multipart field: ${err.field}. Use the field name "file".`, 'file'));
+    return sendError(req, res, 400, 'INVALID_INPUT',
+      `Unexpected multipart field "${err.field}". Use the field name "file".`);
   }
 
-  // Explicit API errors thrown by routes
+  // Express JSON body too large (body-parser)
+  if (err.type === 'entity.too.large') {
+    return sendError(req, res, 413, 'PAYLOAD_TOO_LARGE',
+      'Request body exceeds the maximum allowed size (100kb).');
+  }
+
+  // Explicit errors thrown by routes via createError()
   if (err.statusCode) {
-    return res.status(err.statusCode).json(apiError(
-      err.errorType || 'api_error',
-      err.code || 'internal_error',
-      err.message,
-      err.param,
-    ));
+    const code = err.errorCode || 'INVALID_INPUT';
+    return sendError(req, res, err.statusCode, code, err.message);
   }
 
-  // Unexpected / unhandled errors
+  // Unexpected / unhandled errors — ne jamais leaker la stack en prod
   console.error('[evidencia] Unhandled error:', err);
-  return res.status(500).json(apiError(
-    'api_error', 'internal_error',
-    'An unexpected error occurred. Please try again.',
-  ));
+  const message = IS_PROD
+    ? 'An unexpected error occurred. Please try again.'
+    : err.message || 'An unexpected error occurred.';
+  return sendError(req, res, 500, 'INTERNAL_ERROR', message);
+}
+
+function sendError(req, res, status, code, message) {
+  const body = {};
+  if (req && req.requestId) body.requestId = req.requestId;
+  body.error = { code, message };
+  return res.status(status).json(body);
 }
 
 /**
- * Construct a structured API error object.
+ * Create a throwable API error for errorHandler.
+ *
+ * @param {number} statusCode
+ * @param {string} errorCode    -- one of the standard codes above
+ * @param {string} message
  */
-function apiError(type, code, message, param) {
-  const err = { type, code, message };
-  if (param) err.param = param;
-  err.docUrl = `https://docs.evidencia.io/errors/${code}`;
-  return { error: err };
-}
-
-/**
- * Create a throwable API error with metadata attached.
- */
-function createError(statusCode, code, message, param) {
+function createError(statusCode, errorCode, message) {
   const err = new Error(message);
   err.statusCode = statusCode;
-  err.code = code;
-  err.param = param;
+  err.errorCode  = errorCode;
   return err;
 }
 
-module.exports = { errorHandler, apiError, createError };
+module.exports = { errorHandler, createError };

@@ -339,6 +339,26 @@
     @media print {
       .search-section, .how-row, .btn-reset, .cert-actions, .no-print { display: none !important; }
       .certificate.is-visible { display: block !important; }
+
+      /* Photo démo — toujours visible à l'impression si présente */
+      #demoMediaPreview { display: block !important; }
+      #demoMediaPreview img {
+        display: block !important;
+        width: 100% !important;
+        max-height: 320px !important;
+        object-fit: contain !important;
+        border-radius: 6px !important;
+        margin-bottom: 20px !important;
+        border: 1px solid #d4cfc9 !important;
+        page-break-inside: avoid;
+      }
+
+      /* Éviter les coupures de page malheureuses */
+      .verdict-strip, .check-item, #demoMediaPreview { page-break-inside: avoid; }
+
+      /* Fond blanc forcé pour l'impression */
+      body, .ev-page, .certificate { background: #fff !important; }
+      .verdict-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 
     /* ── Scanner QR ────────────────────────────────────────────────── */
@@ -608,6 +628,9 @@
       <!-- Certificat -->
       <div class="certificate" id="certificate">
 
+        <!-- Aperçu média démo (affiché si transmis depuis demo.html via sessionStorage) -->
+        <div id="demoMediaPreview" style="display:none"></div>
+
         <!-- Bandeau verdict -->
         <div class="verdict-strip" id="verdictStrip">
           <div class="verdict-seal" id="verdictSeal"></div>
@@ -726,6 +749,41 @@ window.addEventListener('DOMContentLoaded', () => {
                || window.location.hash.replace('#','')
                || window.location.pathname.match(/\/(prf_[A-Z0-9]+)/)?.[1];
 
+  // Récupérer les données transmises par demo.html via sessionStorage
+  try {
+    const demoHash    = sessionStorage.getItem('evidencia_demo_hash');
+    const demoThumb   = sessionStorage.getItem('evidencia_demo_thumb');
+    const demoProofId = sessionStorage.getItem('evidencia_demo_proofId');
+
+    // Hash local : permet la vérification d'intégrité automatique
+    if (demoHash && demoHash.startsWith('sha256:')) {
+      fileHash = demoHash;
+      // Afficher la pilule fichier pour indiquer que l'empreinte est disponible
+      document.getElementById('pillName').textContent = 'Fichier certifié (démo)';
+      document.getElementById('filePill').classList.add('is-visible');
+    }
+
+    // Thumbnail : afficher l'aperçu de la capture si disponible
+    if (demoThumb && demoProofId && (fromUrl === demoProofId)) {
+      const preview = document.getElementById('demoMediaPreview');
+      if (preview) {
+        const img = new Image();
+        img.src = demoThumb;
+        img.alt = 'Capture certifiée';
+        img.style.cssText = 'width:100%;max-height:260px;object-fit:contain;border-radius:8px;display:block;margin:0 auto 20px';
+        preview.appendChild(img);
+        preview.style.display = '';
+      }
+    }
+
+    // Nettoyer après lecture (usage unique)
+    if (demoProofId && fromUrl === demoProofId) {
+      sessionStorage.removeItem('evidencia_demo_hash');
+      sessionStorage.removeItem('evidencia_demo_thumb');
+      sessionStorage.removeItem('evidencia_demo_proofId');
+    }
+  } catch(e) { /* sessionStorage bloqué — non bloquant */ }
+
   if (fromUrl && fromUrl.startsWith('prf_')) {
     document.getElementById('proofInput').value = fromUrl;
     setTimeout(() => doVerify(), 150);
@@ -778,10 +836,11 @@ async function doVerify() {
     setStep('Contrôle de l\'horodatage…');
     await sleep(200);
 
-    let data;
-    try { data = await resp.json(); } catch { throw new Error('Réponse inattendue du serveur.'); }
-    if (!resp.ok) throw new Error(data?.error?.message || `Erreur ${resp.status}`);
+    let apiRaw;
+    try { apiRaw = await resp.json(); } catch { throw new Error('Réponse inattendue du serveur.'); }
+    if (!resp.ok) throw new Error(apiRaw?.error?.message || `Erreur ${resp.status}`);
 
+    const data = apiRaw.data ?? apiRaw;          // désenveloppe { ok, data } → data
     setPhase('result');
     renderCertificate(data);
 
@@ -814,7 +873,7 @@ function renderCertificate(data) {
   // Contrôles
   const checkDefs = [
     { key: 'signatureValid',     name: 'Signature cryptographique',  desc: 'La signature Ed25519 est authentique et correspond au contenu de la preuve.',       descFail: 'La signature ne correspond pas. La preuve a peut-être été modifiée.' },
-    { key: 'fileHashMatch',      name: 'Intégrité du fichier',       desc: 'L\'empreinte SHA-256 du fichier original correspond à la preuve.',                  descSkip: 'Aucun fichier fourni — la comparaison d\'empreinte n\'a pas été effectuée.', descFail: 'L\'empreinte ne correspond pas. Il peut s\'agir d\'un fichier différent.' },
+    { key: 'hashMatch',          name: 'Intégrité du fichier',       desc: 'L\'empreinte SHA-256 du fichier original correspond à la preuve.',                  descSkip: 'Aucun fichier fourni — la comparaison d\'empreinte n\'a pas été effectuée.', descFail: 'L\'empreinte ne correspond pas. Il peut s\'agir d\'un fichier différent.' },
     { key: 'timestampPlausible', name: 'Validité de l\'horodatage',  desc: 'L\'horodatage de la preuve est cohérent et n\'est pas daté dans le futur.',         descFail: 'L\'horodatage semble invalide ou est situé dans le futur.' },
   ];
 
@@ -889,11 +948,25 @@ function copyHash(hash) {
 
 function copyVerifyUrl() {
   const url = `${VERIFY_BASE}?id=${currentProofId}`;
-  navigator.clipboard?.writeText(url).then(() => {
-    const lbl = document.getElementById('copyUrlLabel');
-    lbl.textContent = 'Copié !';
-    setTimeout(() => lbl.textContent = 'Copier le lien', 1800);
-  });
+  const lbl = document.getElementById('copyUrlLabel');
+  function onCopied() {
+    if (lbl) { lbl.textContent = 'Copié !'; setTimeout(() => lbl.textContent = 'Copier le lien', 1800); }
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(onCopied).catch(() => fallbackCopy(url, onCopied));
+  } else {
+    fallbackCopy(url, onCopied);
+  }
+}
+
+function fallbackCopy(text, onSuccess) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { if (document.execCommand('copy')) onSuccess(); } catch(e) {}
+  document.body.removeChild(ta);
 }
 
 function resetForm() {

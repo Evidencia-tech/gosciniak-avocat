@@ -1,148 +1,129 @@
 'use strict';
 
 /**
- * proofs.js — Proof creation and retrieval routes
+ * src/routes/proofs.js
  *
- * POST /v1/proofs
- *   Accepts a multipart file upload OR a pre-computed hash.
- *   Hashes the file, signs the canonical payload, stores the receipt.
- *
- * GET /v1/proofs/:id
- *   Returns the stored receipt by proofId.
+ * POST /v1/proofs  — create a proof (authenticated)
+ * GET  /v1/proofs/:id — retrieve a proof (authenticated)
  */
 
-const express = require('express');
-const multer = require('multer');
+const express  = require('express');
+const multer   = require('multer');
 const { ulid } = require('ulid');
 
-const crypto = require('../modules/crypto');
-const { buildReceipt } = require('../modules/receipt');
-const { insertProof, getProofById } = require('../modules/db');
-const { requireApiKey } = require('../middleware/auth');
-const { createError } = require('../middleware/errorHandler');
+const { computeHash, isValidHashFormat }    = require('../../packages/hashing');
+const { sign }                              = require('../../packages/signing');
+const { buildReceipt, buildSigningPayload } = require('../../packages/receipts');
+const { proofs }                            = require('../../packages/persistence');
+const { requireApiKey }                     = require('../middleware/auth');
+const { createError }                       = require('../middleware/errorHandler');
+const { ok }                                = require('../lib/apiResponse');
 
 const router = express.Router();
 
-// Multer: memory storage (never write uploads to disk)
-// Max file size: 50 MB
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits:  { fileSize: 50 * 1024 * 1024 },
 });
 
-// ─── POST /v1/proofs ─────────────────────────────────────────────────────────
+// ---- POST /v1/proofs --------------------------------------------------------
 
 router.post('/', requireApiKey, upload.single('file'), async (req, res, next) => {
   try {
     let fileHash;
     let metadata = {};
 
-    // ── Determine file hash ──────────────────────────────────────────────────
     if (req.file) {
-      // A file was uploaded — hash it server-side
-      fileHash = crypto.hashBuffer(req.file.buffer);
+      fileHash = computeHash(req.file.buffer);
       metadata = {
-        filename: req.file.originalname || null,
-        mimeType: req.file.mimetype || null,
+        filename:  req.file.originalname || null,
+        mimeType:  req.file.mimetype     || null,
         sizeBytes: req.file.size,
       };
     } else if (req.body && req.body.fileHash) {
-      // Caller pre-computed the hash client-side (privacy mode)
       fileHash = req.body.fileHash;
-      validateHashFormat(fileHash, next);
+      if (!isValidHashFormat(fileHash)) {
+        return next(createError(400, 'INVALID_INPUT',
+          'fileHash must be in format "sha256:<64-hex-chars>".'));
+      }
     } else {
-      return next(createError(400, 'missing_file_or_hash',
-        'Provide either a multipart "file" field or a "fileHash" body parameter.',
-        'file'));
+      return next(createError(400, 'INVALID_INPUT',
+        'Provide either a multipart "file" field or a "fileHash" body parameter.'));
     }
 
-    // Merge any caller-supplied metadata
     if (req.body && req.body.metadata) {
       try {
         const extra = typeof req.body.metadata === 'string'
           ? JSON.parse(req.body.metadata)
           : req.body.metadata;
         metadata = { ...metadata, ...extra };
-      } catch {
-        // ignore malformed metadata
-      }
+      } catch { /* ignore malformed metadata */ }
     }
 
     const captureMethod = (req.body && req.body.captureMethod) || 'api_upload';
-    const proofId = `prf_${ulid()}`;
-    const timestamp = new Date().toISOString();
+    const proofId       = `prf_${ulid()}`;
+    const timestamp     = new Date().toISOString();
 
-    // ── Build signing payload and sign ───────────────────────────────────────
-    const signingPayload = crypto.buildSigningPayload(proofId, fileHash, timestamp, captureMethod);
-    const { signature, publicKey, keyId } = await crypto.sign(signingPayload);
+    const signingPayload                  = buildSigningPayload(proofId, fileHash, timestamp, captureMethod);
+    const { signature, publicKey, keyId } = await sign(signingPayload);
 
-    // ── Assemble receipt ─────────────────────────────────────────────────────
     const receipt = buildReceipt({
-      proofId,
-      fileHash,
-      timestamp,
-      captureMethod,
-      signature,
-      publicKey,
-      publicKeyId: keyId,
-      metadata,
+      proofId, fileHash, timestamp, captureMethod,
+      signature, publicKey, publicKeyId: keyId, metadata,
     });
 
-    // ── Persist ──────────────────────────────────────────────────────────────
-    insertProof(receipt);
+    await proofs.create({
+      proofId:       receipt.proofId,
+      fileHash:      receipt.fileHash,
+      timestamp:     receipt.timestamp,
+      captureMethod: receipt.captureMethod,
+      keyId:         receipt.publicKeyId,
+      receipt,
+    });
 
-    // ── Respond ──────────────────────────────────────────────────────────────
-    return res.status(201).json({
-      id: proofId,
-      object: 'proof',
-      status: 'active',
+    return ok(res, {
+      id:       proofId,
+      object:   'proof',
+      status:   'active',
       receipt,
       createdAt: timestamp,
-      livemode: process.env.NODE_ENV === 'production',
-    });
+      livemode:  process.env.NODE_ENV === 'production',
+    }, 201);
 
   } catch (err) {
     next(err);
   }
 });
 
-// ─── GET /v1/proofs/:id ──────────────────────────────────────────────────────
+// ---- GET /v1/proofs/:id -----------------------------------------------------
 
-router.get('/:id', requireApiKey, (req, res, next) => {
-  const { id } = req.params;
+router.get('/:id', requireApiKey, async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (!id.startsWith('prf_')) {
-    return next(createError(400, 'invalid_proof_id',
-      'Proof IDs must start with "prf_".', 'id'));
+    if (!id.startsWith('prf_')) {
+      return next(createError(400, 'INVALID_INPUT',
+        'Proof IDs must start with "prf_".'));
+    }
+
+    const receipt = await proofs.findById(id);
+
+    if (!receipt) {
+      return next(createError(404, 'PROOF_NOT_FOUND',
+        `No proof found with id: ${id}`));
+    }
+
+    return ok(res, {
+      id:       receipt.proofId,
+      object:   'proof',
+      status:   'active',
+      receipt,
+      createdAt: receipt.timestamp,
+      livemode:  process.env.NODE_ENV === 'production',
+    });
+  } catch (err) {
+    next(err);
   }
-
-  const receipt = getProofById(id);
-
-  if (!receipt) {
-    return next(createError(404, 'proof_not_found',
-      `No proof found with id: ${id}`));
-  }
-
-  return res.json({
-    id: receipt.proofId,
-    object: 'proof',
-    status: 'active',
-    receipt,
-    createdAt: receipt.timestamp,
-    livemode: process.env.NODE_ENV === 'production',
-  });
 });
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function validateHashFormat(hash, next) {
-  const valid = /^(sha256|sha3-256):[a-f0-9]{64}$/i.test(hash);
-  if (!valid) {
-    next(createError(400, 'hash_format_invalid',
-      'fileHash must be in format "sha256:<64-hex-chars>".', 'fileHash'));
-    return false;
-  }
-  return true;
-}
 
 module.exports = router;

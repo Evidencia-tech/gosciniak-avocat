@@ -737,7 +737,7 @@
     <div class="ev-wrap ev-wrap--wide">
       <div class="ev-header__inner">
         <a class="ev-logo" href="/">
-          <img class="ev-logo__icon" src="/logo-dtr.png" alt="" onerror="this.style.display='none'" />
+          <img class="ev-logo__icon" src="/icon-evidencia.png" alt="" onerror="this.style.display='none'" />
           <span class="ev-logo__wordmark">Evidencia</span>
         </a>
         <nav class="ev-header__nav">
@@ -915,10 +915,16 @@
                       Il reste uniquement sur votre appareil. La preuve repose sur son empreinte SHA-256,
                       signée ci-dessous. Conservez ce fichier : il sera nécessaire pour toute vérification ultérieure.
                     </div>
-                    <button class="result-media__save" onclick="downloadReceipt()">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      Sauvegarder le reçu JSON
-                    </button>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                      <button class="result-media__save" onclick="downloadReceipt()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Sauvegarder le reçu JSON
+                      </button>
+                      <button class="result-media__save" onclick="shareProofNative()" id="btnShareNative">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        <span id="shareNativeLabel">Partager la version certifiée</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1073,6 +1079,7 @@ const DEMO_URL    = `${API_BASE}/v1/demo/proofs`;
 
 // ── État ──────────────────────────────────────────────────────────────────────
 let pendingHash      = null;
+let capturedThumbDataURL = null; // dataURL lu via FileReader — sans canvas, sans taint
 let currentReceipt   = null;
 let currentId        = null;
 let qrModalRendered  = false;
@@ -1160,6 +1167,7 @@ async function processCapture(file, mode) {
 
   // Libérer l'objectURL précédent si existant
   if (capturedMediaURL) { URL.revokeObjectURL(capturedMediaURL); capturedMediaURL = null; }
+  capturedThumbDataURL = null;
 
   const buffer  = await file.arrayBuffer();
   const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
@@ -1169,6 +1177,17 @@ async function processCapture(file, mode) {
   // Créer l'objectURL et mémoriser le type pour le résultat
   capturedMediaURL  = URL.createObjectURL(file);
   capturedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+
+  // Lire le dataURL directement via FileReader (images uniquement)
+  // FileReader évite tout problème de canvas taint sur les captures caméra mobile
+  if (capturedMediaType === 'image') {
+    capturedThumbDataURL = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload  = e => resolve(e.target.result);
+      reader.onerror = ()  => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
 
   // Aperçu miniature (phase 1)
   const thumb = document.getElementById('captureThumb');
@@ -1198,6 +1217,7 @@ async function processCapture(file, mode) {
 
 function clearCapture() {
   pendingHash = null;
+  capturedThumbDataURL = null;
   if (capturedMediaURL) { URL.revokeObjectURL(capturedMediaURL); capturedMediaURL = null; }
   capturedMediaType = null;
   ['inputPhoto', 'inputVideo'].forEach(id => {
@@ -1236,11 +1256,24 @@ async function startCertify() {
     await sleep(200);
     setCertStep('Génération du reçu…');
 
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data?.error?.message || `Erreur ${resp.status}`);
+    const raw = await resp.json();
+    if (!resp.ok) throw new Error(raw?.error?.message || `Erreur ${resp.status}`);
 
+    const data = raw.data ?? raw;
     currentReceipt = data.receipt;
     currentId      = data.id || data.receipt?.proofId;
+
+    // Transmission locale vers verify.html (sessionStorage — rien côté serveur)
+    try {
+      sessionStorage.setItem('evidencia_demo_hash', pendingHash || '');
+      sessionStorage.setItem('evidencia_demo_proofId', currentId || '');
+      // Thumbnail : dataURL lu par FileReader dans processCapture (sans canvas, sans taint)
+      if (capturedThumbDataURL) {
+        sessionStorage.setItem('evidencia_demo_thumb', capturedThumbDataURL);
+      } else {
+        sessionStorage.removeItem('evidencia_demo_thumb');
+      }
+    } catch(e) { /* sessionStorage peut être bloqué en navigation privée — non bloquant */ }
 
     await sleep(200);
     setPhase(3);
@@ -1344,11 +1377,25 @@ function copyHash(hash) {
 
 function copyLink() {
   const url = `${VERIFY_BASE}?id=${currentId}`;
-  navigator.clipboard?.writeText(url).then(() => {
-    const lbl = document.getElementById('copyLinkLabel');
-    lbl.textContent = 'Copié !';
-    setTimeout(() => lbl.textContent = 'Copier le lien', 1800);
-  });
+  const lbl = document.getElementById('copyLinkLabel');
+  function onCopied() {
+    if (lbl) { lbl.textContent = 'Copié !'; setTimeout(() => lbl.textContent = 'Copier le lien', 1800); }
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(onCopied).catch(() => fallbackCopy(url, onCopied));
+  } else {
+    fallbackCopy(url, onCopied);
+  }
+}
+
+function fallbackCopy(text, onSuccess) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { if (document.execCommand('copy')) onSuccess(); } catch(e) {}
+  document.body.removeChild(ta);
 }
 
 function downloadReceipt() {
@@ -1364,6 +1411,31 @@ function shareProof() {
   const url = `${VERIFY_BASE}?id=${currentId}`;
   if (navigator.share) { navigator.share({ title: 'Preuve Evidencia', text: `Vérifier la preuve ${currentId}`, url }); }
   else copyLink();
+}
+
+function shareProofNative() {
+  const url   = `${VERIFY_BASE}?id=${currentId}`;
+  const label = document.getElementById('shareNativeLabel');
+
+  // Partage natif (mobile / navigateur compatible)
+  if (navigator.share) {
+    navigator.share({
+      title: 'Preuve Evidencia certifiée',
+      text:  `Ce fichier a été certifié par Evidencia.\nIdentifiant : ${currentId}\nVérifiez son intégrité ici :`,
+      url,
+    }).catch(() => {}); // annulation utilisateur — non bloquant
+    return;
+  }
+
+  // Fallback : copier le lien avec feedback
+  const onCopied = () => {
+    if (label) { label.textContent = 'Lien copié !'; setTimeout(() => label.textContent = 'Partager la version certifiée', 2000); }
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(onCopied).catch(() => fallbackCopy(url, onCopied));
+  } else {
+    fallbackCopy(url, onCopied);
+  }
 }
 
 function resetDemo() {
@@ -1418,160 +1490,200 @@ function downloadOriginal() {
 }
 
 // ── Téléchargement version certifiée (Canvas) ─────────────────────────────────
+// ── Génère le PNG certifié badgé (logique partagée par téléchargement et partage) ──
+async function buildCertifiedBlob() {
+  if (!capturedMediaURL || !currentId) throw new Error('Aucune capture ou preuve disponible.');
+
+  const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
+
+  let sourceW, sourceH, drawSource;
+  if (capturedMediaType === 'video') {
+    const vid   = document.createElement('video');
+    vid.muted   = true;
+    vid.preload = 'auto';
+    await new Promise((resolve) => {
+      vid.onloadeddata = () => { vid.onseeked = resolve; vid.currentTime = 0.001; };
+      vid.onerror = resolve;
+      vid.src = capturedMediaURL;
+      vid.load();
+      setTimeout(resolve, 5000);
+    });
+    sourceW    = vid.videoWidth  || 640;
+    sourceH    = vid.videoHeight || 480;
+    drawSource = vid;
+  } else {
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = capturedMediaURL; });
+    sourceW    = img.naturalWidth;
+    sourceH    = img.naturalHeight;
+    drawSource = img;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = sourceW;
+  canvas.height = sourceH;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(drawSource, 0, 0, sourceW, sourceH);
+
+  const w = sourceW, h = sourceH;
+
+  let logoImg = null;
+  try { logoImg = await loadImageSafe('/icon-evidencia.png'); } catch(e) {}
+
+  const qrCanvas = await buildQRCanvas(verifyUrl, Math.max(60, Math.round(Math.min(w, h) * 0.13)));
+
+  const pad  = Math.round(w * 0.02);
+  const boxW = Math.round(w * 0.42);
+  const boxH = Math.round(boxW * 0.32);
+  const bx   = w - boxW - pad;
+  const by   = h - boxH - pad;
+
+  ctx.save();
+  ctx.globalAlpha = 0.94;
+  ctx.fillStyle   = '#0b1220';
+  roundRect(ctx, bx, by, boxW, boxH, Math.round(boxH * 0.18));
+  ctx.fill();
+  ctx.restore();
+
+  const innerPad = Math.round(boxW * 0.06);
+  let textLeft   = bx + innerPad;
+
+  if (logoImg) {
+    const logoSize = Math.round(boxH * 0.8);
+    const lx = bx + innerPad;
+    const ly = by + Math.round((boxH - logoSize) / 2);
+    ctx.save();
+    ctx.globalAlpha = 0.98;
+    ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+    ctx.restore();
+    textLeft = lx + logoSize + Math.round(boxW * 0.04);
+  }
+
+  const qrSize = Math.round(boxH * 0.78);
+  const gap    = Math.round(boxW * 0.04);
+  const qx     = bx + boxW - innerPad - qrSize;
+  const qy     = by + Math.round((boxH - qrSize) / 2);
+  const textMaxRight = qx - gap;
+  const maxTextWidth = Math.max(10, textMaxRight - textLeft);
+
+  function fitFont(text, basePx, weight, family) {
+    let px = basePx;
+    ctx.font = `${weight} ${px}px ${family}`;
+    while (ctx.measureText(text).width > maxTextWidth && px > 8) {
+      px -= 1;
+      ctx.font = `${weight} ${px}px ${family}`;
+    }
+    return px;
+  }
+
+  const line1   = by + Math.round(boxH * 0.42);
+  const line2   = by + Math.round(boxH * 0.78);
+  const shortId = currentId.replace('prf_', '').slice(-10);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(textLeft, by, maxTextWidth, boxH);
+  ctx.clip();
+
+  ctx.fillStyle = '#ffffff';
+  const t1 = fitFont('CERTIFIÉ', Math.round(boxH * 0.26), 700, 'Inter, Arial, sans-serif');
+  ctx.font = `700 ${t1}px Inter, Arial, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('CERTIFIÉ', textLeft, line1);
+
+  ctx.fillStyle = '#cbd5e1';
+  const idText = `ID: ${shortId}`;
+  const t2 = fitFont(idText, Math.round(boxH * 0.20), 400, 'ui-monospace, Menlo, monospace');
+  ctx.font = `${t2}px ui-monospace, Menlo, monospace`;
+  ctx.fillText(idText, textLeft, line2);
+
+  ctx.restore();
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.drawImage(qrCanvas, qx, qy, qrSize, qrSize);
+  ctx.restore();
+
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null')), 'image/png');
+    } catch(e) { reject(e); }
+  });
+}
+
 async function downloadCertified(btn) {
   if (!capturedMediaURL || !currentId) return;
-
   const label    = document.getElementById('certifiedBtnLabel');
   const origText = label.textContent;
   label.textContent = 'Génération…';
   btn.disabled = true;
-
   try {
-    const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
-
-    // ── 1. Source image / frame vidéo ────────────────────────────────
-    let sourceW, sourceH, drawSource;
-
-    if (capturedMediaType === 'video') {
-      const vid   = document.createElement('video');
-      vid.muted   = true;
-      vid.preload = 'auto';
-      await new Promise((resolve) => {
-        vid.onloadeddata = () => { vid.onseeked = resolve; vid.currentTime = 0.001; };
-        vid.onerror = resolve;
-        vid.src = capturedMediaURL;
-        vid.load();
-        setTimeout(resolve, 5000);
-      });
-      sourceW    = vid.videoWidth  || 640;
-      sourceH    = vid.videoHeight || 480;
-      drawSource = vid;
-    } else {
-      const img = new Image();
-      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = capturedMediaURL; });
-      sourceW    = img.naturalWidth;
-      sourceH    = img.naturalHeight;
-      drawSource = img;
-    }
-
-    // ── 2. Canvas principal ──────────────────────────────────────────
-    const canvas = document.createElement('canvas');
-    canvas.width  = sourceW;
-    canvas.height = sourceH;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(drawSource, 0, 0, sourceW, sourceH);
-
-    const w = sourceW;
-    const h = sourceH;
-
-    // ── 3. Logo (facultatif) ─────────────────────────────────────────
-    let logoImg = null;
-    try { logoImg = await loadImageSafe('/logo-dtr.png'); } catch(e) {}
-
-    // ── 4. QR canvas ─────────────────────────────────────────────────
-    const qrCanvas = await buildQRCanvas(verifyUrl, Math.max(60, Math.round(Math.min(w, h) * 0.13)));
-
-    // ── 5. Badge — proportions identiques au prototype ───────────────
-    const pad  = Math.round(w * 0.02);
-    const boxW = Math.round(w * 0.42);
-    const boxH = Math.round(boxW * 0.32);
-    const bx   = w - boxW - pad;
-    const by   = h - boxH - pad;
-
-    // Fond dark navy, légèrement transparent
-    ctx.save();
-    ctx.globalAlpha = 0.94;
-    ctx.fillStyle   = '#0b1220';
-    roundRect(ctx, bx, by, boxW, boxH, Math.round(boxH * 0.18));
-    ctx.fill();
-    ctx.restore();
-
-    // ── 5a. Logo ─────────────────────────────────────────────────────
-    const innerPad = Math.round(boxW * 0.06);
-    let textLeft   = bx + innerPad;
-
-    if (logoImg) {
-      const logoSize = Math.round(boxH * 0.8);
-      const lx = bx + innerPad;
-      const ly = by + Math.round((boxH - logoSize) / 2);
-      ctx.save();
-      ctx.globalAlpha = 0.98;
-      ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
-      ctx.restore();
-      textLeft = lx + logoSize + Math.round(boxW * 0.04);
-    }
-
-    // ── 5b. QR (réserver l'espace d'abord) ───────────────────────────
-    const qrSize = Math.round(boxH * 0.78);
-    const gap    = Math.round(boxW * 0.04);
-    const qx     = bx + boxW - innerPad - qrSize;
-    const qy     = by + Math.round((boxH - qrSize) / 2);
-
-    // ── 5c. Texte clipé (jamais de chevauchement avec le QR) ─────────
-    const textMaxRight = qx - gap;
-    const maxTextWidth = Math.max(10, textMaxRight - textLeft);
-
-    function fitFont(text, basePx, weight, family) {
-      let px = basePx;
-      ctx.font = `${weight} ${px}px ${family}`;
-      while (ctx.measureText(text).width > maxTextWidth && px > 8) {
-        px -= 1;
-        ctx.font = `${weight} ${px}px ${family}`;
-      }
-      return px;
-    }
-
-    const line1 = by + Math.round(boxH * 0.42);
-    const line2 = by + Math.round(boxH * 0.78);
-    const shortId = currentId.replace('prf_', '').slice(-10);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(textLeft, by, maxTextWidth, boxH);
-    ctx.clip();
-
-    ctx.fillStyle = '#ffffff';
-    const t1 = fitFont('CERTIFIÉ', Math.round(boxH * 0.26), 700, 'Inter, Arial, sans-serif');
-    ctx.font = `700 ${t1}px Inter, Arial, sans-serif`;
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText('CERTIFIÉ', textLeft, line1);
-
-    ctx.fillStyle = '#cbd5e1';
-    const idText = `ID: ${shortId}`;
-    const t2 = fitFont(idText, Math.round(boxH * 0.20), 400, 'ui-monospace, Menlo, monospace');
-    ctx.font = `${t2}px ui-monospace, Menlo, monospace`;
-    ctx.fillText(idText, textLeft, line2);
-
-    ctx.restore();
-
-    // ── 5d. QR en dernier (par-dessus tout) ──────────────────────────
-    ctx.save();
-    ctx.globalAlpha = 1;
-    ctx.drawImage(qrCanvas, qx, qy, qrSize, qrSize);
-    ctx.restore();
-
-    // ── 6. Export PNG ────────────────────────────────────────────────
-    const pngBlob = await new Promise((resolve, reject) => {
-      try {
-        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob null — canvas tainté ?')), 'image/png');
-      } catch(e) { reject(e); }
-    });
-
-    const dlUrl = URL.createObjectURL(pngBlob);
-    const a     = document.createElement('a');
-    a.href      = dlUrl;
-    a.download  = `evidencia-certifie-${currentId}.png`;
+    const pngBlob = await buildCertifiedBlob();
+    const dlUrl   = URL.createObjectURL(pngBlob);
+    const a       = document.createElement('a');
+    a.href        = dlUrl;
+    a.download    = `evidencia-certifie-${currentId}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(dlUrl), 3000);
-
   } catch (err) {
     console.error('[Evidencia] Export certifié :', err);
     alert(`Erreur lors de la génération : ${err.message}`);
   } finally {
     label.textContent = origText;
     btn.disabled = false;
+  }
+}
+
+async function shareProofNative() {
+  if (!currentId) return;
+  const label  = document.getElementById('shareNativeLabel');
+  const url    = `${VERIFY_BASE}?id=${currentId}`;
+  const setLbl = t => { if (label) label.textContent = t; };
+
+  if (navigator.share && capturedMediaURL) {
+    setLbl('Génération…');
+    try {
+      const pngBlob = await buildCertifiedBlob();
+      const file    = new File([pngBlob], `evidencia-certifie-${currentId}.png`, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Preuve Evidencia certifiée',
+          text:  `Ce fichier a été certifié par Evidencia.
+Identifiant : ${currentId}`,
+        });
+        setLbl('Partager la version certifiée');
+        return;
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') { setLbl('Partager la version certifiée'); return; }
+      console.warn('[share] image échouée, fallback lien', err.message);
+      setLbl('Partager la version certifiée');
+    }
+    // Fallback : navigator.share avec lien uniquement
+    try {
+      await navigator.share({
+        title: 'Preuve Evidencia certifiée',
+        text:  `Ce fichier a été certifié par Evidencia.
+Identifiant : ${currentId}
+Vérifiez son intégrité ici :`,
+        url,
+      });
+    } catch(e) {}
+    setLbl('Partager la version certifiée');
+    return;
+  } else if (navigator.share) {
+    try { await navigator.share({ title: 'Preuve Evidencia', text: `Vérifier la preuve ${currentId}`, url }); } catch(e) {}
+    return;
+  }
+
+  // Fallback desktop : copier le lien
+  const onCopied = () => { setLbl('Lien copié !'); setTimeout(() => setLbl('Partager la version certifiée'), 2000); };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(onCopied).catch(() => fallbackCopy(url, onCopied));
+  } else {
+    fallbackCopy(url, onCopied);
   }
 }
 

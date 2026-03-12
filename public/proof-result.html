@@ -695,9 +695,10 @@ async function startCertify() {
     await sleep(200);
     setCertStep('Génération du reçu…');
 
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data?.error?.message || `Erreur ${resp.status}`);
+    const raw = await resp.json();
+    if (!resp.ok) throw new Error(raw?.error?.message || `Erreur ${resp.status}`);
 
+    const data = raw.data ?? raw;          // désenveloppe { ok, data } → data
     currentReceipt = data.receipt;
     currentId      = data.id || data.receipt?.proofId;
 

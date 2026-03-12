@@ -402,8 +402,8 @@
                 Ou écrivez-nous directement à<br/>
                 <a href="mailto:hello@evidencia.tech" style="color:var(--blue);text-decoration:none;font-weight:500">hello@evidencia.tech</a>
               </div>
-              <button class="ev-btn ev-btn--primary" onclick="submitForm()">
-                Envoyer le message →
+              <button class="ev-btn ev-btn--primary" id="submitBtn" onclick="submitForm()">
+                <span id="submitBtnLabel">Envoyer le message →</span>
               </button>
             </div>
           </div>
@@ -423,6 +423,7 @@
           <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
           <a href="/verify.html">Vérifier</a>
+          <a href="/contact.html">Contact</a>
         </div>
       </div>
     </div>
@@ -435,10 +436,13 @@ function submitForm() {
   const prenom  = document.getElementById('fPrenom').value.trim();
   const nom     = document.getElementById('fNom').value.trim();
   const email   = document.getElementById('fEmail').value.trim();
+  const societe = document.getElementById('fSociete').value.trim();
   const message = document.getElementById('fMessage').value.trim();
   const consent = document.getElementById('fConsent').checked;
+  const sujetEl = document.getElementById('fSujet');
+  const sujet   = sujetEl.options[sujetEl.selectedIndex]?.value || '';
 
-  // Validation
+  // Validation côté client
   if (!prenom || !nom)  return showFormError('Veuillez indiquer votre prénom et nom.');
   if (!email)           return showFormError('Veuillez indiquer votre adresse email.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError('Cette adresse email ne semble pas valide.');
@@ -447,26 +451,32 @@ function submitForm() {
 
   hideFormError();
 
-  // Pas de backend de formulaire configuré — ouverture du client mail
-  // Pour brancher un backend, remplacer ce bloc par un fetch() vers votre endpoint
-  const sujet   = document.getElementById('fSujet');
-  const societe = document.getElementById('fSociete').value.trim();
-  const sujetVal = sujet.options[sujet.selectedIndex]?.text || 'Contact Evidencia';
+  // Désactiver le bouton pendant l'envoi
+  const btn      = document.getElementById('submitBtn');
+  const btnLabel = document.getElementById('submitBtnLabel');
+  btn.disabled   = true;
+  btnLabel.textContent = 'Envoi en cours…';
 
-  const body = encodeURIComponent(
-    `Prénom : ${prenom}\nNom : ${nom}\nEmail : ${email}` +
-    (societe ? `\nSociété : ${societe}` : '') +
-    `\nSujet : ${sujetVal}\n\n${message}`
-  );
-
-  // Tentative d'envoi via mailto (fallback universel)
-  window.location.href = `mailto:hello@evidencia.tech?subject=${encodeURIComponent(sujetVal + ' — ' + prenom + ' ' + nom)}&body=${body}`;
-
-  // Afficher le message de succès après un court délai
-  setTimeout(() => {
+  fetch('/v1/contact', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ prenom, nom, email, societe, sujet, message }),
+  })
+  .then(async resp => {
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const msg = data?.error?.message || 'Une erreur est survenue. Réessayez dans quelques instants.';
+      throw new Error(msg);
+    }
+    // Succès
     document.getElementById('formWrap').style.display = 'none';
     document.getElementById('formSuccess').classList.add('is-visible');
-  }, 400);
+  })
+  .catch(err => {
+    showFormError(err.message);
+    btn.disabled = false;
+    btnLabel.textContent = 'Envoyer le message →';
+  });
 }
 
 function showFormError(msg) {

@@ -17,7 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { generateKeyPair } = require('../src/modules/crypto');
+const { generateKeyPair } = require('../packages/signing');
 
 const KEY_DIR = path.resolve(__dirname, '../keys');
 

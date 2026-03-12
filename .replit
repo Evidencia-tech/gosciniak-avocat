@@ -19,3 +19,7 @@ expertMode = true
 EVIDENCIA_API_KEY = "evd_sk_dev_monsecret4069"
 PORT = "3000"
 NODE_ENV = "development"
+RESEND_API_KEY = "re_NXXTd7Wr_6niEPG69S3z5rXiFQ5Dw6C9a"
+CONTACT_TO = "hello@evidencia.tech"
+CONTACT_FROM = "noreply@evidencia.tech"
+ANTHROPIC_API_KEY = "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"
