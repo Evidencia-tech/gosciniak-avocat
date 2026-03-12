@@ -105,6 +105,64 @@ async function run() {
     assert(body.data.checks.hashMatch === false, 'hashMatch should be false');
   });
 
+  // 6. Demo endpoint — create proof (no auth required)
+  let demoProofId = null;
+  const DEMO_HASH = 'sha256:' + 'c'.repeat(64);
+
+  await test('POST /v1/demo/proofs — create demo proof', async () => {
+    const res = await fetch(`${BASE}/v1/demo/proofs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileHash: DEMO_HASH }),
+    });
+    const body = await res.json();
+    assert(res.status === 201, `expected 201, got ${res.status}: ${JSON.stringify(body)}`);
+    assert(body.data && body.data.id, 'missing proof id');
+    assert(body.data.id.startsWith('prf_'), `bad proof id format: ${body.data.id}`);
+    assert(body.data.demo === true, 'expected demo=true');
+    assert(body.data.receipt.captureMethod === 'demo_web', `expected captureMethod=demo_web, got ${body.data.receipt.captureMethod}`);
+    assert(body.data.receipt.metadata.demo === true, 'expected metadata.demo=true');
+    demoProofId = body.data.id;
+  });
+
+  // 7. Verify demo proof
+  await test('POST /v1/verify — verify demo proof', async () => {
+    assert(demoProofId, 'no demoProofId from previous test');
+    const res = await fetch(`${BASE}/v1/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proofId: demoProofId }),
+    });
+    const body = await res.json();
+    assert(res.ok, `status ${res.status}`);
+    assert(body.data.valid === true, `expected valid=true, got ${JSON.stringify(body.data)}`);
+    assert(body.data.result === 'valid', `expected result=valid, got ${body.data.result}`);
+  });
+
+  // 8. Demo endpoint — missing input
+  await test('POST /v1/demo/proofs — missing input returns 400', async () => {
+    const res = await fetch(`${BASE}/v1/demo/proofs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const body = await res.json();
+    assert(res.status === 400, `expected 400, got ${res.status}`);
+    assert(body.error && body.error.code === 'INVALID_INPUT', `expected INVALID_INPUT, got ${JSON.stringify(body.error)}`);
+  });
+
+  // 9. Demo endpoint — invalid hash format
+  await test('POST /v1/demo/proofs — invalid hash returns 400', async () => {
+    const res = await fetch(`${BASE}/v1/demo/proofs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileHash: 'not-a-valid-hash' }),
+    });
+    const body = await res.json();
+    assert(res.status === 400, `expected 400, got ${res.status}`);
+    assert(body.error && body.error.code === 'INVALID_INPUT', `expected INVALID_INPUT, got ${JSON.stringify(body.error)}`);
+  });
+
   // ── Summary ─────────────────────────────────────────────────────────────
   const passed = results.filter(r => r.pass).length;
   const failed = results.filter(r => !r.pass).length;
