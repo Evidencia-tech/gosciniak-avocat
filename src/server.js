@@ -27,7 +27,21 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 // crossOriginResourcePolicy: false permet aux assets statiques (demo, verify)
 // d'être chargés normalement depuis le navigateur.
 app.disable('x-powered-by');
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net'],
+      styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc:      ["'self'", 'data:', 'blob:'],
+      mediaSrc:    ["'self'", 'blob:'],
+      connectSrc:  ["'self'"],
+      workerSrc:   ["'self'", 'blob:'],
+    },
+  },
+}));
 
 // ── 2. Request ID ────────────────────────────────────────────────────────────
 // Généré avant tout traitement — inclus dans chaque réponse JSON via apiResponse.js
