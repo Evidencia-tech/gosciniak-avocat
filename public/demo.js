@@ -455,7 +455,7 @@ async function buildCertifiedBlob() {
   const w = sourceW, h = sourceH;
 
   let logoImg = null;
-  try { logoImg = await loadImageSafe('/icon-evidencia.png'); } catch(e) {}
+  try { logoImg = await loadImageSafe('/logo-dtr.png'); } catch(e) {}
 
   const qrCanvas = await buildQRCanvas(verifyUrl, Math.max(60, Math.round(Math.min(w, h) * 0.13)));
 
