@@ -29,6 +29,8 @@
  * @param {string} params.publicKey      — base64 Ed25519 public key
  * @param {string} params.publicKeyId    — key identifier
  * @param {object} [params.metadata]     — optional caller-supplied metadata
+ * @param {object|string} [params.mediaRef]  — optional durable media reference (B2B)
+ * @param {string} [params.photoUrl]     — optional image URL for display only (demo)
  * @returns {object} receipt
  */
 function buildReceipt({
@@ -40,8 +42,10 @@ function buildReceipt({
   publicKey,
   publicKeyId,
   metadata = {},
+  mediaRef,
+  photoUrl,
 }) {
-  return {
+  const receipt = {
     schemaVersion:  '1',
     receiptFormat:  'evidencia-receipt-v1',
     issuedBy:       'evidencia.io',
@@ -65,6 +69,15 @@ function buildReceipt({
     // Convenience link for human verification
     verificationUrl: `https://verify.evidencia.io/${proofId}`,
   };
+
+  // Optional media reference — durable identifier controlled by the B2B client.
+  // Not in the signing payload; the certified content is always the file hash.
+  if (mediaRef !== undefined) receipt.mediaRef = mediaRef;
+
+  // Optional display URL — demo/preview only, never the certified artefact.
+  if (photoUrl !== undefined) receipt.photoUrl = photoUrl;
+
+  return receipt;
 }
 
 /**

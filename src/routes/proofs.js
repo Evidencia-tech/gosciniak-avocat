@@ -64,12 +64,18 @@ router.post('/', requireApiKey, upload.single('file'), async (req, res, next) =>
     const proofId       = `prf_${ulid()}`;
     const timestamp     = new Date().toISOString();
 
+    // Optional media reference — durable identifier controlled by the B2B client.
+    const mediaRef = req.body && req.body.mediaRef !== undefined ? req.body.mediaRef : undefined;
+    // Optional photo URL — display only, never stored as the certified file.
+    const photoUrl = req.body && req.body.photoUrl !== undefined ? req.body.photoUrl : undefined;
+
     const signingPayload                  = buildSigningPayload(proofId, fileHash, timestamp, captureMethod);
     const { signature, publicKey, keyId } = await sign(signingPayload);
 
     const receipt = buildReceipt({
       proofId, fileHash, timestamp, captureMethod,
       signature, publicKey, publicKeyId: keyId, metadata,
+      mediaRef, photoUrl,
     });
 
     await proofs.create({

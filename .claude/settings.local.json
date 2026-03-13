@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(fuser -k 3000/tcp 2>/dev/null; sleep 1)",
+      "Bash(npm start:*)",
+      "Bash(sleep 3 && curl -s http://localhost:3000/health)",
+      "Bash(curl -s http://localhost:3000/v1/info)",
+      "Bash(npm test:*)",
+      "Bash(npm ls:*)",
+      "Bash(pkill -f \"node src/server.js\" 2>/dev/null; sleep 1 && echo \"killed\")",
+      "Bash(pkill -f \"server.js\" 2>/dev/null; echo \"done\")",
+      "Bash(EVIDENCIA_API_KEY='' npm test 2>&1)",
+      "Bash(EVIDENCIA_API_KEY=test-admin-key npm test 2>&1)",
+      "Bash(EVIDENCIA_API_KEY=test-admin-key EVIDENCIA_ADMIN_KEY=test-admin-key npm test 2>&1)",
+      "Bash(curl -s -H \"Authorization: Bearer test-admin-key\" \"http://localhost:3000/v1/proofs?limit=5\")",
+      "Bash(curl -s -X POST http://localhost:3000/v1/keys \\\\\n  -H \"Authorization: Bearer test-admin-key\" \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -d '{\"label\":\"dashboard-test\",\"environment\":\"test\"}' | python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:3000/v1/keys \\\\\n  -H \"Authorization: Bearer test-admin-key\" \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -d '{\"label\":\"dashboard-test\",\"environment\":\"test\"}' | node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const b=JSON.parse\\(d\\); console.log\\('\\\\nClé créée :\\\\n'\\); console.log\\('  ID  :', b.data.id\\); console.log\\('  Clé :', b.data.key\\); console.log\\('  Env :', b.data.environment\\); console.log\\('  Statut :', b.data.status\\);\")",
+      "Bash(node -e \"const h = require\\('helmet'\\); console.log\\(JSON.stringify\\(h.contentSecurityPolicy.getDefaultDirectives\\(\\), null, 2\\)\\)\")",
+      "Bash(python3 - <<'EOF'\nwith open\\('/home/runner/workspace/public/dashboard.html', 'r'\\) as f:\n    content = f.read\\(\\)\n\n# Find the start of the second <script> tag \\(the inline one, after the src tag\\)\nmarker = '<script src=\"/dashboard.js\"></script>'\nidx = content.find\\(marker\\)\nif idx == -1:\n    print\\(\"ERROR: marker not found\"\\)\n    exit\\(1\\)\n\n# Keep everything up to and including the src script tag, then close the doc\nkeep = content[:idx + len\\(marker\\)]\ntail = '\\\\n\\\\n</body>\\\\n</html>\\\\n'\n\nwith open\\('/home/runner/workspace/public/dashboard.html', 'w'\\) as f:\n    f.write\\(keep + tail\\)\n\nprint\\(\"Done. File length:\", len\\(keep + tail\\), \"chars\"\\)\nEOF)",
+      "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst content = fs.readFileSync\\('/home/runner/workspace/public/dashboard.html', 'utf8'\\);\nconst marker = '<script src=\\\\\"/dashboard.js\\\\\"></script>';\nconst idx = content.indexOf\\(marker\\);\nif \\(idx === -1\\) { console.error\\('marker not found'\\); process.exit\\(1\\); }\nconst result = content.slice\\(0, idx + marker.length\\) + '\\\\n\\\\n</body>\\\\n</html>\\\\n';\nfs.writeFileSync\\('/home/runner/workspace/public/dashboard.html', result\\);\nconsole.log\\('Done. Lines:', result.split\\('\\\\n'\\).length\\);\n\")",
+      "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst content = fs.readFileSync\\('/home/runner/workspace/public/verify.html', 'utf8'\\);\nconst scriptStart = content.indexOf\\('\\\\n<script>\\\\n'\\);\nif \\(scriptStart === -1\\) { console.error\\('script tag not found'\\); process.exit\\(1\\); }\nconst result = content.slice\\(0, scriptStart\\) + '\\\\n<script src=\\\\\"/verify.js\\\\\"></script>\\\\n\\\\n</body>\\\\n</html>\\\\n';\nfs.writeFileSync\\('/home/runner/workspace/public/verify.html', result\\);\nconsole.log\\('Done. Lines:', result.split\\('\\\\n'\\).length\\);\n\")"
+    ]
+  }
+}

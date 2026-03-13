@@ -336,6 +336,27 @@
     }
     .btn-reset:hover { border-color: var(--border-hi); color: var(--ink); }
 
+    /* ── Aperçu media (photoUrl ou sessionStorage) ────────────────── */
+    .media-preview { margin-bottom: 20px; }
+
+    .media-preview__img {
+      width:         100%;
+      max-height:    320px;
+      object-fit:    contain;
+      border-radius: var(--r-md);
+      display:       block;
+      border:        1px solid var(--border);
+    }
+
+    .media-preview__disclaimer {
+      margin-top:     8px;
+      font-size:      11px;
+      color:          var(--ink-dim);
+      font-family:    var(--mono);
+      text-align:     center;
+      letter-spacing: 0.04em;
+    }
+
     @media print {
       .search-section, .how-row, .btn-reset, .cert-actions, .no-print { display: none !important; }
       .certificate.is-visible { display: block !important; }
@@ -554,12 +575,12 @@
               autocomplete="off"
               spellcheck="false"
             />
-            <button class="ev-btn ev-btn--primary" id="verifyBtn" onclick="doVerify()">Vérifier</button>
+            <button class="ev-btn ev-btn--primary" id="verifyBtn">Vérifier</button>
           </div>
 
           <div class="search-or">ou</div>
 
-          <button class="scan-btn" onclick="openScanner()">
+          <button class="scan-btn" id="scanBtn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
               <rect x="7" y="7" width="10" height="10" rx="1"/>
@@ -575,12 +596,12 @@
             <label class="upload-btn">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Choisir un fichier
-              <input type="file" id="fileInput" onchange="handleFile()" />
+              <input type="file" id="fileInput" />
             </label>
             <div class="file-pill" id="filePill">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               <span class="file-pill__name" id="pillName"></span>
-              <button class="file-pill__clear" onclick="clearFile()">×</button>
+              <button class="file-pill__clear" id="fileClearBtn">×</button>
             </div>
           </div>
 
@@ -674,11 +695,11 @@
               Infrastructure de preuve · evidencia.io
             </div>
             <div class="cert-actions">
-              <button class="ev-btn ev-btn--outline ev-btn--sm" onclick="window.print()">
+              <button class="ev-btn ev-btn--outline ev-btn--sm" id="printBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 Imprimer
               </button>
-              <button class="ev-btn ev-btn--outline ev-btn--sm" onclick="copyVerifyUrl()">
+              <button class="ev-btn ev-btn--outline ev-btn--sm" id="copyUrlBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
                 <span id="copyUrlLabel">Copier le lien</span>
               </button>
@@ -687,7 +708,7 @@
 
         </div><!-- /cert-body -->
 
-        <button class="btn-reset" onclick="resetForm()">
+        <button class="btn-reset" id="resetBtn">
           ← Vérifier une autre preuve
         </button>
 
@@ -711,7 +732,7 @@
   </footer>
 
 <!-- ── Modal scanner QR ──────────────────────────────────────────────────── -->
-<div class="scanner-overlay" id="scannerOverlay" onclick="onOverlayClick(event)">
+<div class="scanner-overlay" id="scannerOverlay">
   <div class="scanner-modal" role="dialog" aria-modal="true" aria-label="Scanner un QR code">
 
     <div class="scanner-modal__header">
@@ -733,391 +754,7 @@
 
 </div><!-- /ev-page -->
 
-<script>
-// ── Config ────────────────────────────────────────────────────────────────────
-const API_BASE    = `${window.location.protocol}//${window.location.host}`;
-const VERIFY_BASE = `${window.location.protocol}//${window.location.host}/verify.html`;
-
-// ── État ──────────────────────────────────────────────────────────────────────
-let fileHash      = null;
-let currentProofId = null;
-
-// ── Chargement automatique depuis l'URL ───────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  const params  = new URLSearchParams(window.location.search);
-  const fromUrl = params.get('id') || params.get('proofId')
-               || window.location.hash.replace('#','')
-               || window.location.pathname.match(/\/(prf_[A-Z0-9]+)/)?.[1];
-
-  // Récupérer les données transmises par demo.html via sessionStorage
-  try {
-    const demoHash    = sessionStorage.getItem('evidencia_demo_hash');
-    const demoThumb   = sessionStorage.getItem('evidencia_demo_thumb');
-    const demoProofId = sessionStorage.getItem('evidencia_demo_proofId');
-
-    // Hash local : permet la vérification d'intégrité automatique
-    if (demoHash && demoHash.startsWith('sha256:')) {
-      fileHash = demoHash;
-      // Afficher la pilule fichier pour indiquer que l'empreinte est disponible
-      document.getElementById('pillName').textContent = 'Fichier certifié (démo)';
-      document.getElementById('filePill').classList.add('is-visible');
-    }
-
-    // Thumbnail : afficher l'aperçu de la capture si disponible
-    if (demoThumb && demoProofId && (fromUrl === demoProofId)) {
-      const preview = document.getElementById('demoMediaPreview');
-      if (preview) {
-        const img = new Image();
-        img.src = demoThumb;
-        img.alt = 'Capture certifiée';
-        img.style.cssText = 'width:100%;max-height:260px;object-fit:contain;border-radius:8px;display:block;margin:0 auto 20px';
-        preview.appendChild(img);
-        preview.style.display = '';
-      }
-    }
-
-    // Nettoyer après lecture (usage unique)
-    if (demoProofId && fromUrl === demoProofId) {
-      sessionStorage.removeItem('evidencia_demo_hash');
-      sessionStorage.removeItem('evidencia_demo_thumb');
-      sessionStorage.removeItem('evidencia_demo_proofId');
-    }
-  } catch(e) { /* sessionStorage bloqué — non bloquant */ }
-
-  if (fromUrl && fromUrl.startsWith('prf_')) {
-    document.getElementById('proofInput').value = fromUrl;
-    setTimeout(() => doVerify(), 150);
-  }
-});
-
-// ── Fichier ───────────────────────────────────────────────────────────────────
-async function handleFile() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) return;
-  const buffer  = await file.arrayBuffer();
-  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
-  const hex     = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  fileHash      = `sha256:${hex}`;
-  document.getElementById('pillName').textContent = file.name;
-  document.getElementById('filePill').classList.add('is-visible');
-}
-
-function clearFile() {
-  fileHash = null;
-  document.getElementById('fileInput').value = '';
-  document.getElementById('filePill').classList.remove('is-visible');
-}
-
-// ── Vérification ──────────────────────────────────────────────────────────────
-async function doVerify() {
-  const raw = document.getElementById('proofInput').value.trim();
-  hideError();
-
-  if (!raw) { showError('Veuillez entrer un identifiant de preuve commençant par prf_'); return; }
-  if (!raw.startsWith('prf_')) { showError('Les identifiants de preuve commencent par prf_ — vérifiez votre saisie.'); return; }
-
-  currentProofId = raw;
-  setPhase('loading');
-
-  try {
-    setStep('Résolution de la preuve…');
-    await sleep(300);
-    setStep('Vérification de la signature…');
-
-    const body = { proofId: raw };
-    if (fileHash) body.fileHash = fileHash;
-
-    const resp = await fetch(`${API_BASE}/v1/verify`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
-    });
-
-    setStep('Contrôle de l\'horodatage…');
-    await sleep(200);
-
-    let apiRaw;
-    try { apiRaw = await resp.json(); } catch { throw new Error('Réponse inattendue du serveur.'); }
-    if (!resp.ok) throw new Error(apiRaw?.error?.message || `Erreur ${resp.status}`);
-
-    const data = apiRaw.data ?? apiRaw;          // désenveloppe { ok, data } → data
-    setPhase('result');
-    renderCertificate(data);
-
-  } catch (err) {
-    setPhase('search');
-    showError(err.message);
-  }
-}
-
-// ── Rendu du certificat ───────────────────────────────────────────────────────
-function renderCertificate(data) {
-  const valid  = data.valid;
-  const proof  = data.proof  || {};
-  const checks = data.checks || {};
-
-  // Bandeau verdict
-  const strip = document.getElementById('verdictStrip');
-  strip.className = `verdict-strip ${valid ? 'is-valid' : 'is-invalid'}`;
-
-  document.getElementById('verdictSeal').innerHTML = valid
-    ? `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
-    : `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-
-  document.getElementById('verdictLabel').textContent = valid ? 'Vérification réussie' : 'Vérification échouée';
-  document.getElementById('verdictTitle').textContent = valid ? 'Cette preuve est authentique.' : 'Cette preuve est invalide.';
-  document.getElementById('verdictSub').textContent   = valid
-    ? `Émise le ${formatDate(proof.timestamp)} · Signée par Evidencia`
-    : 'Un ou plusieurs contrôles cryptographiques ont échoué. Cette preuve a peut-être été altérée.';
-
-  // Contrôles
-  const checkDefs = [
-    { key: 'signatureValid',     name: 'Signature cryptographique',  desc: 'La signature Ed25519 est authentique et correspond au contenu de la preuve.',       descFail: 'La signature ne correspond pas. La preuve a peut-être été modifiée.' },
-    { key: 'hashMatch',          name: 'Intégrité du fichier',       desc: 'L\'empreinte SHA-256 du fichier original correspond à la preuve.',                  descSkip: 'Aucun fichier fourni — la comparaison d\'empreinte n\'a pas été effectuée.', descFail: 'L\'empreinte ne correspond pas. Il peut s\'agir d\'un fichier différent.' },
-    { key: 'timestampPlausible', name: 'Validité de l\'horodatage',  desc: 'L\'horodatage de la preuve est cohérent et n\'est pas daté dans le futur.',         descFail: 'L\'horodatage semble invalide ou est situé dans le futur.' },
-  ];
-
-  const list = document.getElementById('checkList');
-  list.innerHTML = '';
-  checkDefs.forEach((def, i) => {
-    const val   = checks[def.key];
-    const state = val === null || val === undefined ? 'skip' : val ? 'pass' : 'fail';
-    const badge = state === 'pass' ? 'Vérifié' : state === 'fail' ? 'Échoué' : 'Non vérifié';
-    const desc  = state === 'skip' ? (def.descSkip || def.desc) : state === 'fail' ? (def.descFail || def.desc) : def.desc;
-
-    const el = document.createElement('div');
-    el.className = 'check-item';
-    el.style.animationDelay = `${i * 90}ms`;
-    el.innerHTML = `
-      <div class="check-dot ${state}"></div>
-      <div class="check-info">
-        <div class="check-name">${def.name}</div>
-        <div class="check-desc">${desc}</div>
-      </div>
-      <span class="check-badge ${state}">${badge}</span>
-    `;
-    list.appendChild(el);
-  });
-
-  // Détails
-  const fields = [
-    { label: 'Identifiant de preuve',    val: data.proofId || '—',                       mono: true },
-    { label: 'Émise le',                 val: formatDate(proof.timestamp),                mono: false },
-    { label: 'Méthode de capture',       val: proof.captureMethod || '—',                 mono: true },
-    { label: 'Algorithme de signature',  val: proof.signatureAlgorithm || 'ed25519',      mono: true },
-    { label: 'Clé de signature',         val: proof.publicKeyId || '—',                   mono: true },
-    { label: 'Vérifié le',               val: formatDate(data.verifiedAt),                mono: false },
-  ];
-
-  document.getElementById('detailsGrid').innerHTML = fields.map(f => `
-    <div class="ev-detail">
-      <label>${f.label}</label>
-      <div class="val ${f.mono ? 'mono' : ''}">${f.val}</div>
-    </div>
-  `).join('');
-
-  if (proof.fileHash) {
-    document.getElementById('hashRow').innerHTML = `
-      <div class="ev-hash-box">
-        <div>
-          <span class="ev-hash-box__label">Empreinte du fichier (SHA-256)</span>
-          <div class="ev-hash-box__val" id="hashValDisplay">${proof.fileHash}</div>
-        </div>
-        <button class="ev-copy-btn" id="hashCopyBtn" onclick="copyHash('${proof.fileHash}')">Copier</button>
-      </div>
-    `;
-  }
-
-  // QR code
-  const verifyUrl = `${VERIFY_BASE}?id=${data.proofId}`;
-  document.getElementById('qrUrl').textContent = verifyUrl;
-  const qrFrame = document.getElementById('qrFrame');
-  qrFrame.innerHTML = '';
-  try {
-    new QRCode(qrFrame, { text: verifyUrl, width: 120, height: 120, colorDark: '#1a1814', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  } catch(e) { qrFrame.innerHTML = '<div style="font-size:10px;color:#8a8580;text-align:center">QR indisponible</div>'; }
-}
-
-// ── Actions ───────────────────────────────────────────────────────────────────
-function copyHash(hash) {
-  navigator.clipboard?.writeText(hash).then(() => {
-    const btn = document.getElementById('hashCopyBtn');
-    if (btn) { btn.textContent = 'Copié !'; btn.classList.add('is-done'); setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('is-done'); }, 1800); }
-  });
-}
-
-function copyVerifyUrl() {
-  const url = `${VERIFY_BASE}?id=${currentProofId}`;
-  const lbl = document.getElementById('copyUrlLabel');
-  function onCopied() {
-    if (lbl) { lbl.textContent = 'Copié !'; setTimeout(() => lbl.textContent = 'Copier le lien', 1800); }
-  }
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(url).then(onCopied).catch(() => fallbackCopy(url, onCopied));
-  } else {
-    fallbackCopy(url, onCopied);
-  }
-}
-
-function fallbackCopy(text, onSuccess) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
-  document.body.appendChild(ta);
-  ta.focus(); ta.select();
-  try { if (document.execCommand('copy')) onSuccess(); } catch(e) {}
-  document.body.removeChild(ta);
-}
-
-function resetForm() {
-  setPhase('search');
-  document.getElementById('proofInput').value = '';
-  clearFile();
-  hideError();
-  currentProofId = null;
-  history.pushState({}, '', window.location.pathname);
-}
-
-// ── Phases ────────────────────────────────────────────────────────────────────
-function setPhase(phase) {
-  document.getElementById('searchSection').style.display = phase === 'search'  ? 'block' : 'none';
-  document.getElementById('loadingState').classList.toggle('is-visible', phase === 'loading');
-  document.getElementById('certificate').classList.toggle('is-visible',  phase === 'result');
-}
-
-function setStep(t) { document.getElementById('loadingStep').textContent = t; }
-
-// ── Utilitaires ───────────────────────────────────────────────────────────────
-function showError(msg) { const b = document.getElementById('errorBar'); document.getElementById('errorMsg').textContent = msg; b.classList.add('is-visible'); }
-function hideError()    { document.getElementById('errorBar').classList.remove('is-visible'); }
-
-function formatDate(iso) {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
-  } catch { return iso; }
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-document.getElementById('proofInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doVerify();
-});
-
-// ── Scanner QR ────────────────────────────────────────────────────────────────
-let scannerStream   = null;
-let scannerAnimFrame = null;
-let scannerActive   = false;
-
-async function openScanner() {
-  const overlay = document.getElementById('scannerOverlay');
-  overlay.classList.add('is-open');
-  document.body.style.overflow = 'hidden';
-  setScanStatus('Pointez la caméra vers le QR code de la preuve', '');
-
-  try {
-    // Préférer la caméra arrière sur mobile
-    scannerStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
-    const video = document.getElementById('scannerVideo');
-    video.srcObject = scannerStream;
-    await video.play();
-    scannerActive = true;
-    tickScan();
-  } catch (err) {
-    const msg = err.name === 'NotAllowedError'
-      ? 'Accès à la caméra refusé. Autorisez l\'accès dans les paramètres de votre navigateur.'
-      : err.name === 'NotFoundError'
-      ? 'Aucune caméra détectée sur cet appareil.'
-      : 'Impossible d\'accéder à la caméra : ' + (err.message || err.name);
-    setScanStatus(msg, 'is-error');
-  }
-}
-
-function tickScan() {
-  if (!scannerActive) return;
-  const video  = document.getElementById('scannerVideo');
-  const canvas = document.getElementById('scannerCanvas');
-
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    try {
-      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-      if (code && code.data) {
-        handleScanResult(code.data);
-        return; // stop loop after successful scan
-      }
-    } catch(e) { /* jsQR not yet loaded — keep ticking */ }
-  }
-
-  scannerAnimFrame = requestAnimationFrame(tickScan);
-}
-
-function handleScanResult(raw) {
-  scannerActive = false;
-  setScanStatus('QR code détecté…', 'is-ok');
-
-  // Extraire le proofId — accepte une URL complète ou un id direct
-  let proofId = null;
-
-  try {
-    // Cas 1 : URL complète (https://…/verify.html?id=prf_xxx)
-    const url = new URL(raw);
-    proofId = url.searchParams.get('id') || url.searchParams.get('proofId')
-           || url.hash.replace('#', '')
-           || url.pathname.match(/\/(prf_[A-Z0-9]+)/i)?.[1];
-  } catch {
-    // Cas 2 : identifiant direct prf_xxx
-    if (raw.trim().startsWith('prf_')) proofId = raw.trim();
-  }
-
-  if (!proofId || !proofId.startsWith('prf_')) {
-    setScanStatus('QR code non reconnu — ce code ne semble pas être une preuve Evidencia.', 'is-error');
-    scannerActive = true;
-    scannerAnimFrame = requestAnimationFrame(tickScan);
-    return;
-  }
-
-  // Succès — on ferme et on lance la vérification
-  setTimeout(() => {
-    closeScanner();
-    document.getElementById('proofInput').value = proofId;
-    doVerify();
-  }, 500);
-}
-
-function closeScanner() {
-  scannerActive = false;
-  if (scannerAnimFrame) { cancelAnimationFrame(scannerAnimFrame); scannerAnimFrame = null; }
-  if (scannerStream)    { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
-  const video = document.getElementById('scannerVideo');
-  video.srcObject = null;
-  document.getElementById('scannerOverlay').classList.remove('is-open');
-  document.body.style.overflow = '';
-}
-
-function onOverlayClick(e) {
-  if (e.target === document.getElementById('scannerOverlay')) closeScanner();
-}
-
-function setScanStatus(msg, cls) {
-  const el = document.getElementById('scannerStatus');
-  el.textContent  = msg;
-  el.className    = 'scanner-status' + (cls ? ' ' + cls : '');
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('scannerOverlay').classList.contains('is-open')) {
-    closeScanner();
-  }
-});
-</script>
+<script src="/verify.js"></script>
 
 </body>
 </html>

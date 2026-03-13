@@ -84,6 +84,9 @@ router.post('/', rateLimit, upload.single('file'), async (req, res, next) => {
     const proofId   = `prf_${ulid()}`;
     const timestamp = new Date().toISOString();
 
+    // Optional photo URL for demo display — display only, never the certified artefact.
+    const photoUrl = req.body && req.body.photoUrl !== undefined ? req.body.photoUrl : undefined;
+
     const signingPayload                  = buildSigningPayload(proofId, fileHash, timestamp, 'demo_web');
     const { signature, publicKey, keyId } = await sign(signingPayload);
 
@@ -91,6 +94,7 @@ router.post('/', rateLimit, upload.single('file'), async (req, res, next) => {
       proofId, fileHash, timestamp,
       captureMethod: 'demo_web',
       signature, publicKey, publicKeyId: keyId, metadata,
+      photoUrl,
     });
 
     await proofs.create({

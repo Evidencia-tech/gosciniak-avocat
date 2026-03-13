@@ -68,6 +68,8 @@ router.post('/', upload.single('file'), async (req, res, next) => {
         captureMethod:      receipt.captureMethod,
         publicKeyId:        receipt.publicKeyId,
         signatureAlgorithm: receipt.signatureAlgorithm,
+        ...(receipt.mediaRef !== undefined && { mediaRef: receipt.mediaRef }),
+        ...(receipt.photoUrl !== undefined && { photoUrl: receipt.photoUrl }),
       } : null,
       verifiedAt: result.verifiedAt,
     });
