@@ -1087,14 +1087,17 @@ let capturedMediaURL  = null;   // objectURL local — jamais envoyé au serveur
 let capturedMediaType = null;   // 'image' | 'video'
 
 // ── Détection desktop ─────────────────────────────────────────────────────────
-// "Desktop" = pas de pointeur tactile ET pas d'indicateur mobile dans le UA.
-// On accepte les tablettes avec caméra (ex. iPad) comme "mobile" pour ne pas
-// bloquer des appareils légitimes.
+// Utilise matchMedia pour détecter un pointeur fin (souris/trackpad) comme
+// entrée principale. Plus fiable que maxTouchPoints ou le UA : un laptop avec
+// écran tactile reste "desktop" car le pointeur principal est le trackpad.
 function isDesktop() {
-  const ua = navigator.userAgent || '';
+  if (window.matchMedia) {
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches
+        && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+  }
+  // Fallback navigateurs sans matchMedia
   const hasTouchScreen = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
-  const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
-  // Si l'un des deux signaux indique un appareil tactile/mobile → OK
+  const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent || '');
   return !hasTouchScreen && !mobileUA;
 }
 
