@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
-const BASE = process.env.API_URL || 'http://localhost:3000';
-const API_KEY = process.env.EVIDENCIA_API_KEY || '';
+const BASE      = process.env.API_URL           || 'http://localhost:3000';
+const API_KEY   = process.env.EVIDENCIA_API_KEY  || '';
+const ADMIN_KEY = process.env.EVIDENCIA_ADMIN_KEY || API_KEY;
 
 const results = [];
 
@@ -218,6 +219,81 @@ async function run() {
     } else {
       assert(body.error && body.error.code === 'EMAIL_ERROR', `expected EMAIL_ERROR, got ${JSON.stringify(body.error)}`);
     }
+  });
+
+  // ── Multi-tenant API keys ────────────────────────────────────────────────
+
+  let tenantKeyId  = null;
+  let tenantRawKey = null;
+  const MT_HASH = 'sha256:' + 'd'.repeat(64);
+
+  // 14. Create a new API key via admin
+  await test('POST /v1/keys — create key (admin)', async () => {
+    const res = await fetch(`${BASE}/v1/keys`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_KEY}`,
+      },
+      body: JSON.stringify({ label: 'test-tenant', environment: 'test' }),
+    });
+    const body = await res.json();
+    assert(res.status === 201, `expected 201, got ${res.status}: ${JSON.stringify(body)}`);
+    assert(body.data && body.data.id, 'missing key id');
+    assert(body.data.id.startsWith('key_'), `bad key id format: ${body.data.id}`);
+    assert(body.data.key, 'raw key absent de la réponse');
+    assert(body.data.key.startsWith('evd_sk_test_'), `bad key prefix: ${body.data.key}`);
+    assert(body.data.environment === 'test', `expected environment=test, got ${body.data.environment}`);
+    assert(body.data.status === 'active', `expected status=active, got ${body.data.status}`);
+    tenantKeyId  = body.data.id;
+    tenantRawKey = body.data.key;
+  });
+
+  // 15. Use the new tenant key to POST /v1/proofs
+  await test('POST /v1/proofs — tenant key accepted', async () => {
+    assert(tenantRawKey, 'no tenant key from previous test');
+    const res = await fetch(`${BASE}/v1/proofs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tenantRawKey}`,
+      },
+      body: JSON.stringify({ fileHash: MT_HASH }),
+    });
+    const body = await res.json();
+    assert(res.status === 201, `expected 201, got ${res.status}: ${JSON.stringify(body)}`);
+    assert(body.data && body.data.id && body.data.id.startsWith('prf_'), `bad proof id: ${JSON.stringify(body.data)}`);
+    assert(body.data.receipt.fileHash === MT_HASH, 'fileHash mismatch in receipt');
+  });
+
+  // 16. Revoke the tenant key
+  await test('DELETE /v1/keys/:id — revoke key (admin)', async () => {
+    assert(tenantKeyId, 'no key id from previous test');
+    const res = await fetch(`${BASE}/v1/keys/${tenantKeyId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${ADMIN_KEY}` },
+    });
+    const body = await res.json();
+    assert(res.ok, `expected 200, got ${res.status}: ${JSON.stringify(body)}`);
+    assert(body.data && body.data.status === 'revoked', `expected status=revoked, got ${JSON.stringify(body.data)}`);
+    assert(body.data.id === tenantKeyId, `id mismatch: ${body.data.id}`);
+  });
+
+  // 17. Revoked key is rejected with 401
+  await test('POST /v1/proofs — revoked key rejected (401)', async () => {
+    assert(tenantRawKey, 'no tenant key from previous test');
+    const res = await fetch(`${BASE}/v1/proofs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tenantRawKey}`,
+      },
+      body: JSON.stringify({ fileHash: MT_HASH }),
+    });
+    const body = await res.json();
+    assert(res.status === 401, `expected 401, got ${res.status}: ${JSON.stringify(body)}`);
+    assert(body.error && body.error.code === 'INVALID_API_KEY',
+      `expected INVALID_API_KEY, got ${JSON.stringify(body.error)}`);
   });
 
   // ── Summary ─────────────────────────────────────────────────────────────

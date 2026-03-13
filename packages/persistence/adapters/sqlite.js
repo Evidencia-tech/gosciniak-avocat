@@ -49,6 +49,18 @@ db.exec(`
     rotated_at  INTEGER
   );
 
+  CREATE TABLE IF NOT EXISTS api_keys (
+    id              TEXT    PRIMARY KEY,
+    key_hash        TEXT    NOT NULL,
+    label           TEXT,
+    environment     TEXT    NOT NULL DEFAULT 'live',
+    status          TEXT    NOT NULL DEFAULT 'active',
+    created_at      INTEGER NOT NULL,
+    last_used_at    INTEGER
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_api_keys_status ON api_keys(status);
+
   CREATE TABLE IF NOT EXISTS verification_log (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     proof_id          TEXT,
@@ -98,6 +110,73 @@ const stmtLogInsert = db.prepare(`
   VALUES
     (@proofId, @submittedHash, @result, @checks, @verificationMode, @ipHash, @verifiedAt)
 `);
+
+// ─── api_keys ─────────────────────────────────────────────────────────────
+
+const stmtApiKeyInsert = db.prepare(`
+  INSERT INTO api_keys (id, key_hash, label, environment, status, created_at)
+  VALUES (@id, @keyHash, @label, @environment, @status, @createdAt)
+`);
+
+const stmtApiKeyAllActive = db.prepare(`
+  SELECT id, key_hash, label, environment, status, created_at, last_used_at
+  FROM api_keys WHERE status = 'active'
+`);
+
+const stmtApiKeyById = db.prepare(`
+  SELECT id, key_hash, label, environment, status, created_at, last_used_at
+  FROM api_keys WHERE id = ?
+`);
+
+const stmtApiKeyUpdateLastUsed = db.prepare(`
+  UPDATE api_keys SET last_used_at = ? WHERE id = ?
+`);
+
+const stmtApiKeyRevoke = db.prepare(`
+  UPDATE api_keys SET status = 'revoked' WHERE id = ?
+`);
+
+function apiKeyCreate(data) {
+  const record = {
+    id:          data.id,
+    keyHash:     data.keyHash,
+    label:       data.label || null,
+    environment: data.environment || 'live',
+    status:      'active',
+    createdAt:   Date.now(),
+  };
+  stmtApiKeyInsert.run(record);
+  return rowToApiKey({ ...record, key_hash: record.keyHash, created_at: record.createdAt, last_used_at: null });
+}
+
+function apiKeyFindAllActive() {
+  return stmtApiKeyAllActive.all().map(rowToApiKey);
+}
+
+function apiKeyFindById(id) {
+  const row = stmtApiKeyById.get(id);
+  return row ? rowToApiKey(row) : null;
+}
+
+function apiKeyTouchLastUsed(id) {
+  stmtApiKeyUpdateLastUsed.run(Date.now(), id);
+}
+
+function apiKeyRevoke(id) {
+  stmtApiKeyRevoke.run(id);
+}
+
+function rowToApiKey(row) {
+  return {
+    id:         row.id,
+    keyHash:    row.key_hash,
+    label:      row.label,
+    environment: row.environment,
+    status:     row.status,
+    createdAt:  row.created_at,
+    lastUsedAt: row.last_used_at,
+  };
+}
 
 // ─── proofs ───────────────────────────────────────────────────────────────────
 
@@ -235,4 +314,9 @@ module.exports = {
   keyGetActive,
   keyGetById,
   verificationLogInsert,
+  apiKeyCreate,
+  apiKeyFindAllActive,
+  apiKeyFindById,
+  apiKeyTouchLastUsed,
+  apiKeyRevoke,
 };

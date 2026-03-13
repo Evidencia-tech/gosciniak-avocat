@@ -88,6 +88,24 @@ CREATE INDEX IF NOT EXISTS idx_proofs_key_id
 CREATE INDEX IF NOT EXISTS idx_proofs_proof_mode
   ON proofs (proof_mode);
 
+-- ─── api_keys ─────────────────────────────────────────────────────────────
+-- Multi-tenant API keys. Only the scrypt hash is stored, never the raw key.
+
+CREATE TABLE IF NOT EXISTS api_keys (
+  id              TEXT        NOT NULL PRIMARY KEY,
+  key_hash        TEXT        NOT NULL,
+  label           TEXT,
+  environment     TEXT        NOT NULL DEFAULT 'live',
+  -- 'live' or 'test'
+  status          TEXT        NOT NULL DEFAULT 'active',
+  -- 'active' | 'revoked'
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_used_at    TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_keys_status
+  ON api_keys (status);
+
 -- ─── verification_log ─────────────────────────────────────────────────────────
 -- Append-only. Never updated. Used for audit and analytics.
 

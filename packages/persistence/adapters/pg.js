@@ -197,6 +197,68 @@ async function verificationLogInsert(data) {
   );
 }
 
+// ─── api_keys ─────────────────────────────────────────────────────────────
+
+async function apiKeyCreate(data) {
+  const pool = getPool();
+  await pool.query(
+    `INSERT INTO api_keys (id, key_hash, label, environment, status, created_at)
+     VALUES ($1, $2, $3, $4, 'active', NOW())`,
+    [data.id, data.keyHash, data.label || null, data.environment || 'live'],
+  );
+  return {
+    id:          data.id,
+    keyHash:     data.keyHash,
+    label:       data.label || null,
+    environment: data.environment || 'live',
+    status:      'active',
+    createdAt:   new Date(),
+    lastUsedAt:  null,
+  };
+}
+
+async function apiKeyFindAllActive() {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    `SELECT id, key_hash, label, environment, status, created_at, last_used_at
+     FROM api_keys WHERE status = 'active'`,
+  );
+  return rows.map(rowToApiKey);
+}
+
+async function apiKeyFindById(id) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    `SELECT id, key_hash, label, environment, status, created_at, last_used_at
+     FROM api_keys WHERE id = $1`,
+    [id],
+  );
+  if (rows.length === 0) return null;
+  return rowToApiKey(rows[0]);
+}
+
+async function apiKeyTouchLastUsed(id) {
+  const pool = getPool();
+  await pool.query('UPDATE api_keys SET last_used_at = NOW() WHERE id = $1', [id]);
+}
+
+async function apiKeyRevoke(id) {
+  const pool = getPool();
+  await pool.query(`UPDATE api_keys SET status = 'revoked' WHERE id = $1`, [id]);
+}
+
+function rowToApiKey(row) {
+  return {
+    id:          row.id,
+    keyHash:     row.key_hash,
+    label:       row.label,
+    environment: row.environment,
+    status:      row.status,
+    createdAt:   row.created_at,
+    lastUsedAt:  row.last_used_at,
+  };
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function rowToKey(row) {
@@ -217,4 +279,9 @@ module.exports = {
   keyGetActive,
   keyGetById,
   verificationLogInsert,
+  apiKeyCreate,
+  apiKeyFindAllActive,
+  apiKeyFindById,
+  apiKeyTouchLastUsed,
+  apiKeyRevoke,
 };

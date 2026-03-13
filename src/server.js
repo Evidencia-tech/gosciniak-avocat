@@ -17,6 +17,7 @@ const verifyRouter    = require('./routes/verify');
 const publicKeyRouter = require('./routes/publicKey');
 const demoRouter      = require('./routes/demo');
 const contactRouter   = require('./routes/contact');
+const keysRouter      = require('./routes/keys');
 
 const app  = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -79,6 +80,7 @@ app.use('/v1/verify',      verifyRouter);
 app.use('/v1/publicKey',   publicKeyRouter);
 app.use('/v1/demo/proofs', demoRouter);
 app.use('/v1/contact',     contactRouter);
+app.use('/v1/keys',        keysRouter);
 
 // ── 7. 404 ───────────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -102,8 +104,9 @@ async function start() {
     console.log(`[evidencia] Verification portal: http://localhost:${PORT}/verify.html`);
     console.log(`[evidencia] Storage adapter: ${ADAPTER}`);
 
-    if (!process.env.EVIDENCIA_API_KEY) {
-      console.warn('[evidencia] WARNING: EVIDENCIA_API_KEY not set — auth DISABLED');
+    const adminKey = process.env.EVIDENCIA_ADMIN_KEY || process.env.EVIDENCIA_API_KEY;
+    if (!adminKey) {
+      console.warn('[evidencia] WARNING: EVIDENCIA_ADMIN_KEY not set — auth DISABLED');
     }
   });
 }

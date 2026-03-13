@@ -27,6 +27,12 @@
  *
  *   verificationLog.insert(data) -> Promise<void>
  *
+ *   apiKeys.create(data)         -> Promise<apiKey>
+ *   apiKeys.findAllActive()      -> Promise<apiKey[]>
+ *   apiKeys.findById(id)         -> Promise<apiKey | null>
+ *   apiKeys.touchLastUsed(id)    -> Promise<void>
+ *   apiKeys.revoke(id)           -> Promise<void>
+ *
  * Swapping adapters requires only a change to DB_ADAPTER env var.
  * No route or business package needs to change.
  */
@@ -130,4 +136,24 @@ const verificationLog = {
   },
 };
 
-module.exports = { proofs, keys, verificationLog };
+// ---- apiKeys -----------------------------------------------------------------
+
+const apiKeys = {
+  async create(data) {
+    return adapter.apiKeyCreate(data);
+  },
+  async findAllActive() {
+    return adapter.apiKeyFindAllActive();
+  },
+  async findById(id) {
+    return adapter.apiKeyFindById(id);
+  },
+  async touchLastUsed(id) {
+    return adapter.apiKeyTouchLastUsed(id);
+  },
+  async revoke(id) {
+    return adapter.apiKeyRevoke(id);
+  },
+};
+
+module.exports = { proofs, keys, verificationLog, apiKeys };
