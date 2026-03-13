@@ -98,6 +98,21 @@ async function proofFindByHash(hash) {
   return rows.map(r => r.receipt);
 }
 
+async function proofFindRecent(limit = 20) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    'SELECT receipt FROM proofs ORDER BY created_at DESC LIMIT $1',
+    [limit],
+  );
+  return rows.map(r => r.receipt);
+}
+
+async function proofCount() {
+  const pool = getPool();
+  const { rows } = await pool.query('SELECT COUNT(*) AS n FROM proofs');
+  return parseInt(rows[0].n, 10);
+}
+
 // ─── signing_keys ─────────────────────────────────────────────────────────────
 
 /**
@@ -275,6 +290,8 @@ module.exports = {
   proofCreate,
   proofFindById,
   proofFindByHash,
+  proofFindRecent,
+  proofCount,
   keyUpsert,
   keyGetActive,
   keyGetById,

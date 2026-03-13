@@ -95,6 +95,21 @@ router.post('/', requireApiKey, upload.single('file'), async (req, res, next) =>
   }
 });
 
+// ---- GET /v1/proofs ---------------------------------------------------------
+
+router.get('/', requireApiKey, async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const [items, total] = await Promise.all([
+      proofs.findRecent(limit),
+      proofs.count(),
+    ]);
+    return ok(res, { proofs: items, total, limit });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ---- GET /v1/proofs/:id -----------------------------------------------------
 
 router.get('/:id', requireApiKey, async (req, res, next) => {

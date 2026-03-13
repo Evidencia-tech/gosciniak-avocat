@@ -80,6 +80,20 @@ const proofs = {
   async findByHash(hash) {
     return adapter.proofFindByHash(hash);
   },
+
+  /**
+   * Return the N most recent proofs, newest first.
+   * @param {number} [limit=20]
+   * @returns {Promise<object[]>}
+   */
+  async findRecent(limit = 20) {
+    return adapter.proofFindRecent(limit);
+  },
+
+  /** Total number of proofs in the database. */
+  async count() {
+    return adapter.proofCount();
+  },
 };
 
 // ---- keys --------------------------------------------------------------------

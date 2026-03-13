@@ -89,6 +89,12 @@ const stmtProofByHash = db.prepare(`
   SELECT receipt_json FROM proofs WHERE file_hash = ? ORDER BY created_at DESC
 `);
 
+const stmtProofRecent = db.prepare(`
+  SELECT receipt_json FROM proofs ORDER BY created_at DESC LIMIT ?
+`);
+
+const stmtProofCount = db.prepare(`SELECT COUNT(*) AS n FROM proofs`);
+
 const stmtKeyUpsert = db.prepare(`
   INSERT INTO signing_keys (id, public_key, algorithm, status, created_at)
   VALUES (@id, @publicKey, @algorithm, @status, @createdAt)
@@ -226,6 +232,21 @@ function proofFindByHash(hash) {
   return rows.map(r => JSON.parse(r.receipt_json));
 }
 
+/**
+ * Return the N most recent proofs, newest first.
+ * @param {number} [limit=20]
+ * @returns {object[]}
+ */
+function proofFindRecent(limit = 20) {
+  const rows = stmtProofRecent.all(limit);
+  return rows.map(r => JSON.parse(r.receipt_json));
+}
+
+/** Total number of proofs in the database. */
+function proofCount() {
+  return stmtProofCount.get().n;
+}
+
 // ─── signing_keys ─────────────────────────────────────────────────────────────
 
 /**
@@ -310,6 +331,8 @@ module.exports = {
   proofCreate,
   proofFindById,
   proofFindByHash,
+  proofFindRecent,
+  proofCount,
   keyUpsert,
   keyGetActive,
   keyGetById,
