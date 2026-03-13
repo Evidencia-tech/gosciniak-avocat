@@ -82,10 +82,10 @@ async function doVerify() {
   const raw = document.getElementById('proofInput').value.trim();
   hideError();
 
-  if (!raw) { showError('Veuillez entrer un identifiant de preuve commençant par prf_'); return; }
-  if (!raw.startsWith('prf_')) { showError('Les identifiants de preuve commencent par prf_ — vérifiez votre saisie.'); return; }
+  if (!raw && !fileHash) { showError('Veuillez entrer un identifiant de preuve ou fournir un fichier à vérifier.'); return; }
+  if (raw && !raw.startsWith('prf_')) { showError('Les identifiants de preuve commencent par prf_ — vérifiez votre saisie.'); return; }
 
-  currentProofId = raw;
+  currentProofId = raw || null;
   setPhase('loading');
 
   try {
@@ -93,7 +93,8 @@ async function doVerify() {
     await sleep(300);
     setStep('Vérification de la signature…');
 
-    const body = { proofId: raw };
+    const body = {};
+    if (raw) body.proofId = raw;
     if (fileHash) body.fileHash = fileHash;
 
     const resp = await fetch(`${API_BASE}/v1/verify`, {
@@ -110,6 +111,7 @@ async function doVerify() {
     if (!resp.ok) throw new Error(apiRaw?.error?.message || `Erreur ${resp.status}`);
 
     const data = apiRaw.data ?? apiRaw;          // désenveloppe { ok, data } → data
+    if (data.proofId) currentProofId = data.proofId;
     setPhase('result');
     renderCertificate(data);
 
