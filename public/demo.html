@@ -1129,20 +1129,6 @@
                     <span class="dl-btn__label" id="certifiedBtnLabel">Version certifiée</span>
                     <span class="dl-btn__sub">Avec badge (.png)</span>
                   </button>
-                  <button class="dl-btn" id="btnDlReceipt">
-                    <div class="dl-btn__icon">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    </div>
-                    <span class="dl-btn__label">Notice</span>
-                    <span class="dl-btn__sub">Instructions (.txt)</span>
-                  </button>
-                  <button class="dl-btn" id="btnDlPdf">
-                    <div class="dl-btn__icon">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    </div>
-                    <span class="dl-btn__label" id="pdfBtnLabel">Reçu PDF</span>
-                    <span class="dl-btn__sub">Avec image</span>
-                  </button>
                   <button class="dl-btn" id="btnShareNative">
                     <div class="dl-btn__icon">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -1165,11 +1151,25 @@
                         <li><code>certifie-evidencia.png</code> &#8212; version avec badge</li>
                         <li><code>receipt.json</code> &#8212; preuve cryptographique</li>
                         <li><code>receipt.pdf</code> &#8212; re&#231;u PDF avec image</li>
-                        <li><code>LISEZMOI.txt</code> &#8212; instructions</li>
+                        <li><code>notice.pdf</code> &#8212; notice de v&#233;rification</li>
                       </ul>
                       <div class="pack-tooltip__warn">&#9888;&#65039; Seul le fichier original peut &#234;tre v&#233;rifi&#233; cryptographiquement.</div>
                     </div>
                   </span>
+                  <button class="dl-btn" id="btnDlReceipt">
+                    <div class="dl-btn__icon">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <span class="dl-btn__label">Notice</span>
+                    <span class="dl-btn__sub">Instructions (.pdf)</span>
+                  </button>
+                  <button class="dl-btn" id="btnDlPdf">
+                    <div class="dl-btn__icon">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <span class="dl-btn__label" id="pdfBtnLabel">Reçu PDF</span>
+                    <span class="dl-btn__sub">Avec image</span>
+                  </button>
                 </div>
               </div>
 
@@ -1204,7 +1204,7 @@
                   <span id="copyLinkLabel">Copier le lien</span>
                 </button>
               </div>
-              <div class="result-footer__issuer">Émis par Evidencia · evidencia.io</div>
+              <div class="result-footer__issuer">Émis par Evidencia · evidencia.tech</div>
             </div>
 
           </div><!-- /ev-anim-up -->

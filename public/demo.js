@@ -331,40 +331,127 @@ function downloadReceipt() {
   a.click();
 }
 
-// ── Notice (LISEZMOI.txt) ────────────────────────────────────────────────────
-function buildNoticeText() {
-  const origExt  = capturedMediaType === 'video' ? 'mp4' : 'jpg';
+// ── Notice PDF (jsPDF) ───────────────────────────────────────────────────────
+function buildNoticePdf() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const receipt   = currentReceipt || {};
+  const origExt   = capturedMediaType === 'video' ? 'mp4' : 'jpg';
   const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
-  return [
-    'Ce pack contient la preuve Evidencia pour le fichier certifié.',
-    '',
-    'FICHIER CANONIQUE : original.' + origExt,
-    'C\'est ce fichier qui a été haché et signé.',
-    'Pour vérifier l\'authenticité, uploadez original.' + origExt + ' sur :',
-    VERIFY_BASE,
-    '',
-    'IDENTIFIANT DE PREUVE : ' + currentId,
-    'QR CODE DE VÉRIFICATION : ' + verifyUrl,
-    '',
-    'VERSION CERTIFIÉE : certifie-evidencia.png',
-    'Version visuelle avec badge Evidencia.',
-    'Ce fichier est destiné au partage — il ne peut pas être vérifié cryptographiquement.',
-    '',
-    'REÇU JSON : receipt.json',
-    'Contient la signature cryptographique complète.',
-    '',
-    '---',
-    'Émis par Evidencia · evidencia.io',
-  ].join('\n');
+  const w = doc.internal.pageSize.getWidth();
+  let y = 20;
+
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text('Notice de vérification', 20, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(138, 133, 128);
+  doc.text(`${currentId}  ·  ${receipt.timestamp ? formatDate(receipt.timestamp) : ''}`, 20, y);
+  doc.setTextColor(0, 0, 0);
+  y += 8;
+
+  // Separator
+  doc.setDrawColor(200, 194, 180);
+  doc.line(20, y, w - 20, y);
+  y += 12;
+
+  // Section helper — colored left border
+  function section(title, color, lines) {
+    const [r, g, b] = color;
+    doc.setDrawColor(r, g, b);
+    doc.setLineWidth(1);
+    const sx = 22;
+    const startY = y;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(r, g, b);
+    doc.text(title, sx + 4, y);
+    y += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(74, 70, 64);
+    for (const line of lines) {
+      const wrapped = doc.splitTextToSize(line, w - sx - 28);
+      doc.text(wrapped, sx + 4, y);
+      y += wrapped.length * 4.2 + 2;
+    }
+    y += 2;
+
+    doc.line(sx, startY - 4, sx, y - 4);
+    doc.setLineWidth(0.2);
+    doc.setTextColor(0, 0, 0);
+    y += 6;
+  }
+
+  // Green section — Fichier canonique
+  section('Fichier canonique', [14, 127, 90], [
+    `Le fichier original.${origExt} est la seule preuve vérifiable cryptographiquement.`,
+    'Conservez-le précieusement — il sera nécessaire pour toute vérification ultérieure.',
+    `Pour vérifier : uploadez original.${origExt} sur :`,
+    verifyUrl,
+  ]);
+
+  // Amber section — Version certifiée
+  section('Version certifiée (avec badge)', [146, 96, 10], [
+    'Le fichier certifie-evidencia.png contient le badge Evidencia.',
+    'Il est destiné au partage uniquement.',
+    'Ce fichier ne peut pas être vérifié cryptographiquement car le badge modifie les pixels et donc le hash SHA-256.',
+  ]);
+
+  // Details table
+  doc.setDrawColor(200, 194, 180);
+  doc.line(20, y, w - 20, y);
+  y += 8;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text('Détails de la preuve', 20, y);
+  y += 7;
+
+  const details = [
+    ['Identifiant', receipt.proofId || currentId],
+    ['Horodatage', receipt.timestamp ? formatDate(receipt.timestamp) : '—'],
+    ['Empreinte SHA-256', receipt.fileHash || '—'],
+    ['Méthode de capture', receipt.captureMethod || '—'],
+  ];
+
+  doc.setFontSize(9);
+  for (const [label, val] of details) {
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(138, 133, 128);
+    doc.text(label, 22, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(26, 24, 20);
+    const lines = doc.splitTextToSize(val, w - 70);
+    doc.text(lines, 62, y);
+    y += lines.length * 4 + 3;
+  }
+
+  // Footer
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(138, 133, 128);
+  doc.text('Émis par Evidencia · evidencia.tech · ' + (receipt.timestamp || new Date().toISOString()), 20, pageH - 10);
+  doc.setTextColor(0, 0, 0);
+
+  return doc;
 }
 
-function downloadNotice() {
-  if (!currentId) return;
-  const blob = new Blob([buildNoticeText()], { type: 'text/plain' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `evidencia-notice-${currentId}.txt`;
-  a.click();
+function downloadNoticePdf() {
+  if (!currentId || !currentReceipt) return;
+  try {
+    const doc = buildNoticePdf();
+    doc.save(`evidencia-notice-${currentId}.pdf`);
+  } catch (err) {
+    console.error('[Evidencia] Notice PDF :', err);
+    alert('Erreur lors de la génération de la notice : ' + err.message);
+  }
 }
 
 // ── Reçu PDF (jsPDF) ─────────────────────────────────────────────────────────
@@ -459,7 +546,7 @@ async function buildReceiptPdf() {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(138, 133, 128);
-  doc.text('Émis par Evidencia · evidencia.io · ' + (receipt.timestamp || new Date().toISOString()), 20, pageH - 10);
+  doc.text('Émis par Evidencia · evidencia.tech · ' + (receipt.timestamp || new Date().toISOString()), 20, pageH - 10);
   doc.setTextColor(0, 0, 0);
 
   return doc;
@@ -753,8 +840,13 @@ async function downloadProofPack() {
       console.warn('[Evidencia] PDF non inclus :', e.message);
     }
 
-    // 5. LISEZMOI
-    zip.file('LISEZMOI.txt', buildNoticeText());
+    // 5. Notice PDF
+    try {
+      const noticePdf = buildNoticePdf();
+      zip.file('notice.pdf', noticePdf.output('blob'));
+    } catch (e) {
+      console.warn('[Evidencia] Notice PDF non inclus :', e.message);
+    }
 
     const zipBlob = await zip.generateAsync({ type: 'blob' });
     const dlUrl   = URL.createObjectURL(zipBlob);
@@ -896,7 +988,7 @@ document.getElementById('certifyBtn').addEventListener('click', startCertify);
 document.getElementById('btnCopyLink').addEventListener('click', copyLink);
 document.getElementById('btnDlOriginal').addEventListener('click', downloadOriginal);
 document.getElementById('btnDlCertified').addEventListener('click', downloadCertified);
-document.getElementById('btnDlReceipt').addEventListener('click', downloadNotice);
+document.getElementById('btnDlReceipt').addEventListener('click', downloadNoticePdf);
 document.getElementById('btnDlPdf').addEventListener('click', downloadReceiptPdf);
 document.getElementById('btnShareNative').addEventListener('click', shareProofNativeWithImage);
 document.getElementById('btnDlPack').addEventListener('click', downloadProofPack);

@@ -57,7 +57,7 @@ async function sendViaResend({ prenom, nom, email, societe, sujet, message }) {
       </table>
       <div style="background:#f8f6f3;border-radius:8px;padding:20px;white-space:pre-wrap;line-height:1.6">${esc(message)}</div>
       <p style="margin-top:24px;font-size:12px;color:#b0a89e">
-        Envoyé via le formulaire evidencia.io · ${new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}
+        Envoyé via le formulaire evidencia.tech · ${new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}
       </p>
     </div>
   `;

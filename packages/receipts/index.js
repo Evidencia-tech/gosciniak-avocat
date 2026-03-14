@@ -48,7 +48,7 @@ function buildReceipt({
   const receipt = {
     schemaVersion:  '1',
     receiptFormat:  'evidencia-receipt-v1',
-    issuedBy:       'evidencia.io',
+    issuedBy:       'evidencia.tech',
 
     // Core proof identity
     proofId,
@@ -67,7 +67,7 @@ function buildReceipt({
     metadata,
 
     // Convenience link for human verification
-    verificationUrl: `https://verify.evidencia.io/${proofId}`,
+    verificationUrl: `https://verify.evidencia.tech/${proofId}`,
   };
 
   // Optional media reference — durable identifier controlled by the B2B client.
