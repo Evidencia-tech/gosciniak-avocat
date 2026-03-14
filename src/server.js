@@ -49,6 +49,7 @@ app.use(requestId);
 
 // ── 3. Static files & body parsers ──────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Limite à 100kb : l'API ne traite que des hashes et métadonnées, jamais des médias
 app.use(express.json({ limit: '100kb' }));

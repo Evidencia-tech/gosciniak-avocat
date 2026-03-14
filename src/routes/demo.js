@@ -9,6 +9,8 @@
  * captureMethod forced to "demo_web"
  */
 
+const fs       = require('fs');
+const path     = require('path');
 const express  = require('express');
 const multer   = require('multer');
 const { ulid } = require('ulid');
@@ -61,15 +63,17 @@ router.post('/', rateLimit, upload.single('file'), async (req, res, next) => {
   try {
     let fileHash;
 
-    if (req.file) {
-      fileHash = computeHash(req.file.buffer);
-    } else if (req.body && req.body.fileHash) {
+    // Prefer client-provided hash (computed via WebCrypto) over server-side computation.
+    // The uploaded file is only stored for display (photoUrl), not for hashing.
+    if (req.body && req.body.fileHash) {
       const hash = req.body.fileHash;
       if (!/^(sha256|sha3-256):[a-f0-9]{64}$/i.test(hash)) {
         return next(createError(400, 'INVALID_INPUT',
           'fileHash must be in format "sha256:<64-hex-chars>".'));
       }
       fileHash = hash;
+    } else if (req.file) {
+      fileHash = computeHash(req.file.buffer);
     } else {
       return next(createError(400, 'INVALID_INPUT',
         'Provide a multipart "file" field or a "fileHash" parameter.'));
@@ -84,8 +88,17 @@ router.post('/', rateLimit, upload.single('file'), async (req, res, next) => {
     const proofId   = `prf_${ulid()}`;
     const timestamp = new Date().toISOString();
 
-    // Optional photo URL for demo display — display only, never the certified artefact.
-    const photoUrl = req.body && req.body.photoUrl !== undefined ? req.body.photoUrl : undefined;
+    // Save uploaded file for demo preview (photoUrl) — display only, never the certified artefact.
+    let photoUrl = req.body && req.body.photoUrl !== undefined ? req.body.photoUrl : undefined;
+
+    if (req.file && !photoUrl) {
+      const ext = (req.file.originalname.match(/\.[^.]+$/) || ['.bin'])[0].toLowerCase();
+      const filename = `${proofId}${ext}`;
+      const uploadsDir = path.join(__dirname, '../../uploads');
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadsDir, filename), req.file.buffer);
+      photoUrl = `/uploads/${filename}`;
+    }
 
     const signingPayload                  = buildSigningPayload(proofId, fileHash, timestamp, 'demo_web');
     const { signature, publicKey, keyId } = await sign(signingPayload);

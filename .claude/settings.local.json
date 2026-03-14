@@ -24,7 +24,12 @@
       "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst content = fs.readFileSync\\('/home/runner/workspace/public/dashboard.html', 'utf8'\\);\nconst marker = '<script src=\\\\\"/dashboard.js\\\\\"></script>';\nconst idx = content.indexOf\\(marker\\);\nif \\(idx === -1\\) { console.error\\('marker not found'\\); process.exit\\(1\\); }\nconst result = content.slice\\(0, idx + marker.length\\) + '\\\\n\\\\n</body>\\\\n</html>\\\\n';\nfs.writeFileSync\\('/home/runner/workspace/public/dashboard.html', result\\);\nconsole.log\\('Done. Lines:', result.split\\('\\\\n'\\).length\\);\n\")",
       "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst content = fs.readFileSync\\('/home/runner/workspace/public/verify.html', 'utf8'\\);\nconst scriptStart = content.indexOf\\('\\\\n<script>\\\\n'\\);\nif \\(scriptStart === -1\\) { console.error\\('script tag not found'\\); process.exit\\(1\\); }\nconst result = content.slice\\(0, scriptStart\\) + '\\\\n<script src=\\\\\"/verify.js\\\\\"></script>\\\\n\\\\n</body>\\\\n</html>\\\\n';\nfs.writeFileSync\\('/home/runner/workspace/public/verify.html', result\\);\nconsole.log\\('Done. Lines:', result.split\\('\\\\n'\\).length\\);\n\")",
       "Bash(curl -sI http://localhost:3000/demo.html | grep -i content-security-policy)",
-      "Bash(curl -s http://localhost:3000/v1/verify -H 'Content-Type: application/json' -d '{\"proofId\":\"'\"$\\(curl -s http://localhost:3000/v1/demo/proofs -H 'Content-Type: application/json' -d '{\"fileHash\":\"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}' | node -pe 'JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0,\"utf8\"\\)\\).data.id'\\)\"'\"}' | node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0,\"utf8\"\\)\\).data,null,2\\)')"
+      "Bash(curl -s http://localhost:3000/v1/verify -H 'Content-Type: application/json' -d '{\"proofId\":\"'\"$\\(curl -s http://localhost:3000/v1/demo/proofs -H 'Content-Type: application/json' -d '{\"fileHash\":\"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}' | node -pe 'JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0,\"utf8\"\\)\\).data.id'\\)\"'\"}' | node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0,\"utf8\"\\)\\).data,null,2\\)')",
+      "Bash(timeout:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(sleep:*)"
     ]
   }
 }

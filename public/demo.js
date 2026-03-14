@@ -13,6 +13,7 @@ let currentId        = null;
 let qrModalRendered  = false;
 let capturedMediaURL  = null;   // objectURL local — jamais envoyé au serveur
 let capturedMediaType = null;   // 'image' | 'video'
+let capturedFile      = null;   // File object — pour upload serveur (aperçu via QR)
 
 // ── Détection desktop ─────────────────────────────────────────────────────────
 // Utilise matchMedia pour détecter un pointeur fin (souris/trackpad) comme
@@ -94,6 +95,7 @@ async function processCapture(file, mode) {
   // Libérer l'objectURL précédent si existant
   if (capturedMediaURL) { URL.revokeObjectURL(capturedMediaURL); capturedMediaURL = null; }
   capturedThumbDataURL = null;
+  capturedFile = file;
 
   const buffer  = await file.arrayBuffer();
   const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
@@ -144,6 +146,7 @@ async function processCapture(file, mode) {
 function clearCapture() {
   pendingHash = null;
   capturedThumbDataURL = null;
+  capturedFile = null;
   if (capturedMediaURL) { URL.revokeObjectURL(capturedMediaURL); capturedMediaURL = null; }
   capturedMediaType = null;
   ['inputPhoto', 'inputVideo'].forEach(id => {
@@ -169,14 +172,15 @@ async function startCertify() {
     await sleep(300);
     setCertStep('Signature cryptographique en cours…');
 
+    const formData = new FormData();
+    formData.append('fileHash', pendingHash);
+    formData.append('captureMethod', 'demo_web');
+    formData.append('metadata', JSON.stringify(label ? { reference: label } : {}));
+    if (capturedFile) formData.append('file', capturedFile);
+
     const resp = await fetch(DEMO_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fileHash:      pendingHash,
-        captureMethod: 'demo_web',
-        metadata:      JSON.stringify(label ? { reference: label } : {}),
-      }),
+      method: 'POST',
+      body:   formData,
     });
 
     await sleep(200);
@@ -366,7 +370,7 @@ function shareProofNative() {
 }
 
 function resetDemo() {
-  currentReceipt = null; currentId = null;
+  currentReceipt = null; currentId = null; capturedFile = null;
   document.getElementById('labelInput').value = '';
   clearCapture();   // libère aussi capturedMediaURL
   setPhase(1);
