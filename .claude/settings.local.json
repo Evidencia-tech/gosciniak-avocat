@@ -30,7 +30,8 @@
       "Bash(curl:*)",
       "Bash(pkill:*)",
       "Bash(sleep:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -9,7 +9,7 @@ const { requestId }    = require('./middleware/requestId');
 const { ok, fail }     = require('./lib/apiResponse');
 const { ready }        = require('../packages/signing');
 const { ensureActiveKey } = require('../packages/signing/keystore');
-const { ADAPTER }         = require('../packages/persistence/client');
+const { ADAPTER, getPool } = require('../packages/persistence/client');
 
 // Routes
 const proofsRouter    = require('./routes/proofs');
@@ -106,8 +106,33 @@ app.use((req, res) => {
 // ── 8. Error handler ─────────────────────────────────────────────────────────
 app.use(errorHandler);
 
+// ── Auto-migrate (PG only) ───────────────────────────────────────────────────
+async function autoMigrate() {
+  if (ADAPTER !== 'pg') return;
+
+  const fs   = require('fs');
+  const pool = getPool();
+
+  // Check if tables already exist
+  const { rows } = await pool.query(
+    `SELECT COUNT(*) AS c FROM information_schema.tables
+     WHERE table_schema = 'public' AND table_name = 'proofs'`
+  );
+  if (parseInt(rows[0].c, 10) > 0) {
+    console.log('[evidencia] PG tables already exist — skipping migration');
+    return;
+  }
+
+  const sqlPath = path.join(__dirname, '../packages/persistence/migration/001_initial.sql');
+  const sql = fs.readFileSync(sqlPath, 'utf8');
+  await pool.query(sql);
+  console.log('[evidencia] PG migration 001_initial.sql applied');
+}
+
 // ── Boot ─────────────────────────────────────────────────────────────────────
 async function start() {
+  await autoMigrate();
+
   await ready();
   console.log('[evidencia] libsodium ready');
 
