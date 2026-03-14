@@ -29,7 +29,8 @@
       "Bash(echo:*)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
-      "Bash(sleep:*)"
+      "Bash(sleep:*)",
+      "Bash(grep:*)"
     ]
   }
 }

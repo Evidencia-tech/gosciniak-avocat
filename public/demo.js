@@ -293,6 +293,7 @@ function renderResult(data) {
   if (capturedMediaURL) {
     document.getElementById('btnDlOriginal').style.display  = '';
     document.getElementById('btnDlCertified').style.display = '';
+    document.getElementById('btnDlPack').style.display      = '';
   }
 
   markDone(1); markDone(2); markActive(3);
@@ -567,6 +568,72 @@ async function downloadCertified() {
   }
 }
 
+async function downloadProofPack() {
+  if (!capturedMediaURL || !currentId || !currentReceipt) return;
+  const btn      = document.getElementById('btnDlPack');
+  const label    = document.getElementById('packBtnLabel');
+  const origText = label.textContent;
+  label.textContent = 'Génération…';
+  btn.disabled = true;
+  try {
+    const zip = new JSZip();
+
+    // 1. Original file
+    const origResp = await fetch(capturedMediaURL);
+    const origBlob = await origResp.blob();
+    const origExt  = capturedMediaType === 'video' ? 'mp4' : 'jpg';
+    zip.file(`original.${origExt}`, origBlob);
+
+    // 2. Certified image with badge
+    const certBlob = await buildCertifiedBlob();
+    zip.file('certifie-evidencia.png', certBlob);
+
+    // 3. Receipt JSON
+    zip.file('receipt.json', JSON.stringify(currentReceipt, null, 2));
+
+    // 4. README
+    const verifyUrl = `${VERIFY_BASE}?id=${currentId}`;
+    const readme = [
+      'Ce pack contient la preuve Evidencia pour le fichier certifié.',
+      '',
+      'FICHIER CANONIQUE : original.' + origExt,
+      'C\'est ce fichier qui a été haché et signé.',
+      'Pour vérifier l\'authenticité, uploadez original.' + origExt + ' sur :',
+      VERIFY_BASE,
+      '',
+      'IDENTIFIANT DE PREUVE : ' + currentId,
+      'QR CODE DE VÉRIFICATION : ' + verifyUrl,
+      '',
+      'VERSION CERTIFIÉE : certifie-evidencia.png',
+      'Version visuelle avec badge Evidencia.',
+      'Ce fichier est destiné au partage — il ne peut pas être vérifié cryptographiquement.',
+      '',
+      'REÇU JSON : receipt.json',
+      'Contient la signature cryptographique complète.',
+      '',
+      '---',
+      'Émis par Evidencia · evidencia.io',
+    ].join('\n');
+    zip.file('LISEZMOI.txt', readme);
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const dlUrl   = URL.createObjectURL(zipBlob);
+    const a       = document.createElement('a');
+    a.href        = dlUrl;
+    a.download    = `evidencia-pack-${currentId}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(dlUrl), 3000);
+  } catch (err) {
+    console.error('[Evidencia] Pack de preuve :', err);
+    alert(`Erreur lors de la génération du pack : ${err.message}`);
+  } finally {
+    label.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
 async function shareProofNativeWithImage() {
   if (!currentId) return;
   const label  = document.getElementById('shareNativeLabel');
@@ -692,6 +759,7 @@ document.getElementById('btnCopyLink').addEventListener('click', copyLink);
 document.getElementById('btnDlOriginal').addEventListener('click', downloadOriginal);
 document.getElementById('btnDlCertified').addEventListener('click', downloadCertified);
 document.getElementById('btnDlReceipt').addEventListener('click', downloadReceipt);
+document.getElementById('btnDlPack').addEventListener('click', downloadProofPack);
 
 // Next section cards
 document.getElementById('nextReceiptCard').addEventListener('click', downloadReceipt);
