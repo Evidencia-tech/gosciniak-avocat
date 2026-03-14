@@ -10,12 +10,34 @@
       "default": "./evidencia.js"
     }
   },
-  "files": ["evidencia.js", "index.d.ts", "README.md", "CHANGELOG.md"],
-  "keywords": ["evidencia", "proof", "proof-of-existence", "cryptography", "verification", "ed25519", "sha256", "digital-signature"],
+  "files": [
+    "evidencia.js",
+    "index.d.ts",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "evidencia",
+    "proof",
+    "proof-of-existence",
+    "cryptography",
+    "verification",
+    "ed25519",
+    "sha256",
+    "digital-signature"
+  ],
   "license": "MIT",
-  "engines": { "node": ">=18" },
-  "repository": { "type": "git", "url": "https://github.com/nicofmusic/evidencia.git", "directory": "sdk/js" },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicofmusic/evidencia.git",
+    "directory": "sdk/js"
+  },
   "homepage": "https://evidencia.tech",
-  "bugs": { "url": "https://github.com/nicofMusic/evidencia/issues" },
+  "bugs": {
+    "url": "https://github.com/nicofMusic/evidencia/issues"
+  },
   "author": "Evidencia <hello@evidencia.io>"
 }
