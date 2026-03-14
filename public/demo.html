@@ -728,6 +728,113 @@
       gap:             10px;
       justify-content: center;
     }
+
+    /* ── Tooltip pack de preuve ───────────────────────────────────── */
+    .pack-wrap {
+      position: relative;
+      display:  inline-flex;
+      align-items: center;
+    }
+
+    .pack-info {
+      display:      inline-flex;
+      align-items:  center;
+      justify-content: center;
+      width:        18px;
+      height:       18px;
+      margin-left:  5px;
+      font-size:    12px;
+      line-height:  1;
+      color:        var(--ink-dim);
+      cursor:       help;
+      flex-shrink:  0;
+    }
+
+    .pack-tooltip {
+      visibility:    hidden;
+      opacity:       0;
+      position:      absolute;
+      bottom:        calc(100% + 10px);
+      right:         0;
+      width:         320px;
+      background:    var(--ink);
+      color:         #e8e4dc;
+      font-family:   var(--sans);
+      font-size:     12px;
+      line-height:   1.65;
+      padding:       14px 16px;
+      border-radius: var(--r-md);
+      box-shadow:    var(--shadow-lg);
+      pointer-events: none;
+      transition:    opacity 0.18s, visibility 0.18s;
+      z-index:       100;
+    }
+
+    .pack-tooltip::after {
+      content:      '';
+      position:     absolute;
+      top:          100%;
+      right:        16px;
+      border:       6px solid transparent;
+      border-top-color: var(--ink);
+    }
+
+    .pack-tooltip strong {
+      display:       block;
+      font-weight:   600;
+      color:         #fff;
+      margin-bottom: 6px;
+    }
+
+    .pack-tooltip ul {
+      list-style:    none;
+      margin:        0 0 8px;
+      padding:       0;
+    }
+
+    .pack-tooltip li {
+      padding-left:  14px;
+      position:      relative;
+      margin-bottom: 2px;
+    }
+
+    .pack-tooltip li::before {
+      content:    '\2022';
+      position:   absolute;
+      left:       0;
+      color:      var(--border-hi);
+    }
+
+    .pack-tooltip li code {
+      font-family:    var(--mono);
+      font-size:      11px;
+      color:          var(--amber-ring);
+    }
+
+    .pack-tooltip .pack-tooltip__warn {
+      margin-top:    6px;
+      padding-top:   6px;
+      border-top:    1px solid rgba(255,255,255,0.12);
+      font-size:     11px;
+      color:         var(--amber-ring);
+    }
+
+    .pack-wrap:hover .pack-tooltip,
+    .pack-wrap:focus-within .pack-tooltip {
+      visibility:     visible;
+      opacity:        1;
+      pointer-events: auto;
+    }
+
+    @media (max-width: 480px) {
+      .pack-tooltip {
+        width:  260px;
+        right:  -8px;
+      }
+      .pack-tooltip::after {
+        right: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -972,10 +1079,23 @@
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   Reçu JSON
                 </button>
-                <button class="ev-btn ev-btn--ghost ev-btn--sm" id="btnDlPack" style="display:none">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
-                  <span id="packBtnLabel">Pack de preuve (.zip)</span>
-                </button>
+                <span class="pack-wrap">
+                  <button class="ev-btn ev-btn--ghost ev-btn--sm" id="btnDlPack" style="display:none">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                    <span id="packBtnLabel">Pack de preuve (.zip)</span>
+                    <span class="pack-info" tabindex="0" aria-label="Informations sur le pack de preuve">&#9432;</span>
+                  </button>
+                  <div class="pack-tooltip" role="tooltip">
+                    <strong>Ce pack contient 4 fichiers :</strong>
+                    <ul>
+                      <li><code>original.jpg</code> &#8212; le fichier certifi&#233; (&#224; conserver pour la v&#233;rification)</li>
+                      <li><code>certifie-evidencia.png</code> &#8212; la version avec badge (pour le partage)</li>
+                      <li><code>receipt.json</code> &#8212; la preuve cryptographique compl&#232;te</li>
+                      <li><code>LISEZMOI.txt</code> &#8212; les instructions de v&#233;rification</li>
+                    </ul>
+                    <div class="pack-tooltip__warn">&#9888;&#65039; Seul le fichier original peut &#234;tre v&#233;rifi&#233; cryptographiquement.</div>
+                  </div>
+                </span>
               </div>
               <div class="result-footer__issuer">Émis par Evidencia · evidencia.io</div>
             </div>
