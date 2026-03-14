@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencia — Developer Documentation</title>
+  <meta name="description" content="Integrate proof of authenticity into your application with the Evidencia API and JavaScript SDK." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/ev-system.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────── */
+    .docs-layout { padding: 56px 0 100px; }
+
+    .docs-hero {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .docs-eyebrow {
+      font-family:    var(--mono);
+      font-size:      11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--blue);
+      margin-bottom:  18px;
+    }
+
+    .docs-title {
+      font-family:    var(--serif);
+      font-size:      clamp(28px, 4vw, 44px);
+      color:          var(--ink);
+      letter-spacing: -0.025em;
+      line-height:    1.12;
+      margin-bottom:  14px;
+    }
+
+    .docs-sub {
+      font-size:   16px;
+      color:       var(--ink-mid);
+      max-width:   520px;
+      margin:      0 auto 28px;
+      line-height: 1.65;
+    }
+
+    .docs-install {
+      display:       inline-flex;
+      align-items:   center;
+      gap:           10px;
+      background:    var(--ink);
+      color:         #e8e4dc;
+      font-family:   var(--mono);
+      font-size:     14px;
+      padding:       12px 22px;
+      border-radius: var(--r-md);
+      user-select:   all;
+    }
+
+    .docs-install__prompt { color: var(--green); }
+
+    /* ── Sections ────────────────────────────────────────────────── */
+    .docs-section {
+      margin-bottom: 64px;
+    }
+
+    .docs-section__title {
+      font-family:     var(--serif);
+      font-size:       clamp(22px, 3vw, 30px);
+      color:           var(--ink);
+      letter-spacing:  -0.02em;
+      margin-bottom:   8px;
+    }
+
+    .docs-section__lead {
+      font-size:     15px;
+      color:         var(--ink-mid);
+      line-height:   1.65;
+      margin-bottom: 28px;
+      max-width:     600px;
+    }
+
+    /* ── How-it-works steps ──────────────────────────────────────── */
+    .how-steps {
+      display:  grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:      20px;
+    }
+    @media (max-width: 640px) {
+      .how-steps { grid-template-columns: 1fr; }
+    }
+
+    .how-step {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      padding:       28px 24px;
+      text-align:    center;
+    }
+
+    .how-step__num {
+      display:       inline-flex;
+      align-items:   center;
+      justify-content: center;
+      width:         36px;
+      height:        36px;
+      border-radius: 50%;
+      background:    var(--blue-bg);
+      color:         var(--blue);
+      font-family:   var(--mono);
+      font-weight:   600;
+      font-size:     14px;
+      margin-bottom: 14px;
+    }
+
+    .how-step__label {
+      font-family:   var(--serif);
+      font-size:     18px;
+      color:         var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .how-step__desc {
+      font-size:   13px;
+      color:       var(--ink-mid);
+      line-height: 1.6;
+    }
+
+    .how-step__tag {
+      display:       inline-block;
+      font-family:   var(--mono);
+      font-size:     10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background:    var(--panel);
+      color:         var(--ink-dim);
+      padding:       3px 10px;
+      border-radius: 12px;
+      margin-top:    12px;
+    }
+
+    /* ── Code tabs ───────────────────────────────────────────────── */
+    .code-tabs {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow:      hidden;
+      box-shadow:    var(--shadow-sm);
+    }
+
+    .code-tabs__bar {
+      display:    flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .code-tab-btn {
+      font-family:   var(--mono);
+      font-size:     12px;
+      letter-spacing: 0.04em;
+      padding:       10px 20px;
+      border:        none;
+      background:    transparent;
+      color:         var(--ink-dim);
+      cursor:        pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition:    color 0.15s, border-color 0.15s;
+    }
+
+    .code-tab-btn:hover { color: var(--ink-mid); }
+
+    .code-tab-btn.is-active {
+      color:        var(--blue);
+      border-color: var(--blue);
+      background:   var(--surface);
+    }
+
+    .code-tab-panel {
+      display: none;
+      padding: 0;
+    }
+
+    .code-tab-panel.is-active { display: block; }
+
+    .code-tab-panel pre {
+      margin:  0;
+      padding: 20px 24px;
+      background: var(--surface);
+      overflow-x: auto;
+      font-size:  13px;
+      line-height: 1.6;
+    }
+
+    .code-tab-panel code {
+      font-family: var(--mono);
+      font-size:   13px;
+    }
+
+    /* ── Standalone code blocks ──────────────────────────────────── */
+    .docs-code {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow:      hidden;
+      box-shadow:    var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+
+    .docs-code__header {
+      display:       flex;
+      align-items:   center;
+      gap:           8px;
+      padding:       10px 20px;
+      background:    var(--panel);
+      border-bottom: 1px solid var(--border);
+      font-family:   var(--mono);
+      font-size:     11px;
+      color:         var(--ink-dim);
+      letter-spacing: 0.04em;
+    }
+
+    .docs-code pre {
+      margin:     0;
+      padding:    20px 24px;
+      background: var(--surface);
+      overflow-x: auto;
+      font-size:  13px;
+      line-height: 1.6;
+    }
+
+    .docs-code code {
+      font-family: var(--mono);
+      font-size:   13px;
+    }
+
+    /* ── API table ───────────────────────────────────────────────── */
+    .docs-table-wrap {
+      overflow-x:    auto;
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      background:    var(--surface);
+    }
+
+    .docs-table {
+      width:           100%;
+      border-collapse: collapse;
+      font-size:       13px;
+    }
+
+    .docs-table thead {
+      background: var(--panel);
+    }
+
+    .docs-table th {
+      text-align:     left;
+      padding:        12px 16px;
+      font-family:    var(--mono);
+      font-size:      11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color:          var(--ink-dim);
+      border-bottom:  1px solid var(--border);
+      white-space:    nowrap;
+    }
+
+    .docs-table td {
+      padding:       12px 16px;
+      border-bottom: 1px solid var(--border);
+      color:         var(--ink);
+      vertical-align: top;
+    }
+
+    .docs-table tr:last-child td { border-bottom: none; }
+
+    .docs-table code {
+      font-family: var(--mono);
+      font-size:   12px;
+      background:  var(--panel);
+      padding:     2px 7px;
+      border-radius: 4px;
+    }
+
+    .method-badge {
+      font-family:   var(--mono);
+      font-size:     10px;
+      font-weight:   600;
+      letter-spacing: 0.04em;
+      padding:       3px 8px;
+      border-radius: 4px;
+      display:       inline-block;
+    }
+
+    .method-badge--get {
+      background: var(--green-bg);
+      color:      var(--green);
+    }
+
+    .method-badge--post {
+      background: var(--blue-bg);
+      color:      var(--blue);
+    }
+
+    .method-badge--delete {
+      background: var(--red-bg);
+      color:      var(--red);
+    }
+
+    .auth-badge {
+      font-family: var(--mono);
+      font-size:   10px;
+      padding:     2px 8px;
+      border-radius: 10px;
+      background:  var(--panel-hi);
+      color:       var(--ink-dim);
+    }
+
+    .auth-badge--open {
+      background: var(--green-bg);
+      color:      var(--green-deep);
+    }
+
+    /* ── Receipt fields ──────────────────────────────────────────── */
+    .receipt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      .receipt-grid { grid-template-columns: 1fr; }
+    }
+
+    .receipt-grid__code {
+      padding: 20px 24px;
+      overflow-x: auto;
+      border-right: 1px solid var(--border);
+    }
+    @media (max-width: 640px) {
+      .receipt-grid__code { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    .receipt-grid__code pre {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.65;
+      background: transparent;
+    }
+
+    .receipt-grid__fields {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      font-size: 13px;
+      align-items: baseline;
+    }
+    @media (max-width: 480px) {
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    .field-row__key {
+      font-family: var(--mono);
+      font-size:   11px;
+      color:       var(--blue);
+    }
+
+    .field-row__val {
+      color: var(--ink-mid);
+      line-height: 1.5;
+    }
+
+    /* ── Use-case cards ──────────────────────────────────────────── */
+    .usecase-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .usecase-grid { grid-template-columns: 1fr; }
+    }
+
+    .usecase-card {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      padding:       24px;
+    }
+
+    .usecase-card__icon {
+      font-size:     22px;
+      margin-bottom: 10px;
+    }
+
+    .usecase-card__title {
+      font-family:   var(--serif);
+      font-size:     17px;
+      color:         var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .usecase-card__desc {
+      font-size:   13px;
+      color:       var(--ink-mid);
+      line-height: 1.6;
+    }
+
+    .usecase-card__example {
+      margin-top:  10px;
+      font-family: var(--mono);
+      font-size:   11px;
+      color:       var(--ink-dim);
+      background:  var(--panel);
+      padding:     6px 10px;
+      border-radius: 4px;
+    }
+
+    /* ── Security list ───────────────────────────────────────────── */
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .security-grid { grid-template-columns: 1fr; }
+    }
+
+    .security-item {
+      display: flex;
+      gap:     14px;
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      padding:       20px;
+    }
+
+    .security-item__icon {
+      flex-shrink: 0;
+      width:       32px;
+      height:      32px;
+      border-radius: 50%;
+      background:  var(--green-bg);
+      color:       var(--green);
+      display:     flex;
+      align-items: center;
+      justify-content: center;
+      font-size:   15px;
+    }
+
+    .security-item__title {
+      font-size:     14px;
+      font-weight:   500;
+      color:         var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .security-item__desc {
+      font-size:   13px;
+      color:       var(--ink-mid);
+      line-height: 1.55;
+    }
+
+    /* ── CTA ─────────────────────────────────────────────────────── */
+    .docs-cta {
+      text-align:    center;
+      padding:       48px 32px;
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow:    var(--shadow-sm);
+    }
+
+    .docs-cta__title {
+      font-family:   var(--serif);
+      font-size:     clamp(22px, 3vw, 30px);
+      color:         var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .docs-cta__sub {
+      font-size:     15px;
+      color:         var(--ink-mid);
+      margin-bottom: 24px;
+    }
+
+    /* ── TOC sidebar ─────────────────────────────────────────────── */
+    .docs-toc {
+      position:      sticky;
+      top:           80px;
+      padding:       16px 0;
+    }
+
+    .docs-toc__title {
+      font-family:    var(--mono);
+      font-size:      10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color:          var(--ink-dim);
+      margin-bottom:  12px;
+    }
+
+    .docs-toc a {
+      display:     block;
+      font-size:   13px;
+      color:       var(--ink-dim);
+      padding:     5px 0;
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      padding-left: 12px;
+      transition:  color 0.15s, border-color 0.15s;
+    }
+
+    .docs-toc a:hover {
+      color:        var(--ink);
+      border-color: var(--border-hi);
+    }
+
+    .docs-main-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (max-width: 820px) {
+      .docs-main-grid { grid-template-columns: 1fr; }
+      .docs-toc { display: none; }
+    }
+
+    /* ── highlight.js override ───────────────────────────────────── */
+    .hljs {
+      background: transparent !important;
+      padding: 0 !important;
+    }
+  </style>
+</head>
+
+<body>
+<div class="ev-page">
+
+  <header class="ev-header">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-header__inner">
+        <a class="ev-logo" href="/">
+          <img class="ev-logo__icon" src="/icon-evidencia.png" alt="" onerror="this.style.display='none'" />
+          <span class="ev-logo__wordmark">Evidencia</span>
+        </a>
+        <nav class="ev-header__nav">
+          <a href="/demo.html">Démonstration</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/docs.html" class="is-active">Docs</a>
+          <a href="/api-client.html">API</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="docs-layout">
+
+<!-- ── 1. Hero ──────────────────────────────────────────────────────────── -->
+
+<div class="docs-hero ev-anim-up">
+  <div class="docs-eyebrow">Developer Documentation</div>
+  <h1 class="docs-title">Integrate proof of authenticity<br />in minutes</h1>
+  <p class="docs-sub">
+    Certify any file with a cryptographic timestamp and Ed25519 signature.
+    Your users' files are hashed client-side — never uploaded, never stored.
+  </p>
+  <div class="docs-install">
+    <span class="docs-install__prompt">$</span> npm install evidencia
+  </div>
+</div>
+
+<!-- ── 2. How it works ─────────────────────────────────────────────────── -->
+
+<div class="docs-section ev-anim-up" id="how-it-works">
+  <h2 class="docs-section__title">How it works</h2>
+  <p class="docs-section__lead">
+    Three steps. No file upload. The proof is mathematically verifiable by anyone, anywhere, forever.
+  </p>
+
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-step__num">1</div>
+      <div class="how-step__label">Hash</div>
+      <p class="how-step__desc">
+        The SDK computes a SHA-256 hash of the file on the user's device. The original file never leaves the browser or server.
+      </p>
+      <span class="how-step__tag">Client-side</span>
+    </div>
+    <div class="how-step">
+      <div class="how-step__num">2</div>
+      <div class="how-step__label">Sign</div>
+      <p class="how-step__desc">
+        Evidencia signs the hash with an Ed25519 key pair and issues a timestamped receipt — the proof of existence.
+      </p>
+      <span class="how-step__tag">Evidencia server</span>
+    </div>
+    <div class="how-step">
+      <div class="how-step__num">3</div>
+      <div class="how-step__label">Verify</div>
+      <p class="how-step__desc">
+        Anyone can verify the receipt against the public key — offline, in court, or via the verification portal.
+      </p>
+      <span class="how-step__tag">Anywhere</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 3. Quickstart ───────────────────────────────────────────────────── -->
+
+<div class="docs-main-grid">
+<nav class="docs-toc">
+  <div class="docs-toc__title">On this page</div>
+  <a href="#how-it-works">How it works</a>
+  <a href="#quickstart">Quickstart</a>
+  <a href="#api-reference">API Reference</a>
+  <a href="#receipt-format">Receipt format</a>
+  <a href="#media-ref">mediaRef</a>
+  <a href="#sdk">SDK</a>
+  <a href="#security">Security</a>
+</nav>
+
+<div>
+
+<div class="docs-section" id="quickstart">
+  <h2 class="docs-section__title">Quickstart</h2>
+  <p class="docs-section__lead">
+    Create your first proof in under 10 lines of code.
+  </p>
+
+  <div class="code-tabs">
+    <div class="code-tabs__bar">
+      <button class="code-tab-btn is-active" data-tab="browser">Browser</button>
+      <button class="code-tab-btn" data-tab="node">Node.js</button>
+    </div>
+
+    <div class="code-tab-panel is-active" id="tab-browser">
+      <pre><code class="language-javascript">import { Evidencia } from 'evidencia';
+
+const client = new Evidencia({ apiKey: 'evd_sk_live_...' });
+
+// Certify a photo from a file input
+const file = document.querySelector('#photo').files[0];
+const proof = await client.proofs.create({
+  file,
+  captureMethod: 'mobile_camera',
+});
+
+console.log(proof.id);                // "prf_01J4X9..."
+console.log(proof.receipt.signature); // base64 Ed25519 signature
+console.log(proof.receipt.timestamp); // "2026-03-14T10:42:00.000Z"</code></pre>
+    </div>
+
+    <div class="code-tab-panel" id="tab-node">
+      <pre><code class="language-javascript">const { Evidencia, hashFile } = require('evidencia');
+const fs = require('fs');
+
+const client = new Evidencia({
+  apiKey: process.env.EVIDENCIA_API_KEY,
+});
+
+// Hash a file and create a proof
+const buffer = fs.readFileSync('./evidence.pdf');
+const fileHash = await hashFile(buffer);
+
+const proof = await client.proofs.create({
+  fileHash,
+  captureMethod: 'server',
+  metadata: { caseId: 'INS-2026-4821' },
+});
+
+// Verify the proof
+const result = await client.proofs.verify({
+  proofId: proof.id,
+  fileHash,
+});
+console.log(result.valid);                // true
+console.log(result.checks.signatureValid); // true</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ── 4. API Reference ────────────────────────────────────────────────── -->
+
+<div class="docs-section" id="api-reference">
+  <h2 class="docs-section__title">API Reference</h2>
+  <p class="docs-section__lead">
+    All endpoints accept and return JSON. Authentication uses <code>Bearer</code> token in the <code>Authorization</code> header.
+  </p>
+
+  <div class="docs-table-wrap">
+    <table class="docs-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Endpoint</th>
+          <th>Auth</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="method-badge method-badge--post">POST</span></td>
+          <td><code>/v1/proofs</code></td>
+          <td><span class="auth-badge">API key</span></td>
+          <td>Create a new proof from a file hash</td>
+        </tr>
+        <tr>
+          <td><span class="method-badge method-badge--get">GET</span></td>
+          <td><code>/v1/proofs/:id</code></td>
+          <td><span class="auth-badge">API key</span></td>
+          <td>Retrieve a proof receipt by ID</td>
+        </tr>
+        <tr>
+          <td><span class="method-badge method-badge--post">POST</span></td>
+          <td><code>/v1/verify</code></td>
+          <td><span class="auth-badge auth-badge--open">Public</span></td>
+          <td>Verify a proof's signature and hash</td>
+        </tr>
+        <tr>
+          <td><span class="method-badge method-badge--get">GET</span></td>
+          <td><code>/v1/publicKey</code></td>
+          <td><span class="auth-badge auth-badge--open">Public</span></td>
+          <td>Get the active Ed25519 public key</td>
+        </tr>
+        <tr>
+          <td><span class="method-badge method-badge--get">GET</span></td>
+          <td><code>/v1/info</code></td>
+          <td><span class="auth-badge auth-badge--open">Public</span></td>
+          <td>API metadata and capabilities</td>
+        </tr>
+        <tr>
+          <td><span class="method-badge method-badge--get">GET</span></td>
+          <td><code>/health</code></td>
+          <td><span class="auth-badge auth-badge--open">Public</span></td>
+          <td>Health check for monitoring</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── 5. Receipt format ───────────────────────────────────────────────── -->
+
+<div class="docs-section" id="receipt-format">
+  <h2 class="docs-section__title">Receipt format</h2>
+  <p class="docs-section__lead">
+    Every proof returns a self-contained receipt — a signed JSON object that can be verified offline without contacting Evidencia.
+  </p>
+
+  <div class="receipt-grid">
+    <div class="receipt-grid__code">
+      <pre><code class="language-json">{
+  "schemaVersion": "1",
+  "receiptFormat": "evidencia-receipt-v1",
+  "issuedBy": "evidencia.tech",
+  "proofId": "prf_01J4X9K2M8...",
+  "fileHash": "sha256:e3b0c44298fc...",
+  "hashAlgorithm": "sha256",
+  "timestamp": "2026-03-14T10:42:00.000Z",
+  "captureMethod": "mobile_camera",
+  "signatureAlgorithm": "ed25519",
+  "signature": "base64...",
+  "publicKey": "base64...",
+  "publicKeyId": "kid_01J4...",
+  "metadata": {},
+  "verificationUrl": "https://verify.evidencia.tech/prf_01J4..."
+}</code></pre>
+    </div>
+    <div class="receipt-grid__fields">
+      <div class="field-row">
+        <span class="field-row__key">proofId</span>
+        <span class="field-row__val">Unique proof identifier (ULID-based)</span>
+      </div>
+      <div class="field-row">
+        <span class="field-row__key">fileHash</span>
+        <span class="field-row__val">SHA-256 of the original file, prefixed with <code>sha256:</code></span>
+      </div>
+      <div class="field-row">
+        <span class="field-row__key">timestamp</span>
+        <span class="field-row__val">ISO 8601 UTC — when the proof was created</span>
+      </div>
+      <div class="field-row">
+        <span class="field-row__key">signature</span>
+        <span class="field-row__val">Ed25519 signature over the canonical signing payload</span>
+      </div>
+      <div class="field-row">
+        <span class="field-row__key">publicKey</span>
+        <span class="field-row__val">Base64-encoded public key for independent verification</span>
+      </div>
+      <div class="field-row">
+        <span class="field-row__key">metadata</span>
+        <span class="field-row__val">Optional key/value context provided by the caller</span>
+      </div>
+      <div class="field-row">
+        <span class="field-row__key">mediaRef</span>
+        <span class="field-row__val">Optional — durable media reference for B2B integrations</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 6. mediaRef ─────────────────────────────────────────────────────── -->
+
+<div class="docs-section" id="media-ref">
+  <h2 class="docs-section__title">mediaRef — durable media references</h2>
+  <p class="docs-section__lead">
+    The <code>mediaRef</code> field lets B2B clients attach a durable reference to the certified file — a claim number, a listing ID, or an article URL. It's stored in the receipt but never part of the signing payload. The cryptographic proof is always the file hash.
+  </p>
+
+  <div class="docs-code">
+    <div class="docs-code__header">POST /v1/proofs — with mediaRef</div>
+    <pre><code class="language-javascript">const proof = await client.proofs.create({
+  fileHash: 'sha256:e3b0c44298fc1c14...',
+  captureMethod: 'mobile_camera',
+  metadata: {
+    mediaRef: {
+      type: 'insurance_claim',
+      claimId: 'CLM-2026-4821',
+      storage: 's3://bucket/claims/CLM-2026-4821/photo_001.jpg',
+    },
+  },
+});</code></pre>
+  </div>
+
+  <div class="usecase-grid">
+    <div class="usecase-card">
+      <div class="usecase-card__icon">&#x1F3E0;</div>
+      <div class="usecase-card__title">Insurance</div>
+      <p class="usecase-card__desc">
+        Attach claim IDs and storage paths to certified damage photos. Prove when the photo was taken, not just when the claim was filed.
+      </p>
+      <div class="usecase-card__example">claimId: "CLM-2026-4821"</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-card__icon">&#x1F6D2;</div>
+      <div class="usecase-card__title">Marketplace</div>
+      <p class="usecase-card__desc">
+        Certify product photos at listing time. Buyers and dispute teams can verify the original hasn't been altered after sale.
+      </p>
+      <div class="usecase-card__example">listingId: "LST-8842"</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-card__icon">&#x1F4F0;</div>
+      <div class="usecase-card__title">Journalism</div>
+      <p class="usecase-card__desc">
+        Certify raw footage at capture. Link to the published article or CMS asset ID for end-to-end provenance.
+      </p>
+      <div class="usecase-card__example">articleUrl: "https://..."</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 7. SDK ──────────────────────────────────────────────────────────── -->
+
+<div class="docs-section" id="sdk">
+  <h2 class="docs-section__title">JavaScript SDK</h2>
+  <p class="docs-section__lead">
+    The official SDK handles client-side hashing, authentication, retries, and TypeScript types. Works in Node.js 18+ and all modern browsers.
+  </p>
+
+  <div class="docs-code">
+    <div class="docs-code__header">Install</div>
+    <pre><code class="language-bash">npm install evidencia</code></pre>
+  </div>
+
+  <div class="docs-code">
+    <div class="docs-code__header">Browser — CDN</div>
+    <pre><code class="language-html">&lt;script src="https://cdn.jsdelivr.net/npm/evidencia@1/evidencia.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const client = new Evidencia({ apiKey: 'evd_sk_live_...' });
+&lt;/script&gt;</code></pre>
+  </div>
+
+  <div class="docs-table-wrap" style="margin-top: 20px;">
+    <table class="docs-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>client.proofs.create(params)</code></td>
+          <td>Create a proof. Accepts <code>file</code> or <code>fileHash</code>, plus optional <code>captureMethod</code> and <code>metadata</code>.</td>
+        </tr>
+        <tr>
+          <td><code>client.proofs.retrieve(proofId)</code></td>
+          <td>Retrieve a stored proof receipt by ID.</td>
+        </tr>
+        <tr>
+          <td><code>client.proofs.verify(params)</code></td>
+          <td>Verify signature and optionally check file hash. Accepts <code>proofId</code> or inline <code>receipt</code>.</td>
+        </tr>
+        <tr>
+          <td><code>client.publicKey.retrieve()</code></td>
+          <td>Get the active Ed25519 public signing key.</td>
+        </tr>
+        <tr>
+          <td><code>hashFile(input)</code></td>
+          <td>Standalone SHA-256 utility. Accepts File, Blob, Buffer, ArrayBuffer, Uint8Array. Returns <code>"sha256:&lt;hex&gt;"</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── 8. Security ─────────────────────────────────────────────────────── -->
+
+<div class="docs-section" id="security">
+  <h2 class="docs-section__title">Security</h2>
+  <p class="docs-section__lead">
+    Evidencia is designed for cryptographic integrity from the ground up.
+  </p>
+
+  <div class="security-grid">
+    <div class="security-item">
+      <div class="security-item__icon">&#x1F512;</div>
+      <div>
+        <div class="security-item__title">Ed25519 signatures</div>
+        <div class="security-item__desc">Every proof is signed with a 256-bit elliptic curve key. Signatures are deterministic and independently verifiable.</div>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-item__icon">&#x1F9EE;</div>
+      <div>
+        <div class="security-item__title">SHA-256 hashing</div>
+        <div class="security-item__desc">Files are hashed client-side using WebCrypto or Node.js crypto. The original file never touches the Evidencia server.</div>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-item__icon">&#x1F511;</div>
+      <div>
+        <div class="security-item__title">API key security</div>
+        <div class="security-item__desc">API keys are hashed with scrypt before storage. Raw keys are never persisted in the database.</div>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-item__icon">&#x1F6E1;</div>
+      <div>
+        <div class="security-item__title">No media storage</div>
+        <div class="security-item__desc">Evidencia stores hashes and receipts — never the original files. Your data stays on your infrastructure.</div>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-item__icon">&#x1F310;</div>
+      <div>
+        <div class="security-item__title">Content Security Policy</div>
+        <div class="security-item__desc">Strict CSP headers via Helmet. No inline scripts, no unsafe eval, no third-party trackers.</div>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-item__icon">&#x2705;</div>
+      <div>
+        <div class="security-item__title">Canonical signing payload</div>
+        <div class="security-item__desc">The signing payload uses deterministic JSON (sorted keys, RFC 8785 spirit). Changing a single byte invalidates the signature.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 9. CTA ──────────────────────────────────────────────────────────── -->
+
+<div class="docs-section">
+  <div class="docs-cta">
+    <h2 class="docs-cta__title">Ready to integrate?</h2>
+    <p class="docs-cta__sub">Request an API key and start certifying files in minutes.</p>
+    <a class="ev-btn ev-btn--blue" href="/contact.html">Request an API key</a>
+  </div>
+</div>
+
+</div><!-- /main column -->
+</div><!-- /docs-main-grid -->
+
+      </div><!-- /docs-layout -->
+    </div><!-- /ev-wrap -->
+  </main>
+
+  <footer class="ev-footer">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-footer__inner">
+        <span class="ev-footer__copy">&copy; 2025 Evidencia &middot; Infrastructure de preuve num&eacute;rique</span>
+        <div class="ev-footer__links">
+          <a href="/">Accueil</a>
+          <a href="/demo.html">Démonstration</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /ev-page -->
+
+<script src="/docs.js"></script>
+
+</body>
+</html>
