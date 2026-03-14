@@ -225,21 +225,16 @@ function renderResult(data) {
   // ── Média capturé — vignette pleine taille dans le résultat ──────
   const mediaSection = document.getElementById('resultMediaSection');
   const mediaPreview = document.getElementById('resultMediaPreview');
-  const mediaBadge   = document.getElementById('resultMediaBadge');
 
   if (capturedMediaURL) {
     mediaSection.style.display = '';
-    // Vider le contenu sauf le badge
-    Array.from(mediaPreview.children).forEach(el => {
-      if (!el.classList.contains('result-media__badge')) el.remove();
-    });
+    mediaPreview.innerHTML = '';
     if (capturedMediaType === 'image') {
       const img = new Image();
       img.src = capturedMediaURL;
       img.alt = 'Capture certifiée';
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0';
       mediaPreview.appendChild(img);
-      mediaBadge.textContent = '📷 Photo certifiée';
     } else {
       const vid = document.createElement('video');
       vid.src      = capturedMediaURL;
@@ -247,7 +242,6 @@ function renderResult(data) {
       vid.controls = true;
       vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0';
       mediaPreview.appendChild(vid);
-      mediaBadge.textContent = '🎥 Vidéo certifiée';
     }
   } else {
     mediaSection.style.display = 'none';
@@ -289,9 +283,9 @@ function renderResult(data) {
   document.getElementById('openVerifyBtn').href  = verifyUrl;
   document.getElementById('nextVerifyCard').href = verifyUrl;
 
-  // Afficher la section téléchargements si un média est disponible
+  // Afficher la grille téléchargements si un média est disponible
   if (capturedMediaURL) {
-    document.getElementById('dlSection').style.display = '';
+    document.getElementById('dlGrid').style.display = '';
   }
 
   markDone(1); markDone(2); markActive(3);
@@ -908,9 +902,7 @@ document.getElementById('btnShareNative').addEventListener('click', shareProofNa
 document.getElementById('btnDlPack').addEventListener('click', downloadProofPack);
 
 // Next section cards
-document.getElementById('nextReceiptCard').addEventListener('click', downloadReceiptPdf);
 document.getElementById('nextResetCard').addEventListener('click', resetDemo);
-document.getElementById('nextShareCard').addEventListener('click', shareProof);
 
 // Desktop modal
 document.getElementById('desktopOverlay').addEventListener('click', e => closeDesktopModal(e));
