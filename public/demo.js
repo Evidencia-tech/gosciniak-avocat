@@ -771,6 +771,15 @@ document.getElementById('desktopOverlay').addEventListener('click', e => closeDe
 document.getElementById('btnCopyDemoLink').addEventListener('click', function() { copyDemoLink(this); });
 document.getElementById('btnCloseDesktopModal').addEventListener('click', () => closeDesktopModal());
 
+// Pack tooltip toggle (mobile)
+document.querySelector('.pack-info').addEventListener('click', e => {
+  e.stopPropagation();
+  document.querySelector('.pack-wrap').classList.toggle('is-open');
+});
+document.addEventListener('click', () => {
+  document.querySelector('.pack-wrap').classList.remove('is-open');
+});
+
 // Keyboard
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeDesktopModal();
