@@ -1,6 +1,8 @@
-![README](README_2.md)# evidencia — JavaScript SDK
+# evidencia — JavaScript SDK
 
-Official JavaScript SDK for the [Evidencia](https://evidencia.io) proof infrastructure API.
+Official JavaScript SDK for the [Evidencia](https://evidencia.tech) proof-of-existence API.
+
+Certify file hashes with Ed25519 signatures. Files are hashed **client-side** and never uploaded — only the SHA-256 hash is sent to the API.
 
 ## Install
 
@@ -8,26 +10,35 @@ Official JavaScript SDK for the [Evidencia](https://evidencia.io) proof infrastr
 npm install evidencia
 ```
 
-## Quick Start
+Or load directly in a browser:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/evidencia@1/evidencia.js"></script>
+```
+
+## Browser — certify a photo
 
 ```javascript
 import { Evidencia } from 'evidencia';
 
 const client = new Evidencia({ apiKey: 'evd_sk_live_...' });
 
-// Create a proof from a file upload input
-const file = document.querySelector('input[type=file]').files[0];
+// Certify a file from an <input type="file">
+const file = document.querySelector('#photo').files[0];
 const proof = await client.proofs.create({ file });
-console.log(proof.id); // prf_01J4X9...
 
-// Verify it
+console.log(proof.id);                // "prf_01J4X9..."
+console.log(proof.receipt.timestamp); // "2026-03-14T12:00:00.000Z"
+console.log(proof.receipt.signature); // base64 Ed25519 signature
+
+// Verify the same file
 const result = await client.proofs.verify({ proofId: proof.id, file });
-console.log(result.valid); // true
+console.log(result.valid);                // true
 console.log(result.checks.signatureValid); // true
 console.log(result.checks.fileHashMatch);  // true
 ```
 
-## Node.js
+## Node.js — verify a proof
 
 ```javascript
 const { Evidencia } = require('evidencia');
@@ -35,100 +46,122 @@ const fs = require('fs');
 
 const client = new Evidencia({ apiKey: process.env.EVIDENCIA_API_KEY });
 
-// From a Buffer
-const buffer = fs.readFileSync('./damage_photo.jpg');
-const proof = await client.proofs.create({
+// Retrieve an existing proof
+const proof = await client.proofs.retrieve('prf_01J4X9K2M8N3P5Q7R9S0T1U2V3');
+console.log(proof.receipt.fileHash); // "sha256:e3b0c4..."
+
+// Verify with the original file
+const buffer = fs.readFileSync('./photo.jpg');
+const result = await client.proofs.verify({
+  proofId: proof.id,
   file: buffer,
-  captureMethod: 'api_upload',
-  metadata: { claimId: 'CLM-9821', adjuster: 'J. Dupont' },
 });
+console.log(result.valid); // true
 ```
 
-## Privacy mode — hash client-side, never send file
+## Privacy mode — hash locally, submit hash only
 
 ```javascript
 import { Evidencia, hashFile } from 'evidencia';
 
 const client = new Evidencia({ apiKey: '...' });
 
-// 1. Hash the file locally
-const fileHash = await hashFile(myFile);  // "sha256:e3b0..."
+// Hash the file locally
+const fileHash = await hashFile(myFile); // "sha256:e3b0c4..."
 
-// 2. Submit hash only — file never leaves the browser
-const proof = await client.proofs.create({ fileHash, captureMethod: 'sdk_web' });
-```
-
-## Retrieve a proof
-
-```javascript
-const proof = await client.proofs.retrieve('prf_01J4X9K2M8N3P5Q7R9S0T1U2V3');
-console.log(proof.receipt.timestamp); // "2025-08-14T10:42:00.000Z"
-```
-
-## Verify an inline receipt (fully offline)
-
-```javascript
-// receipt is a local JSON object — no server lookup, no proofId
-const result = await client.proofs.verify({
-  receipt: savedReceipt,
-  file: originalFile,
-});
+// Only the hash is sent — the file never leaves the device
+const proof = await client.proofs.create({ fileHash });
 ```
 
 ## Error handling
 
 ```javascript
-import { Evidencia, EvidenciaNotFoundError, EvidenciaAuthError } from 'evidencia';
+import {
+  Evidencia,
+  EvidenciaAuthError,
+  EvidenciaNotFoundError,
+  EvidenciaValidationError,
+} from 'evidencia';
 
 try {
   const proof = await client.proofs.retrieve('prf_NOTEXIST');
 } catch (err) {
   if (err instanceof EvidenciaNotFoundError) {
-    console.log('Proof not found:', err.code);
+    console.log('Proof not found');
   } else if (err instanceof EvidenciaAuthError) {
     console.log('Invalid API key');
-  } else {
-    console.error('Unexpected error:', err.message);
+  } else if (err instanceof EvidenciaValidationError) {
+    console.log('Bad request:', err.message);
   }
 }
 ```
 
 ## Configuration
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `apiKey` | `EVIDENCIA_API_KEY` env | Your API key |
-| `baseUrl` | `https://api.evidencia.io` | API base URL |
-| `timeout` | `30000` | Request timeout (ms) |
+| Option    | Default                      | Description              |
+|-----------|------------------------------|--------------------------|
+| `apiKey`  | `EVIDENCIA_API_KEY` env var  | Your API key             |
+| `baseUrl` | `https://api.evidencia.io`   | API base URL             |
+| `timeout` | `30000`                      | Request timeout (ms)     |
 
 ```javascript
-// Development: point at local backend
 const client = new Evidencia({
   apiKey: 'evd_sk_dev_changeme',
   baseUrl: 'http://localhost:3000',
 });
 ```
 
-## API
+## API Reference
 
 ### `client.proofs.create(params)`
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `file` | File / Blob / Buffer | One of file or fileHash | File to prove (hashed client-side) |
-| `fileHash` | string | One of file or fileHash | Pre-computed `"sha256:..."` hash |
-| `captureMethod` | string | No | Default: `"sdk_js"` |
-| `metadata` | object | No | Custom key/value metadata |
+
+Create a new proof. The file is hashed client-side — never uploaded.
+
+| Param           | Type                         | Required             | Description                          |
+|-----------------|------------------------------|----------------------|--------------------------------------|
+| `file`          | File / Blob / Buffer         | file or fileHash     | File to prove (hashed client-side)   |
+| `fileHash`      | string                       | file or fileHash     | Pre-computed `"sha256:<hex>"` hash   |
+| `captureMethod` | string                       | No                   | Default: `"sdk_js"`                  |
+| `metadata`      | object                       | No                   | Custom key/value metadata            |
+
+Returns: `Promise<ProofResponse>`
 
 ### `client.proofs.retrieve(proofId)`
-Returns the stored proof receipt.
+
+Retrieve a stored proof receipt by ID.
+
+Returns: `Promise<ProofResponse>`
 
 ### `client.proofs.verify(params)`
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `proofId` | string | One of proofId or receipt | Look up receipt from server |
-| `receipt` | object | One of proofId or receipt | Inline receipt (offline) |
-| `file` | File / Blob / Buffer | No | Original file for hash check |
-| `fileHash` | string | No | Pre-computed hash for comparison |
+
+Verify a proof's Ed25519 signature and optionally check file hash correspondence.
+
+| Param      | Type                         | Required               | Description                          |
+|------------|------------------------------|------------------------|--------------------------------------|
+| `proofId`  | string                       | proofId or receipt     | Look up receipt from server          |
+| `receipt`  | object                       | proofId or receipt     | Inline receipt (offline verify)      |
+| `file`     | File / Blob / Buffer         | No                     | Original file for hash check         |
+| `fileHash` | string                       | No                     | Pre-computed hash for comparison     |
+
+Returns: `Promise<VerifyResponse>`
+
+### `client.publicKey.retrieve()`
+
+Get the active Ed25519 public signing key.
+
+Returns: `Promise<PublicKeyResponse>`
 
 ### `hashFile(input)`
-Compute SHA-256 of a file. Returns `"sha256:<hex>"`. Standalone helper, no client needed.
+
+Standalone SHA-256 hash utility. No client instance needed.
+
+```javascript
+import { hashFile } from 'evidencia';
+const hash = await hashFile(file); // "sha256:e3b0c4..."
+```
+
+Accepts: `File`, `Blob`, `ArrayBuffer`, `Buffer`, `Uint8Array`
+
+## License
+
+MIT

@@ -12,42 +12,25 @@ export interface EvidenciaConfig {
 
 // ─── Receipt ──────────────────────────────────────────────────────────────────
 
-export interface DeviceAttestation {
-  platform: string;
-  model?: string;
-  osVersion?: string;
-  attestationToken?: string;
-  attestationProvider?: string;
-}
-
-export interface LocationClaim {
-  latitude: number;
-  longitude: number;
-  accuracyMeters?: number;
-  provider?: string;
-}
-
 export interface ProofReceipt {
   schemaVersion: '1';
   receiptFormat: 'evidencia-receipt-v1';
   issuedBy: string;
   proofId: string;
   fileHash: string;
-  hashAlgorithm: 'sha256' | 'sha3-256';
+  hashAlgorithm: 'sha256';
   timestamp: string;       // ISO 8601 UTC
   captureMethod: string;
-  signatureAlgorithm: 'ed25519' | 'ecdsa-p256';
+  signatureAlgorithm: 'ed25519';
   signature: string;       // base64
   publicKey: string;       // base64
   publicKeyId: string;
   metadata: Record<string, unknown>;
-  deviceAttestation?: DeviceAttestation;
-  locationClaim?: LocationClaim;
-  rfcTimestamp?: string;
-  rfcTimestampAuthority?: string;
-  anchorTxId?: string;
-  anchorChain?: string;
   verificationUrl: string;
+  /** Durable media reference (B2B clients). Not part of the signing payload. */
+  mediaRef?: string | Record<string, unknown>;
+  /** Display-only image URL (demo/preview). Not the certified artefact. */
+  photoUrl?: string;
 }
 
 // ─── API responses ────────────────────────────────────────────────────────────
@@ -66,8 +49,6 @@ export interface VerifyChecks {
   /** null if no file or hash was provided for comparison */
   fileHashMatch: boolean | null;
   timestampPlausible: boolean;
-  rfc3161Valid?: boolean;
-  blockchainConfirmed?: boolean;
 }
 
 export interface VerifyResponse {

@@ -1,0 +1,10 @@
+README_2.md
+*.test.js
+*.spec.js
+__tests__/
+test/
+tests/
+.github/
+.eslintrc*
+.prettierrc*
+tsconfig.json

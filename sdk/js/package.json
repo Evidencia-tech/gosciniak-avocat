@@ -3,16 +3,19 @@
   "version": "1.0.0",
   "description": "Official JavaScript SDK for the Evidencia proof infrastructure API",
   "main": "evidencia.js",
-  "module": "evidencia.mjs",
+  "types": "index.d.ts",
   "exports": {
     ".": {
-      "import": "./evidencia.mjs",
-      "require": "./evidencia.js"
+      "require": "./evidencia.js",
+      "default": "./evidencia.js"
     }
   },
-  "files": ["evidencia.js", "evidencia.mjs", "index.d.ts", "README.md"],
-  "keywords": ["evidencia", "proof", "cryptography", "verification", "ed25519"],
+  "files": ["evidencia.js", "index.d.ts", "README.md", "CHANGELOG.md"],
+  "keywords": ["evidencia", "proof", "proof-of-existence", "cryptography", "verification", "ed25519", "sha256", "digital-signature"],
   "license": "MIT",
   "engines": { "node": ">=18" },
-  "repository": { "type": "git", "url": "https://github.com/evidencia/evidencia-js" }
+  "repository": { "type": "git", "url": "https://github.com/nicofmusic/evidencia.git", "directory": "sdk/js" },
+  "homepage": "https://evidencia.tech",
+  "bugs": { "url": "https://github.com/nicofMusic/evidencia/issues" },
+  "author": "Evidencia <hello@evidencia.io>"
 }
