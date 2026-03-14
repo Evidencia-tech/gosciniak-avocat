@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Evidencia — Developer Documentation</title>
-  <meta name="description" content="Integrate proof of authenticity into your application with the Evidencia API and JavaScript SDK." />
+  <title>Evidencia — Documentation développeur</title>
+  <meta name="description" content="Intégrez la preuve d'authenticité dans votre application avec l'API Evidencia et le SDK JavaScript." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/ev-system.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <style>
     /* ── Layout ──────────────────────────────────────────────────── */
@@ -537,10 +537,54 @@
       .docs-toc { display: none; }
     }
 
+    /* ── Language toggle ─────────────────────────────────────────── */
+    .lang-toggle {
+      display:       inline-flex;
+      align-items:   center;
+      gap:           0;
+      font-family:   var(--mono);
+      font-size:     11px;
+      letter-spacing: 0.04em;
+      border:        1.5px solid var(--border);
+      border-radius: 20px;
+      overflow:      hidden;
+      margin-left:   16px;
+      flex-shrink:   0;
+    }
+
+    .lang-toggle__btn {
+      padding:    5px 11px;
+      border:     none;
+      background: transparent;
+      color:      var(--ink-dim);
+      cursor:     pointer;
+      font-family: inherit;
+      font-size:   inherit;
+      letter-spacing: inherit;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .lang-toggle__btn:hover {
+      color: var(--ink-mid);
+    }
+
+    .lang-toggle__btn.is-active {
+      background: var(--blue);
+      color:      #fff;
+    }
+
     /* ── highlight.js override ───────────────────────────────────── */
-    .hljs {
+    /* Scope hljs styles strictly to pre>code so they never leak into headings */
+    pre code.hljs {
       background: transparent !important;
       padding: 0 !important;
+    }
+
+    /* Prevent any stray hljs class outside pre from affecting layout */
+    :not(pre) > .hljs {
+      display: inline;
+      padding: 0;
+      background: none;
     }
   </style>
 </head>
@@ -561,6 +605,10 @@
           <a href="/docs.html" class="is-active">Docs</a>
           <a href="/api-client.html">API</a>
         </nav>
+        <div class="lang-toggle" id="langToggle">
+          <button class="lang-toggle__btn is-active" data-lang="fr">FR</button>
+          <button class="lang-toggle__btn" data-lang="en">EN</button>
+        </div>
       </div>
     </div>
   </header>
@@ -572,12 +620,12 @@
 <!-- ── 1. Hero ──────────────────────────────────────────────────────────── -->
 
 <div class="docs-hero ev-anim-up">
-  <div class="docs-eyebrow">Developer Documentation</div>
-  <h1 class="docs-title">Integrate proof of authenticity<br />in minutes</h1>
-  <p class="docs-sub">
-    Certify any file with a cryptographic timestamp and Ed25519 signature.
-    Your users' files are hashed client-side — never uploaded, never stored.
-  </p>
+  <div class="docs-eyebrow" data-fr="Documentation développeur" data-en="Developer Documentation">Documentation développeur</div>
+  <h1 class="docs-title">
+    <span data-fr="Intégrez la preuve d'authenticité" data-en="Integrate proof of authenticity">Intégrez la preuve d'authenticité</span><br />
+    <span data-fr="en quelques minutes" data-en="in minutes">en quelques minutes</span>
+  </h1>
+  <p class="docs-sub" data-fr="Certifiez n'importe quel fichier avec un horodatage cryptographique et une signature Ed25519. Les fichiers de vos utilisateurs sont hachés côté client — jamais téléversés, jamais stockés." data-en="Certify any file with a cryptographic timestamp and Ed25519 signature. Your users' files are hashed client-side — never uploaded, never stored.">Certifiez n'importe quel fichier avec un horodatage cryptographique et une signature Ed25519. Les fichiers de vos utilisateurs sont hachés côté client — jamais téléversés, jamais stockés.</p>
   <div class="docs-install">
     <span class="docs-install__prompt">$</span> npm install evidencia
   </div>
@@ -586,35 +634,27 @@
 <!-- ── 2. How it works ─────────────────────────────────────────────────── -->
 
 <div class="docs-section ev-anim-up" id="how-it-works">
-  <h2 class="docs-section__title">How it works</h2>
-  <p class="docs-section__lead">
-    Three steps. No file upload. The proof is mathematically verifiable by anyone, anywhere, forever.
-  </p>
+  <h2 class="docs-section__title" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</h2>
+  <p class="docs-section__lead" data-fr="Trois étapes. Aucun fichier téléversé. La preuve est vérifiable mathématiquement par quiconque, partout, pour toujours." data-en="Three steps. No file upload. The proof is mathematically verifiable by anyone, anywhere, forever.">Trois étapes. Aucun fichier téléversé. La preuve est vérifiable mathématiquement par quiconque, partout, pour toujours.</p>
 
   <div class="how-steps">
     <div class="how-step">
       <div class="how-step__num">1</div>
       <div class="how-step__label">Hash</div>
-      <p class="how-step__desc">
-        The SDK computes a SHA-256 hash of the file on the user's device. The original file never leaves the browser or server.
-      </p>
-      <span class="how-step__tag">Client-side</span>
+      <p class="how-step__desc" data-fr="Le SDK calcule un hash SHA-256 du fichier sur l'appareil de l'utilisateur. Le fichier original ne quitte jamais le navigateur ni le serveur." data-en="The SDK computes a SHA-256 hash of the file on the user's device. The original file never leaves the browser or server.">Le SDK calcule un hash SHA-256 du fichier sur l'appareil de l'utilisateur. Le fichier original ne quitte jamais le navigateur ni le serveur.</p>
+      <span class="how-step__tag" data-fr="Côté client" data-en="Client-side">Côté client</span>
     </div>
     <div class="how-step">
       <div class="how-step__num">2</div>
-      <div class="how-step__label">Sign</div>
-      <p class="how-step__desc">
-        Evidencia signs the hash with an Ed25519 key pair and issues a timestamped receipt — the proof of existence.
-      </p>
-      <span class="how-step__tag">Evidencia server</span>
+      <div class="how-step__label" data-fr="Signature" data-en="Sign">Signature</div>
+      <p class="how-step__desc" data-fr="Evidencia signe le hash avec une paire de clés Ed25519 et émet un reçu horodaté — la preuve d'existence." data-en="Evidencia signs the hash with an Ed25519 key pair and issues a timestamped receipt — the proof of existence.">Evidencia signe le hash avec une paire de clés Ed25519 et émet un reçu horodaté — la preuve d'existence.</p>
+      <span class="how-step__tag" data-fr="Serveur Evidencia" data-en="Evidencia server">Serveur Evidencia</span>
     </div>
     <div class="how-step">
       <div class="how-step__num">3</div>
-      <div class="how-step__label">Verify</div>
-      <p class="how-step__desc">
-        Anyone can verify the receipt against the public key — offline, in court, or via the verification portal.
-      </p>
-      <span class="how-step__tag">Anywhere</span>
+      <div class="how-step__label" data-fr="Vérification" data-en="Verify">Vérification</div>
+      <p class="how-step__desc" data-fr="N'importe qui peut vérifier le reçu contre la clé publique — hors ligne, en tribunal, ou via le portail de vérification." data-en="Anyone can verify the receipt against the public key — offline, in court, or via the verification portal.">N'importe qui peut vérifier le reçu contre la clé publique — hors ligne, en tribunal, ou via le portail de vérification.</p>
+      <span class="how-step__tag" data-fr="Partout" data-en="Anywhere">Partout</span>
     </div>
   </div>
 </div>
@@ -623,27 +663,25 @@
 
 <div class="docs-main-grid">
 <nav class="docs-toc">
-  <div class="docs-toc__title">On this page</div>
-  <a href="#how-it-works">How it works</a>
-  <a href="#quickstart">Quickstart</a>
-  <a href="#api-reference">API Reference</a>
-  <a href="#receipt-format">Receipt format</a>
+  <div class="docs-toc__title" data-fr="Sur cette page" data-en="On this page">Sur cette page</div>
+  <a href="#how-it-works" data-fr="Fonctionnement" data-en="How it works">Fonctionnement</a>
+  <a href="#quickstart" data-fr="Démarrage rapide" data-en="Quickstart">Démarrage rapide</a>
+  <a href="#api-reference" data-fr="Référence API" data-en="API Reference">Référence API</a>
+  <a href="#receipt-format" data-fr="Format du reçu" data-en="Receipt format">Format du reçu</a>
   <a href="#media-ref">mediaRef</a>
   <a href="#sdk">SDK</a>
-  <a href="#security">Security</a>
+  <a href="#security" data-fr="Sécurité" data-en="Security">Sécurité</a>
 </nav>
 
 <div>
 
 <div class="docs-section" id="quickstart">
-  <h2 class="docs-section__title">Quickstart</h2>
-  <p class="docs-section__lead">
-    Create your first proof in under 10 lines of code.
-  </p>
+  <h2 class="docs-section__title" data-fr="Démarrage rapide" data-en="Quickstart">Démarrage rapide</h2>
+  <p class="docs-section__lead" data-fr="Créez votre première preuve en moins de 10 lignes de code." data-en="Create your first proof in under 10 lines of code.">Créez votre première preuve en moins de 10 lignes de code.</p>
 
   <div class="code-tabs">
     <div class="code-tabs__bar">
-      <button class="code-tab-btn is-active" data-tab="browser">Browser</button>
+      <button class="code-tab-btn is-active" data-tab="browser" data-fr="Navigateur" data-en="Browser">Navigateur</button>
       <button class="code-tab-btn" data-tab="node">Node.js</button>
     </div>
 
@@ -652,7 +690,7 @@
 
 const client = new Evidencia({ apiKey: 'evd_sk_live_...' });
 
-// Certify a photo from a file input
+// Certifier une photo depuis un input fichier
 const file = document.querySelector('#photo').files[0];
 const proof = await client.proofs.create({
   file,
@@ -660,7 +698,7 @@ const proof = await client.proofs.create({
 });
 
 console.log(proof.id);                // "prf_01J4X9..."
-console.log(proof.receipt.signature); // base64 Ed25519 signature
+console.log(proof.receipt.signature); // signature Ed25519 en base64
 console.log(proof.receipt.timestamp); // "2026-03-14T10:42:00.000Z"</code></pre>
     </div>
 
@@ -672,7 +710,7 @@ const client = new Evidencia({
   apiKey: process.env.EVIDENCIA_API_KEY,
 });
 
-// Hash a file and create a proof
+// Hacher un fichier et créer une preuve
 const buffer = fs.readFileSync('./evidence.pdf');
 const fileHash = await hashFile(buffer);
 
@@ -682,7 +720,7 @@ const proof = await client.proofs.create({
   metadata: { caseId: 'INS-2026-4821' },
 });
 
-// Verify the proof
+// Vérifier la preuve
 const result = await client.proofs.verify({
   proofId: proof.id,
   fileHash,
@@ -696,16 +734,14 @@ console.log(result.checks.signatureValid); // true</code></pre>
 <!-- ── 4. API Reference ────────────────────────────────────────────────── -->
 
 <div class="docs-section" id="api-reference">
-  <h2 class="docs-section__title">API Reference</h2>
-  <p class="docs-section__lead">
-    All endpoints accept and return JSON. Authentication uses <code>Bearer</code> token in the <code>Authorization</code> header.
-  </p>
+  <h2 class="docs-section__title" data-fr="Référence API" data-en="API Reference">Référence API</h2>
+  <p class="docs-section__lead" data-fr="Tous les endpoints acceptent et retournent du JSON. L'authentification utilise un token <code>Bearer</code> dans le header <code>Authorization</code>." data-en="All endpoints accept and return JSON. Authentication uses a <code>Bearer</code> token in the <code>Authorization</code> header.">Tous les endpoints acceptent et retournent du JSON. L'authentification utilise un token <code>Bearer</code> dans le header <code>Authorization</code>.</p>
 
   <div class="docs-table-wrap">
     <table class="docs-table">
       <thead>
         <tr>
-          <th>Method</th>
+          <th data-fr="Méthode" data-en="Method">Méthode</th>
           <th>Endpoint</th>
           <th>Auth</th>
           <th>Description</th>
@@ -716,37 +752,37 @@ console.log(result.checks.signatureValid); // true</code></pre>
           <td><span class="method-badge method-badge--post">POST</span></td>
           <td><code>/v1/proofs</code></td>
           <td><span class="auth-badge">API key</span></td>
-          <td>Create a new proof from a file hash</td>
+          <td data-fr="Créer une nouvelle preuve à partir d'un hash de fichier" data-en="Create a new proof from a file hash">Créer une nouvelle preuve à partir d'un hash de fichier</td>
         </tr>
         <tr>
           <td><span class="method-badge method-badge--get">GET</span></td>
-          <td><code>/v1/proofs/:id</code></td>
+          <td><code>/v1/proofs</code></td>
           <td><span class="auth-badge">API key</span></td>
-          <td>Retrieve a proof receipt by ID</td>
+          <td data-fr="Lister les preuves récentes (max 100, retourne <code>proofs[]</code>, <code>total</code>, <code>limit</code>)" data-en="List recent proofs (max 100, returns <code>proofs[]</code>, <code>total</code>, <code>limit</code>)">Lister les preuves récentes (max 100, retourne <code>proofs[]</code>, <code>total</code>, <code>limit</code>)</td>
         </tr>
         <tr>
           <td><span class="method-badge method-badge--post">POST</span></td>
           <td><code>/v1/verify</code></td>
           <td><span class="auth-badge auth-badge--open">Public</span></td>
-          <td>Verify a proof's signature and hash</td>
+          <td data-fr="Vérifier la signature et le hash d'une preuve" data-en="Verify a proof's signature and hash">Vérifier la signature et le hash d'une preuve</td>
         </tr>
         <tr>
           <td><span class="method-badge method-badge--get">GET</span></td>
           <td><code>/v1/publicKey</code></td>
           <td><span class="auth-badge auth-badge--open">Public</span></td>
-          <td>Get the active Ed25519 public key</td>
+          <td data-fr="Obtenir la clé publique Ed25519 active" data-en="Get the active Ed25519 public key">Obtenir la clé publique Ed25519 active</td>
         </tr>
         <tr>
           <td><span class="method-badge method-badge--get">GET</span></td>
           <td><code>/v1/info</code></td>
           <td><span class="auth-badge auth-badge--open">Public</span></td>
-          <td>API metadata and capabilities</td>
+          <td data-fr="Métadonnées et capacités de l'API" data-en="API metadata and capabilities">Métadonnées et capacités de l'API</td>
         </tr>
         <tr>
           <td><span class="method-badge method-badge--get">GET</span></td>
           <td><code>/health</code></td>
           <td><span class="auth-badge auth-badge--open">Public</span></td>
-          <td>Health check for monitoring</td>
+          <td data-fr="Vérification de santé pour le monitoring" data-en="Health check for monitoring">Vérification de santé pour le monitoring</td>
         </tr>
       </tbody>
     </table>
@@ -756,10 +792,8 @@ console.log(result.checks.signatureValid); // true</code></pre>
 <!-- ── 5. Receipt format ───────────────────────────────────────────────── -->
 
 <div class="docs-section" id="receipt-format">
-  <h2 class="docs-section__title">Receipt format</h2>
-  <p class="docs-section__lead">
-    Every proof returns a self-contained receipt — a signed JSON object that can be verified offline without contacting Evidencia.
-  </p>
+  <h2 class="docs-section__title" data-fr="Format du reçu" data-en="Receipt format">Format du reçu</h2>
+  <p class="docs-section__lead" data-fr="Chaque preuve retourne un reçu autonome — un objet JSON signé, vérifiable hors ligne sans contacter Evidencia." data-en="Every proof returns a self-contained receipt — a signed JSON object that can be verified offline without contacting Evidencia.">Chaque preuve retourne un reçu autonome — un objet JSON signé, vérifiable hors ligne sans contacter Evidencia.</p>
 
   <div class="receipt-grid">
     <div class="receipt-grid__code">
@@ -783,31 +817,31 @@ console.log(result.checks.signatureValid); // true</code></pre>
     <div class="receipt-grid__fields">
       <div class="field-row">
         <span class="field-row__key">proofId</span>
-        <span class="field-row__val">Unique proof identifier (ULID-based)</span>
+        <span class="field-row__val" data-fr="Identifiant unique de la preuve (basé sur ULID)" data-en="Unique proof identifier (ULID-based)">Identifiant unique de la preuve (basé sur ULID)</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">fileHash</span>
-        <span class="field-row__val">SHA-256 of the original file, prefixed with <code>sha256:</code></span>
+        <span class="field-row__val" data-fr="SHA-256 du fichier original, préfixé par <code>sha256:</code>" data-en="SHA-256 of the original file, prefixed with <code>sha256:</code>">SHA-256 du fichier original, préfixé par <code>sha256:</code></span>
       </div>
       <div class="field-row">
         <span class="field-row__key">timestamp</span>
-        <span class="field-row__val">ISO 8601 UTC — when the proof was created</span>
+        <span class="field-row__val" data-fr="ISO 8601 UTC — date de création de la preuve" data-en="ISO 8601 UTC — when the proof was created">ISO 8601 UTC — date de création de la preuve</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">signature</span>
-        <span class="field-row__val">Ed25519 signature over the canonical signing payload</span>
+        <span class="field-row__val" data-fr="Signature Ed25519 du payload canonique" data-en="Ed25519 signature over the canonical signing payload">Signature Ed25519 du payload canonique</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">publicKey</span>
-        <span class="field-row__val">Base64-encoded public key for independent verification</span>
+        <span class="field-row__val" data-fr="Clé publique encodée en base64 pour vérification indépendante" data-en="Base64-encoded public key for independent verification">Clé publique encodée en base64 pour vérification indépendante</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">metadata</span>
-        <span class="field-row__val">Optional key/value context provided by the caller</span>
+        <span class="field-row__val" data-fr="Contexte clé/valeur optionnel fourni par l'appelant" data-en="Optional key/value context provided by the caller">Contexte clé/valeur optionnel fourni par l'appelant</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">mediaRef</span>
-        <span class="field-row__val">Optional — durable media reference for B2B integrations</span>
+        <span class="field-row__val" data-fr="Optionnel — référence média durable pour les intégrations B2B" data-en="Optional — durable media reference for B2B integrations">Optionnel — référence média durable pour les intégrations B2B</span>
       </div>
     </div>
   </div>
@@ -816,13 +850,11 @@ console.log(result.checks.signatureValid); // true</code></pre>
 <!-- ── 6. mediaRef ─────────────────────────────────────────────────────── -->
 
 <div class="docs-section" id="media-ref">
-  <h2 class="docs-section__title">mediaRef — durable media references</h2>
-  <p class="docs-section__lead">
-    The <code>mediaRef</code> field lets B2B clients attach a durable reference to the certified file — a claim number, a listing ID, or an article URL. It's stored in the receipt but never part of the signing payload. The cryptographic proof is always the file hash.
-  </p>
+  <h2 class="docs-section__title" data-fr="mediaRef — références média durables" data-en="mediaRef — durable media references">mediaRef — références média durables</h2>
+  <p class="docs-section__lead" data-fr="Le champ <code>mediaRef</code> permet aux clients B2B d'attacher une référence durable au fichier certifié — un numéro de sinistre, un identifiant d'annonce ou une URL d'article. Il est stocké dans le reçu mais ne fait jamais partie du payload de signature. La preuve cryptographique est toujours le hash du fichier." data-en="The <code>mediaRef</code> field lets B2B clients attach a durable reference to the certified file — a claim number, a listing ID, or an article URL. It's stored in the receipt but never part of the signing payload. The cryptographic proof is always the file hash.">Le champ <code>mediaRef</code> permet aux clients B2B d'attacher une référence durable au fichier certifié — un numéro de sinistre, un identifiant d'annonce ou une URL d'article. Il est stocké dans le reçu mais ne fait jamais partie du payload de signature. La preuve cryptographique est toujours le hash du fichier.</p>
 
   <div class="docs-code">
-    <div class="docs-code__header">POST /v1/proofs — with mediaRef</div>
+    <div class="docs-code__header" data-fr="POST /v1/proofs — avec mediaRef" data-en="POST /v1/proofs — with mediaRef">POST /v1/proofs — avec mediaRef</div>
     <pre><code class="language-javascript">const proof = await client.proofs.create({
   fileHash: 'sha256:e3b0c44298fc1c14...',
   captureMethod: 'mobile_camera',
@@ -839,26 +871,20 @@ console.log(result.checks.signatureValid); // true</code></pre>
   <div class="usecase-grid">
     <div class="usecase-card">
       <div class="usecase-card__icon">&#x1F3E0;</div>
-      <div class="usecase-card__title">Insurance</div>
-      <p class="usecase-card__desc">
-        Attach claim IDs and storage paths to certified damage photos. Prove when the photo was taken, not just when the claim was filed.
-      </p>
+      <div class="usecase-card__title" data-fr="Assurance" data-en="Insurance">Assurance</div>
+      <p class="usecase-card__desc" data-fr="Associez des numéros de sinistre et des chemins de stockage aux photos de dommages certifiées. Prouvez quand la photo a été prise, pas seulement quand le sinistre a été déclaré." data-en="Attach claim IDs and storage paths to certified damage photos. Prove when the photo was taken, not just when the claim was filed.">Associez des numéros de sinistre et des chemins de stockage aux photos de dommages certifiées. Prouvez quand la photo a été prise, pas seulement quand le sinistre a été déclaré.</p>
       <div class="usecase-card__example">claimId: "CLM-2026-4821"</div>
     </div>
     <div class="usecase-card">
       <div class="usecase-card__icon">&#x1F6D2;</div>
       <div class="usecase-card__title">Marketplace</div>
-      <p class="usecase-card__desc">
-        Certify product photos at listing time. Buyers and dispute teams can verify the original hasn't been altered after sale.
-      </p>
+      <p class="usecase-card__desc" data-fr="Certifiez les photos produit à la mise en ligne. Les acheteurs et équipes de litiges peuvent vérifier que l'original n'a pas été modifié après la vente." data-en="Certify product photos at listing time. Buyers and dispute teams can verify the original hasn't been altered after sale.">Certifiez les photos produit à la mise en ligne. Les acheteurs et équipes de litiges peuvent vérifier que l'original n'a pas été modifié après la vente.</p>
       <div class="usecase-card__example">listingId: "LST-8842"</div>
     </div>
     <div class="usecase-card">
       <div class="usecase-card__icon">&#x1F4F0;</div>
-      <div class="usecase-card__title">Journalism</div>
-      <p class="usecase-card__desc">
-        Certify raw footage at capture. Link to the published article or CMS asset ID for end-to-end provenance.
-      </p>
+      <div class="usecase-card__title" data-fr="Journalisme" data-en="Journalism">Journalisme</div>
+      <p class="usecase-card__desc" data-fr="Certifiez les images brutes à la capture. Reliez-les à l'article publié ou à l'identifiant CMS pour une traçabilité de bout en bout." data-en="Certify raw footage at capture. Link to the published article or CMS asset ID for end-to-end provenance.">Certifiez les images brutes à la capture. Reliez-les à l'article publié ou à l'identifiant CMS pour une traçabilité de bout en bout.</p>
       <div class="usecase-card__example">articleUrl: "https://..."</div>
     </div>
   </div>
@@ -867,18 +893,16 @@ console.log(result.checks.signatureValid); // true</code></pre>
 <!-- ── 7. SDK ──────────────────────────────────────────────────────────── -->
 
 <div class="docs-section" id="sdk">
-  <h2 class="docs-section__title">JavaScript SDK</h2>
-  <p class="docs-section__lead">
-    The official SDK handles client-side hashing, authentication, retries, and TypeScript types. Works in Node.js 18+ and all modern browsers.
-  </p>
+  <h2 class="docs-section__title" data-fr="SDK JavaScript" data-en="JavaScript SDK">SDK JavaScript</h2>
+  <p class="docs-section__lead" data-fr="Le SDK officiel gère le hachage côté client, l'authentification, les tentatives automatiques et les types TypeScript. Compatible Node.js 18+ et tous les navigateurs modernes." data-en="The official SDK handles client-side hashing, authentication, retries, and TypeScript types. Works in Node.js 18+ and all modern browsers.">Le SDK officiel gère le hachage côté client, l'authentification, les tentatives automatiques et les types TypeScript. Compatible Node.js 18+ et tous les navigateurs modernes.</p>
 
   <div class="docs-code">
-    <div class="docs-code__header">Install</div>
+    <div class="docs-code__header" data-fr="Installation" data-en="Install">Installation</div>
     <pre><code class="language-bash">npm install evidencia</code></pre>
   </div>
 
   <div class="docs-code">
-    <div class="docs-code__header">Browser — CDN</div>
+    <div class="docs-code__header" data-fr="Navigateur — CDN" data-en="Browser — CDN">Navigateur — CDN</div>
     <pre><code class="language-html">&lt;script src="https://cdn.jsdelivr.net/npm/evidencia@1/evidencia.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   const client = new Evidencia({ apiKey: 'evd_sk_live_...' });
@@ -889,30 +913,30 @@ console.log(result.checks.signatureValid); // true</code></pre>
     <table class="docs-table">
       <thead>
         <tr>
-          <th>Method</th>
+          <th data-fr="Méthode" data-en="Method">Méthode</th>
           <th>Description</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><code>client.proofs.create(params)</code></td>
-          <td>Create a proof. Accepts <code>file</code> or <code>fileHash</code>, plus optional <code>captureMethod</code> and <code>metadata</code>.</td>
+          <td data-fr="Créer une preuve. Accepte <code>file</code> ou <code>fileHash</code>, plus <code>captureMethod</code> et <code>metadata</code> optionnels." data-en="Create a proof. Accepts <code>file</code> or <code>fileHash</code>, plus optional <code>captureMethod</code> and <code>metadata</code>.">Créer une preuve. Accepte <code>file</code> ou <code>fileHash</code>, plus <code>captureMethod</code> et <code>metadata</code> optionnels.</td>
         </tr>
         <tr>
           <td><code>client.proofs.retrieve(proofId)</code></td>
-          <td>Retrieve a stored proof receipt by ID.</td>
+          <td data-fr="Récupérer un reçu de preuve par son identifiant." data-en="Retrieve a stored proof receipt by ID.">Récupérer un reçu de preuve par son identifiant.</td>
         </tr>
         <tr>
           <td><code>client.proofs.verify(params)</code></td>
-          <td>Verify signature and optionally check file hash. Accepts <code>proofId</code> or inline <code>receipt</code>.</td>
+          <td data-fr="Vérifier la signature et optionnellement le hash du fichier. Accepte <code>proofId</code> ou un <code>receipt</code> inline." data-en="Verify signature and optionally check file hash. Accepts <code>proofId</code> or inline <code>receipt</code>.">Vérifier la signature et optionnellement le hash du fichier. Accepte <code>proofId</code> ou un <code>receipt</code> inline.</td>
         </tr>
         <tr>
           <td><code>client.publicKey.retrieve()</code></td>
-          <td>Get the active Ed25519 public signing key.</td>
+          <td data-fr="Obtenir la clé publique Ed25519 active." data-en="Get the active Ed25519 public signing key.">Obtenir la clé publique Ed25519 active.</td>
         </tr>
         <tr>
           <td><code>hashFile(input)</code></td>
-          <td>Standalone SHA-256 utility. Accepts File, Blob, Buffer, ArrayBuffer, Uint8Array. Returns <code>"sha256:&lt;hex&gt;"</code>.</td>
+          <td data-fr="Utilitaire SHA-256 autonome. Accepte File, Blob, Buffer, ArrayBuffer, Uint8Array. Retourne <code>&quot;sha256:&lt;hex&gt;&quot;</code>." data-en="Standalone SHA-256 utility. Accepts File, Blob, Buffer, ArrayBuffer, Uint8Array. Returns <code>&quot;sha256:&lt;hex&gt;&quot;</code>.">Utilitaire SHA-256 autonome. Accepte File, Blob, Buffer, ArrayBuffer, Uint8Array. Retourne <code>"sha256:&lt;hex&gt;"</code>.</td>
         </tr>
       </tbody>
     </table>
@@ -922,52 +946,50 @@ console.log(result.checks.signatureValid); // true</code></pre>
 <!-- ── 8. Security ─────────────────────────────────────────────────────── -->
 
 <div class="docs-section" id="security">
-  <h2 class="docs-section__title">Security</h2>
-  <p class="docs-section__lead">
-    Evidencia is designed for cryptographic integrity from the ground up.
-  </p>
+  <h2 class="docs-section__title" data-fr="Sécurité" data-en="Security">Sécurité</h2>
+  <p class="docs-section__lead" data-fr="Evidencia est conçu pour l'intégrité cryptographique de bout en bout." data-en="Evidencia is designed for cryptographic integrity from the ground up.">Evidencia est conçu pour l'intégrité cryptographique de bout en bout.</p>
 
   <div class="security-grid">
     <div class="security-item">
       <div class="security-item__icon">&#x1F512;</div>
       <div>
-        <div class="security-item__title">Ed25519 signatures</div>
-        <div class="security-item__desc">Every proof is signed with a 256-bit elliptic curve key. Signatures are deterministic and independently verifiable.</div>
+        <div class="security-item__title" data-fr="Signatures Ed25519" data-en="Ed25519 signatures">Signatures Ed25519</div>
+        <div class="security-item__desc" data-fr="Chaque preuve est signée avec une clé à courbe elliptique 256 bits. Les signatures sont déterministes et vérifiables de manière indépendante." data-en="Every proof is signed with a 256-bit elliptic curve key. Signatures are deterministic and independently verifiable.">Chaque preuve est signée avec une clé à courbe elliptique 256 bits. Les signatures sont déterministes et vérifiables de manière indépendante.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x1F9EE;</div>
       <div>
-        <div class="security-item__title">SHA-256 hashing</div>
-        <div class="security-item__desc">Files are hashed client-side using WebCrypto or Node.js crypto. The original file never touches the Evidencia server.</div>
+        <div class="security-item__title" data-fr="Hachage SHA-256" data-en="SHA-256 hashing">Hachage SHA-256</div>
+        <div class="security-item__desc" data-fr="Les fichiers sont hachés côté client via WebCrypto ou Node.js crypto. Le fichier original ne touche jamais le serveur Evidencia." data-en="Files are hashed client-side using WebCrypto or Node.js crypto. The original file never touches the Evidencia server.">Les fichiers sont hachés côté client via WebCrypto ou Node.js crypto. Le fichier original ne touche jamais le serveur Evidencia.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x1F511;</div>
       <div>
-        <div class="security-item__title">API key security</div>
-        <div class="security-item__desc">API keys are hashed with scrypt before storage. Raw keys are never persisted in the database.</div>
+        <div class="security-item__title" data-fr="Sécurité des clés API" data-en="API key security">Sécurité des clés API</div>
+        <div class="security-item__desc" data-fr="Les clés API sont hachées avec scrypt avant stockage. Les clés brutes ne sont jamais persistées en base de données." data-en="API keys are hashed with scrypt before storage. Raw keys are never persisted in the database.">Les clés API sont hachées avec scrypt avant stockage. Les clés brutes ne sont jamais persistées en base de données.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x1F6E1;</div>
       <div>
-        <div class="security-item__title">No media storage</div>
-        <div class="security-item__desc">Evidencia stores hashes and receipts — never the original files. Your data stays on your infrastructure.</div>
+        <div class="security-item__title" data-fr="Aucun stockage de médias" data-en="No media storage">Aucun stockage de médias</div>
+        <div class="security-item__desc" data-fr="Evidencia stocke les hash et les reçus — jamais les fichiers originaux. Vos données restent sur votre infrastructure." data-en="Evidencia stores hashes and receipts — never the original files. Your data stays on your infrastructure.">Evidencia stocke les hash et les reçus — jamais les fichiers originaux. Vos données restent sur votre infrastructure.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x1F310;</div>
       <div>
         <div class="security-item__title">Content Security Policy</div>
-        <div class="security-item__desc">Strict CSP headers via Helmet. No inline scripts, no unsafe eval, no third-party trackers.</div>
+        <div class="security-item__desc" data-fr="Headers CSP stricts via Helmet. Aucun script inline, pas d'eval, aucun tracker tiers." data-en="Strict CSP headers via Helmet. No inline scripts, no unsafe eval, no third-party trackers.">Headers CSP stricts via Helmet. Aucun script inline, pas d'eval, aucun tracker tiers.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x2705;</div>
       <div>
-        <div class="security-item__title">Canonical signing payload</div>
-        <div class="security-item__desc">The signing payload uses deterministic JSON (sorted keys, RFC 8785 spirit). Changing a single byte invalidates the signature.</div>
+        <div class="security-item__title" data-fr="Payload de signature canonique" data-en="Canonical signing payload">Payload de signature canonique</div>
+        <div class="security-item__desc" data-fr="Le payload de signature utilise du JSON déterministe (clés triées, esprit RFC 8785). Modifier un seul octet invalide la signature." data-en="The signing payload uses deterministic JSON (sorted keys, RFC 8785 spirit). Changing a single byte invalidates the signature.">Le payload de signature utilise du JSON déterministe (clés triées, esprit RFC 8785). Modifier un seul octet invalide la signature.</div>
       </div>
     </div>
   </div>
@@ -977,9 +999,9 @@ console.log(result.checks.signatureValid); // true</code></pre>
 
 <div class="docs-section">
   <div class="docs-cta">
-    <h2 class="docs-cta__title">Ready to integrate?</h2>
-    <p class="docs-cta__sub">Request an API key and start certifying files in minutes.</p>
-    <a class="ev-btn ev-btn--blue" href="/contact.html">Request an API key</a>
+    <h2 class="docs-cta__title" data-fr="Prêt à intégrer ?" data-en="Ready to integrate?">Prêt à intégrer ?</h2>
+    <p class="docs-cta__sub" data-fr="Demandez une clé API et commencez à certifier vos fichiers en quelques minutes." data-en="Request an API key and start certifying files in minutes.">Demandez une clé API et commencez à certifier vos fichiers en quelques minutes.</p>
+    <a class="ev-btn ev-btn--blue" href="/contact.html" data-fr="Demander une clé API" data-en="Request an API key">Demander une clé API</a>
   </div>
 </div>
 
@@ -993,7 +1015,7 @@ console.log(result.checks.signatureValid); // true</code></pre>
   <footer class="ev-footer">
     <div class="ev-wrap ev-wrap--wide">
       <div class="ev-footer__inner">
-        <span class="ev-footer__copy">&copy; 2025 Evidencia &middot; Infrastructure de preuve num&eacute;rique</span>
+        <span class="ev-footer__copy">&copy; 2026 Evidencia &middot; Infrastructure de preuve num&eacute;rique</span>
         <div class="ev-footer__links">
           <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
