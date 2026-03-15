@@ -547,14 +547,37 @@
           <span class="ev-logo__wordmark">Evidencia</span>
         </a>
         <nav class="ev-header__nav">
+          <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
           <a href="/verify.html" class="is-active">Vérifier</a>
+          <a href="/dashboard.html">Dashboard</a>
           <a href="/docs.html">Docs</a>
           <a href="/api-client.html">API</a>
+          <a href="/contact.html">Contact</a>
         </nav>
+        <button class="ev-hamburger" aria-label="Menu" onclick="document.getElementById('mobileNav').classList.add('is-open')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </header>
+
+  <div class="ev-mobile-nav" id="mobileNav" onclick="if(event.target===this)this.classList.remove('is-open')">
+    <div class="ev-mobile-nav__panel">
+      <button class="ev-mobile-nav__close" aria-label="Fermer" onclick="document.getElementById('mobileNav').classList.remove('is-open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="ev-mobile-nav__links">
+        <a href="/">Accueil</a>
+        <a href="/demo.html">Démonstration</a>
+        <a href="/verify.html" class="is-active">Vérifier</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/api-client.html">API</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+    </div>
+  </div>
 
   <main>
     <div class="ev-wrap">
@@ -619,14 +642,14 @@
             <span class="how-item__num">1</span>
             <div>
               <div class="how-item__title">Le fichier est haché</div>
-              <div class="how-item__desc">SHA-256 crée une empreinte unique du fichier</div>
+              <div class="how-item__desc">Une empreinte numérique unique du fichier est créée</div>
             </div>
           </div>
           <div class="how-item">
             <span class="how-item__num">2</span>
             <div>
               <div class="how-item__title">Evidencia signe</div>
-              <div class="how-item__desc">Une signature Ed25519 est appliquée à l'instant exact</div>
+              <div class="how-item__desc">Une signature cryptographique est appliquée à l'instant exact</div>
             </div>
           </div>
           <div class="how-item">
@@ -726,6 +749,9 @@
         <div class="ev-footer__links">
           <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/docs.html">Docs</a>
+          <a href="/api-client.html">API</a>
           <a href="/contact.html">Contact</a>
         </div>
       </div>

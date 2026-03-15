@@ -600,18 +600,41 @@
           <span class="ev-logo__wordmark">Evidencia</span>
         </a>
         <nav class="ev-header__nav">
+          <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
           <a href="/verify.html">Vérifier</a>
+          <a href="/dashboard.html">Dashboard</a>
           <a href="/docs.html" class="is-active">Docs</a>
           <a href="/api-client.html">API</a>
+          <a href="/contact.html">Contact</a>
         </nav>
         <div class="lang-toggle" id="langToggle">
           <button class="lang-toggle__btn is-active" data-lang="fr">FR</button>
           <button class="lang-toggle__btn" data-lang="en">EN</button>
         </div>
+        <button class="ev-hamburger" aria-label="Menu" onclick="document.getElementById('mobileNav').classList.add('is-open')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </header>
+
+  <div class="ev-mobile-nav" id="mobileNav" onclick="if(event.target===this)this.classList.remove('is-open')">
+    <div class="ev-mobile-nav__panel">
+      <button class="ev-mobile-nav__close" aria-label="Fermer" onclick="document.getElementById('mobileNav').classList.remove('is-open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="ev-mobile-nav__links">
+        <a href="/">Accueil</a>
+        <a href="/demo.html">Démonstration</a>
+        <a href="/verify.html">Vérifier</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/docs.html" class="is-active">Docs</a>
+        <a href="/api-client.html">API</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+    </div>
+  </div>
 
   <main>
     <div class="ev-wrap ev-wrap--wide">
@@ -625,7 +648,7 @@
     <span data-fr="Intégrez la preuve d'authenticité" data-en="Integrate proof of authenticity">Intégrez la preuve d'authenticité</span><br />
     <span data-fr="en quelques minutes" data-en="in minutes">en quelques minutes</span>
   </h1>
-  <p class="docs-sub" data-fr="Certifiez n'importe quel fichier avec un horodatage cryptographique et une signature Ed25519. Les fichiers de vos utilisateurs sont hachés côté client — jamais téléversés, jamais stockés." data-en="Certify any file with a cryptographic timestamp and Ed25519 signature. Your users' files are hashed client-side — never uploaded, never stored.">Certifiez n'importe quel fichier avec un horodatage cryptographique et une signature Ed25519. Les fichiers de vos utilisateurs sont hachés côté client — jamais téléversés, jamais stockés.</p>
+  <p class="docs-sub" data-fr="Certifiez n'importe quel fichier avec un horodatage et une signature cryptographique. Les fichiers de vos utilisateurs sont hachés côté client — jamais téléversés, jamais stockés." data-en="Certify any file with a cryptographic timestamp and signature. Your users' files are hashed client-side — never uploaded, never stored.">Certifiez n'importe quel fichier avec un horodatage et une signature cryptographique. Les fichiers de vos utilisateurs sont hachés côté client — jamais téléversés, jamais stockés.</p>
   <div class="docs-install">
     <span class="docs-install__prompt">$</span> npm install evidencia
   </div>
@@ -641,13 +664,13 @@
     <div class="how-step">
       <div class="how-step__num">1</div>
       <div class="how-step__label">Hash</div>
-      <p class="how-step__desc" data-fr="Le SDK calcule un hash SHA-256 du fichier sur l'appareil de l'utilisateur. Le fichier original ne quitte jamais le navigateur ni le serveur." data-en="The SDK computes a SHA-256 hash of the file on the user's device. The original file never leaves the browser or server.">Le SDK calcule un hash SHA-256 du fichier sur l'appareil de l'utilisateur. Le fichier original ne quitte jamais le navigateur ni le serveur.</p>
+      <p class="how-step__desc" data-fr="Le SDK calcule une empreinte numérique du fichier sur l'appareil de l'utilisateur. Le fichier original ne quitte jamais le navigateur ni le serveur." data-en="The SDK computes a digital fingerprint of the file on the user's device. The original file never leaves the browser or server.">Le SDK calcule une empreinte numérique du fichier sur l'appareil de l'utilisateur. Le fichier original ne quitte jamais le navigateur ni le serveur.</p>
       <span class="how-step__tag" data-fr="Côté client" data-en="Client-side">Côté client</span>
     </div>
     <div class="how-step">
       <div class="how-step__num">2</div>
       <div class="how-step__label" data-fr="Signature" data-en="Sign">Signature</div>
-      <p class="how-step__desc" data-fr="Evidencia signe le hash avec une paire de clés Ed25519 et émet un reçu horodaté — la preuve d'existence." data-en="Evidencia signs the hash with an Ed25519 key pair and issues a timestamped receipt — the proof of existence.">Evidencia signe le hash avec une paire de clés Ed25519 et émet un reçu horodaté — la preuve d'existence.</p>
+      <p class="how-step__desc" data-fr="Evidencia signe l'empreinte avec une clé cryptographique et émet un reçu horodaté — la preuve d'existence." data-en="Evidencia signs the fingerprint with a cryptographic key and issues a timestamped receipt — the proof of existence.">Evidencia signe l'empreinte avec une clé cryptographique et émet un reçu horodaté — la preuve d'existence.</p>
       <span class="how-step__tag" data-fr="Serveur Evidencia" data-en="Evidencia server">Serveur Evidencia</span>
     </div>
     <div class="how-step">
@@ -698,7 +721,7 @@ const proof = await client.proofs.create({
 });
 
 console.log(proof.id);                // "prf_01J4X9..."
-console.log(proof.receipt.signature); // signature Ed25519 en base64
+console.log(proof.receipt.signature); // signature cryptographique en base64
 console.log(proof.receipt.timestamp); // "2026-03-14T10:42:00.000Z"</code></pre>
     </div>
 
@@ -770,7 +793,7 @@ console.log(result.checks.signatureValid); // true</code></pre>
           <td><span class="method-badge method-badge--get">GET</span></td>
           <td><code>/v1/publicKey</code></td>
           <td><span class="auth-badge auth-badge--open">Public</span></td>
-          <td data-fr="Obtenir la clé publique Ed25519 active" data-en="Get the active Ed25519 public key">Obtenir la clé publique Ed25519 active</td>
+          <td data-fr="Obtenir la clé publique active" data-en="Get the active public key">Obtenir la clé publique active</td>
         </tr>
         <tr>
           <td><span class="method-badge method-badge--get">GET</span></td>
@@ -798,30 +821,21 @@ console.log(result.checks.signatureValid); // true</code></pre>
   <div class="receipt-grid">
     <div class="receipt-grid__code">
       <pre><code class="language-json">{
-  "schemaVersion": "1",
-  "receiptFormat": "evidencia-receipt-v1",
-  "issuedBy": "evidencia.tech",
   "proofId": "prf_01J4X9K2M8...",
   "fileHash": "sha256:e3b0c44298fc...",
-  "hashAlgorithm": "sha256",
   "timestamp": "2026-03-14T10:42:00.000Z",
-  "captureMethod": "mobile_camera",
-  "signatureAlgorithm": "ed25519",
   "signature": "base64...",
-  "publicKey": "base64...",
-  "publicKeyId": "kid_01J4...",
-  "metadata": {},
   "verificationUrl": "https://verify.evidencia.tech/prf_01J4..."
 }</code></pre>
     </div>
     <div class="receipt-grid__fields">
       <div class="field-row">
         <span class="field-row__key">proofId</span>
-        <span class="field-row__val" data-fr="Identifiant unique de la preuve (basé sur ULID)" data-en="Unique proof identifier (ULID-based)">Identifiant unique de la preuve (basé sur ULID)</span>
+        <span class="field-row__val" data-fr="Identifiant unique de la preuve" data-en="Unique proof identifier">Identifiant unique de la preuve</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">fileHash</span>
-        <span class="field-row__val" data-fr="SHA-256 du fichier original, préfixé par <code>sha256:</code>" data-en="SHA-256 of the original file, prefixed with <code>sha256:</code>">SHA-256 du fichier original, préfixé par <code>sha256:</code></span>
+        <span class="field-row__val" data-fr="Empreinte numérique du fichier original" data-en="Digital fingerprint of the original file">Empreinte numérique du fichier original</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">timestamp</span>
@@ -829,15 +843,11 @@ console.log(result.checks.signatureValid); // true</code></pre>
       </div>
       <div class="field-row">
         <span class="field-row__key">signature</span>
-        <span class="field-row__val" data-fr="Signature Ed25519 du payload canonique" data-en="Ed25519 signature over the canonical signing payload">Signature Ed25519 du payload canonique</span>
+        <span class="field-row__val" data-fr="Signature cryptographique du payload déterministe signé par Evidencia" data-en="Cryptographic signature of the deterministic payload signed by Evidencia">Signature cryptographique du payload déterministe signé par Evidencia</span>
       </div>
       <div class="field-row">
-        <span class="field-row__key">publicKey</span>
-        <span class="field-row__val" data-fr="Clé publique encodée en base64 pour vérification indépendante" data-en="Base64-encoded public key for independent verification">Clé publique encodée en base64 pour vérification indépendante</span>
-      </div>
-      <div class="field-row">
-        <span class="field-row__key">metadata</span>
-        <span class="field-row__val" data-fr="Contexte clé/valeur optionnel fourni par l'appelant" data-en="Optional key/value context provided by the caller">Contexte clé/valeur optionnel fourni par l'appelant</span>
+        <span class="field-row__key">verificationUrl</span>
+        <span class="field-row__val" data-fr="URL de vérification publique de la preuve" data-en="Public verification URL for the proof">URL de vérification publique de la preuve</span>
       </div>
       <div class="field-row">
         <span class="field-row__key">mediaRef</span>
@@ -932,11 +942,11 @@ console.log(result.checks.signatureValid); // true</code></pre>
         </tr>
         <tr>
           <td><code>client.publicKey.retrieve()</code></td>
-          <td data-fr="Obtenir la clé publique Ed25519 active." data-en="Get the active Ed25519 public signing key.">Obtenir la clé publique Ed25519 active.</td>
+          <td data-fr="Obtenir la clé publique active." data-en="Get the active public signing key.">Obtenir la clé publique active.</td>
         </tr>
         <tr>
           <td><code>hashFile(input)</code></td>
-          <td data-fr="Utilitaire SHA-256 autonome. Accepte File, Blob, Buffer, ArrayBuffer, Uint8Array. Retourne <code>&quot;sha256:&lt;hex&gt;&quot;</code>." data-en="Standalone SHA-256 utility. Accepts File, Blob, Buffer, ArrayBuffer, Uint8Array. Returns <code>&quot;sha256:&lt;hex&gt;&quot;</code>.">Utilitaire SHA-256 autonome. Accepte File, Blob, Buffer, ArrayBuffer, Uint8Array. Retourne <code>"sha256:&lt;hex&gt;"</code>.</td>
+          <td data-fr="Utilitaire d'empreinte numérique autonome. Accepte File, Blob, Buffer, ArrayBuffer, Uint8Array. Retourne une empreinte préfixée." data-en="Standalone hashing utility. Accepts File, Blob, Buffer, ArrayBuffer, Uint8Array. Returns a prefixed fingerprint.">Utilitaire d'empreinte numérique autonome. Accepte File, Blob, Buffer, ArrayBuffer, Uint8Array. Retourne une empreinte préfixée.</td>
         </tr>
       </tbody>
     </table>
@@ -953,22 +963,22 @@ console.log(result.checks.signatureValid); // true</code></pre>
     <div class="security-item">
       <div class="security-item__icon">&#x1F512;</div>
       <div>
-        <div class="security-item__title" data-fr="Signatures Ed25519" data-en="Ed25519 signatures">Signatures Ed25519</div>
-        <div class="security-item__desc" data-fr="Chaque preuve est signée avec une clé à courbe elliptique 256 bits. Les signatures sont déterministes et vérifiables de manière indépendante." data-en="Every proof is signed with a 256-bit elliptic curve key. Signatures are deterministic and independently verifiable.">Chaque preuve est signée avec une clé à courbe elliptique 256 bits. Les signatures sont déterministes et vérifiables de manière indépendante.</div>
+        <div class="security-item__title" data-fr="Signatures cryptographiques" data-en="Cryptographic signatures">Signatures cryptographiques</div>
+        <div class="security-item__desc" data-fr="Chaque preuve est signée avec une clé cryptographique de haute sécurité. Les signatures sont déterministes et vérifiables de manière indépendante." data-en="Every proof is signed with a high-security cryptographic key. Signatures are deterministic and independently verifiable.">Chaque preuve est signée avec une clé cryptographique de haute sécurité. Les signatures sont déterministes et vérifiables de manière indépendante.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x1F9EE;</div>
       <div>
-        <div class="security-item__title" data-fr="Hachage SHA-256" data-en="SHA-256 hashing">Hachage SHA-256</div>
-        <div class="security-item__desc" data-fr="Les fichiers sont hachés côté client via WebCrypto ou Node.js crypto. Le fichier original ne touche jamais le serveur Evidencia." data-en="Files are hashed client-side using WebCrypto or Node.js crypto. The original file never touches the Evidencia server.">Les fichiers sont hachés côté client via WebCrypto ou Node.js crypto. Le fichier original ne touche jamais le serveur Evidencia.</div>
+        <div class="security-item__title" data-fr="Empreinte numérique" data-en="Digital fingerprint">Empreinte numérique</div>
+        <div class="security-item__desc" data-fr="Les fichiers sont hachés côté client. Le fichier original ne touche jamais le serveur Evidencia." data-en="Files are hashed client-side. The original file never touches the Evidencia server.">Les fichiers sont hachés côté client. Le fichier original ne touche jamais le serveur Evidencia.</div>
       </div>
     </div>
     <div class="security-item">
       <div class="security-item__icon">&#x1F511;</div>
       <div>
         <div class="security-item__title" data-fr="Sécurité des clés API" data-en="API key security">Sécurité des clés API</div>
-        <div class="security-item__desc" data-fr="Les clés API sont hachées avec scrypt avant stockage. Les clés brutes ne sont jamais persistées en base de données." data-en="API keys are hashed with scrypt before storage. Raw keys are never persisted in the database.">Les clés API sont hachées avec scrypt avant stockage. Les clés brutes ne sont jamais persistées en base de données.</div>
+        <div class="security-item__desc" data-fr="Les clés API sont protégées par un algorithme de hachage renforcé avant stockage. Les clés brutes ne sont jamais persistées en base de données." data-en="API keys are protected by a reinforced hashing algorithm before storage. Raw keys are never persisted in the database.">Les clés API sont protégées par un algorithme de hachage renforcé avant stockage. Les clés brutes ne sont jamais persistées en base de données.</div>
       </div>
     </div>
     <div class="security-item">
@@ -988,8 +998,8 @@ console.log(result.checks.signatureValid); // true</code></pre>
     <div class="security-item">
       <div class="security-item__icon">&#x2705;</div>
       <div>
-        <div class="security-item__title" data-fr="Payload de signature canonique" data-en="Canonical signing payload">Payload de signature canonique</div>
-        <div class="security-item__desc" data-fr="Le payload de signature utilise du JSON déterministe (clés triées, esprit RFC 8785). Modifier un seul octet invalide la signature." data-en="The signing payload uses deterministic JSON (sorted keys, RFC 8785 spirit). Changing a single byte invalidates the signature.">Le payload de signature utilise du JSON déterministe (clés triées, esprit RFC 8785). Modifier un seul octet invalide la signature.</div>
+        <div class="security-item__title" data-fr="Payload de signature déterministe" data-en="Deterministic signing payload">Payload de signature déterministe</div>
+        <div class="security-item__desc" data-fr="Le payload de signature utilise un format déterministe. Modifier un seul octet invalide la signature." data-en="The signing payload uses a deterministic format. Changing a single byte invalidates the signature.">Le payload de signature utilise un format déterministe. Modifier un seul octet invalide la signature.</div>
       </div>
     </div>
   </div>
@@ -1020,6 +1030,8 @@ console.log(result.checks.signatureValid); // true</code></pre>
           <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
           <a href="/verify.html">Vérifier</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/api-client.html">API</a>
           <a href="/contact.html">Contact</a>
         </div>
       </div>

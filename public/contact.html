@@ -251,15 +251,38 @@
           <span class="ev-logo__wordmark">Evidencia</span>
         </a>
         <nav class="ev-header__nav">
+          <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
           <a href="/verify.html">Vérifier</a>
+          <a href="/dashboard.html">Dashboard</a>
           <a href="/docs.html">Docs</a>
           <a href="/api-client.html">API</a>
+          <a href="/contact.html" class="is-active">Contact</a>
         </nav>
         <a class="ev-btn ev-btn--blue ev-btn--sm" href="/demo.html">Essayer →</a>
+        <button class="ev-hamburger" aria-label="Menu" onclick="document.getElementById('mobileNav').classList.add('is-open')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </header>
+
+  <div class="ev-mobile-nav" id="mobileNav" onclick="if(event.target===this)this.classList.remove('is-open')">
+    <div class="ev-mobile-nav__panel">
+      <button class="ev-mobile-nav__close" aria-label="Fermer" onclick="document.getElementById('mobileNav').classList.remove('is-open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="ev-mobile-nav__links">
+        <a href="/">Accueil</a>
+        <a href="/demo.html">Démonstration</a>
+        <a href="/verify.html">Vérifier</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/api-client.html">API</a>
+        <a href="/contact.html" class="is-active">Contact</a>
+      </div>
+    </div>
+  </div>
 
   <main>
     <div class="ev-wrap">
@@ -424,7 +447,9 @@
           <a href="/">Accueil</a>
           <a href="/demo.html">Démonstration</a>
           <a href="/verify.html">Vérifier</a>
-          <a href="/contact.html">Contact</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/docs.html">Docs</a>
+          <a href="/api-client.html">API</a>
         </div>
       </div>
     </div>
