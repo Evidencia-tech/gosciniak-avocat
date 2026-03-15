@@ -123,20 +123,45 @@
       border-radius:  3px;
     }
 
-    .topbar-nav {
-      display:     flex;
-      align-items: center;
-      gap:         20px;
+    .topbar-nav { display: none; }
+
+    .topbar-hamburger {
+      background:  none;
+      border:      none;
+      cursor:      pointer;
+      padding:     6px;
+      color:       var(--ink);
+      font-size:   22px;
+      line-height: 1;
       margin-left: 8px;
+      flex-shrink: 0;
     }
 
-    .topbar-nav a {
-      font-size:       12px;
-      color:           var(--ink-dim);
-      text-decoration: none;
-      transition:      color 0.15s;
+    .topbar-dropdown {
+      display:        none;
+      position:       absolute;
+      top:            100%;
+      right:          16px;
+      background:     var(--surface);
+      border:         1.5px solid var(--border);
+      border-radius:  var(--r-md);
+      box-shadow:     var(--shadow-lg);
+      min-width:      200px;
+      z-index:        200;
+      padding:        8px 0;
+      animation:      ev-fadeUp 0.2s ease both;
     }
-    .topbar-nav a:hover { color: var(--ink); }
+    .topbar-dropdown.is-open { display: block; }
+
+    .topbar-dropdown a {
+      display:         block;
+      padding:         10px 20px;
+      font-size:       14px;
+      color:           var(--ink-mid);
+      text-decoration: none;
+      transition:      background 0.15s, color 0.15s;
+    }
+    .topbar-dropdown a:hover { background: var(--panel); color: var(--ink); }
 
     /* Champs de config dans la topbar */
     .topbar-right {
@@ -584,14 +609,15 @@
   <div class="topbar-sep"></div>
   <span class="topbar-tag">Console API</span>
 
-  <nav class="topbar-nav">
+  <button class="topbar-hamburger" id="topbarHamburger" aria-label="Menu" onclick="document.getElementById('topbarDropdown').classList.toggle('is-open')">&#9776;</button>
+  <div class="topbar-dropdown" id="topbarDropdown">
     <a href="/">Accueil</a>
-    <a href="/demo.html">Démo</a>
+    <a href="/demo.html">Démonstration</a>
     <a href="/verify.html">Vérifier</a>
     <a href="/dashboard.html">Dashboard</a>
     <a href="/docs.html">Docs</a>
     <a href="/contact.html">Contact</a>
-  </nav>
+  </div>
 
   <div class="topbar-right">
     <input class="topbar-input topbar-input--url" id="baseUrl"
@@ -720,7 +746,7 @@ function renderFields(id) {
         <div class="file-drop" id="createDrop">
           <input type="file" id="createFile" onchange="handleCreateFile()" />
           <div class="file-drop__text">Déposer un fichier ou cliquer pour parcourir</div>
-          <div class="file-drop__sub">Le fichier n'est jamais envoyé — seule l'empreinte SHA-256 est transmise</div>
+          <div class="file-drop__sub">Le fichier n'est jamais envoyé — seule l'empreinte numérique est transmise</div>
         </div>
         <div class="file-info" id="createFileInfo">
           <div class="file-info__icon">
@@ -1117,6 +1143,10 @@ function formatBytes(b) {
 
 // ── Initialisation ────────────────────────────────────────────────────────────
 selectEndpoint('create');
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('topbarDropdown');
+  if (dd && !dd.contains(e.target) && e.target.id !== 'topbarHamburger') dd.classList.remove('is-open');
+});
 </script>
 
 </body>

@@ -546,7 +546,7 @@
 
           <div class="new-proof-section__header">
             <div class="new-proof-section__title">Certifier un fichier</div>
-            <div class="new-proof-section__sub">Sélectionnez n'importe quel fichier. L'empreinte SHA-256 est calculée dans votre navigateur — le fichier ne quitte jamais votre appareil.</div>
+            <div class="new-proof-section__sub">Sélectionnez n'importe quel fichier. L'empreinte numérique est calculée dans votre navigateur — le fichier ne quitte jamais votre appareil.</div>
           </div>
 
           <div class="new-proof-section__body">
@@ -610,7 +610,7 @@
           <!-- Pied -->
           <div class="new-proof-section__footer">
             <div class="new-proof-section__note">
-              L'empreinte SHA-256 est calculée localement.<br/>
+              L'empreinte numérique est calculée localement.<br/>
               Le fichier n'est jamais envoyé à Evidencia.
             </div>
             <button class="ev-btn ev-btn--primary" id="certifyBtn" onclick="startCertify()" disabled>
@@ -772,7 +772,7 @@ function renderResult(data) {
     document.getElementById('resultHashBox').innerHTML = `
       <div class="ev-hash-box">
         <div>
-          <span class="ev-hash-box__label">Empreinte du fichier (SHA-256)</span>
+          <span class="ev-hash-box__label">Empreinte du fichier</span>
           <div class="ev-hash-box__val">${receipt.fileHash}</div>
         </div>
         <button class="ev-copy-btn" id="hashCopyBtn" onclick="copyHash('${receipt.fileHash}')">Copier</button>
