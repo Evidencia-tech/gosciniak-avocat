@@ -265,7 +265,7 @@ function renderResult(data) {
     document.getElementById('resultHashBox').innerHTML = `
       <div class="ev-hash-box" style="margin-top:16px">
         <div>
-          <span class="ev-hash-box__label">Empreinte du fichier (SHA-256)</span>
+          <span class="ev-hash-box__label">Empreinte du fichier</span>
           <div class="ev-hash-box__val" id="hashVal">${receipt.fileHash}</div>
         </div>
         <button class="ev-copy-btn" id="hashCopyBtn">Copier</button>
@@ -400,7 +400,7 @@ function buildNoticePdf() {
   section('Version certifiée (avec badge)', [146, 96, 10], [
     'Le fichier certifie-evidencia.png contient le badge Evidencia.',
     'Il est destiné au partage uniquement.',
-    'Ce fichier ne peut pas être vérifié cryptographiquement car le badge modifie les pixels et donc le hash SHA-256.',
+    'Ce fichier ne peut pas être vérifié cryptographiquement car le badge modifie les pixels et donc l\'empreinte numérique.',
   ]);
 
   // Details table
@@ -416,7 +416,7 @@ function buildNoticePdf() {
   const details = [
     ['Identifiant', receipt.proofId || currentId],
     ['Horodatage', receipt.timestamp ? formatDate(receipt.timestamp) : '—'],
-    ['Empreinte SHA-256', receipt.fileHash || '—'],
+    ['Empreinte numérique', receipt.fileHash || '—'],
     ['Méthode de capture', receipt.captureMethod || '—'],
   ];
 
@@ -477,9 +477,9 @@ async function buildReceiptPdf() {
   const fields = [
     ['Identifiant', receipt.proofId || currentId],
     ['Horodatage', receipt.timestamp ? formatDate(receipt.timestamp) : '—'],
-    ['Empreinte SHA-256', receipt.fileHash || '—'],
+    ['Empreinte numérique', receipt.fileHash || '—'],
     ['Méthode de capture', receipt.captureMethod || '—'],
-    ['Algorithme', receipt.signatureAlgorithm || 'ed25519'],
+    ['Algorithme', receipt.signatureAlgorithm || '—'],
     ['Clé publique (ID)', receipt.publicKeyId || '—'],
     ['Signature', receipt.signature || '—'],
   ];
@@ -534,7 +534,7 @@ async function buildReceiptPdf() {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(138, 133, 128);
-      doc.text('Image fournie à titre de référence visuelle · seul le hash SHA-256 est certifié', 20, y);
+      doc.text('Image fournie à titre de référence visuelle · seule l\'empreinte numérique est certifiée', 20, y);
       doc.setTextColor(0, 0, 0);
     } catch (e) {
       console.warn('[Evidencia] Image non incluse dans le PDF :', e.message);

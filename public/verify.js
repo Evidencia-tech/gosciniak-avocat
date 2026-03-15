@@ -153,7 +153,7 @@ function renderCertificate(data) {
     img.onerror = () => { preview.style.display = 'none'; };
     const disclaimer = document.createElement('p');
     disclaimer.className = 'media-preview__disclaimer';
-    disclaimer.textContent = 'Image fournie à titre de référence visuelle · seul le hash SHA-256 est certifié';
+    disclaimer.textContent = 'Image fournie à titre de référence visuelle · seule l\'empreinte numérique est certifiée';
     wrapper.appendChild(img);
     wrapper.appendChild(disclaimer);
     preview.appendChild(wrapper);
@@ -162,8 +162,8 @@ function renderCertificate(data) {
 
   // Contrôles
   const checkDefs = [
-    { key: 'signatureValid',     name: 'Signature cryptographique',  desc: 'La signature Ed25519 est authentique et correspond au contenu de la preuve.',       descFail: 'La signature ne correspond pas. La preuve a peut-être été modifiée.' },
-    { key: 'hashMatch',          name: 'Intégrité du fichier',       desc: 'L\'empreinte SHA-256 du fichier original correspond à la preuve.',                  descSkip: 'Aucun fichier fourni — la comparaison d\'empreinte n\'a pas été effectuée.', descFail: 'L\'empreinte ne correspond pas. Il peut s\'agir d\'un fichier différent.' },
+    { key: 'signatureValid',     name: 'Signature cryptographique',  desc: 'La signature cryptographique est authentique et correspond au contenu de la preuve.',       descFail: 'La signature ne correspond pas. La preuve a peut-être été modifiée.' },
+    { key: 'hashMatch',          name: 'Intégrité du fichier',       desc: 'L\'empreinte numérique du fichier original correspond à la preuve.',                  descSkip: 'Aucun fichier fourni — la comparaison d\'empreinte n\'a pas été effectuée.', descFail: 'L\'empreinte ne correspond pas. Il peut s\'agir d\'un fichier différent.' },
     { key: 'timestampPlausible', name: 'Validité de l\'horodatage',  desc: 'L\'horodatage de la preuve est cohérent et n\'est pas daté dans le futur.',         descFail: 'L\'horodatage semble invalide ou est situé dans le futur.' },
   ];
 
@@ -218,7 +218,7 @@ function renderCertificate(data) {
     document.getElementById('hashRow').innerHTML = `
       <div class="ev-hash-box">
         <div>
-          <span class="ev-hash-box__label">Empreinte du fichier (SHA-256)</span>
+          <span class="ev-hash-box__label">Empreinte du fichier</span>
           <div class="ev-hash-box__val" id="hashValDisplay">${proof.fileHash}</div>
         </div>
         <button class="ev-copy-btn" id="hashCopyBtn">Copier</button>

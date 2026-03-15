@@ -277,7 +277,7 @@ function toggleDetail(tr, receipt) {
             <div class="val">${esc(formatDate(receipt.timestamp))}</div>
           </div>
           <div class="proof-detail-field">
-            <label>Hash SHA-256</label>
+            <label>Empreinte numérique</label>
             <div class="val mono">${esc(receipt.fileHash || '—')}</div>
           </div>
           <div class="proof-detail-field">
