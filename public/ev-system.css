@@ -586,14 +586,13 @@ body::before {
 .ev-anim-in   { animation: ev-fadeIn   0.4s ease both; }
 .ev-anim-scale{ animation: ev-scaleIn  0.5s cubic-bezier(0.16,1,0.3,1) both; }
 
-/* ── Navigation : hamburger universel ────────────────────────────────────── */
-.ev-header__nav  { display: none; }
-.ev-hamburger    { display: block; }
+/* ── Navigation responsive ──────────────────────────────────────────────── */
 .ev-mobile-nav   { display: none; pointer-events: none; }
 .ev-mobile-nav.is-open { display: block; pointer-events: auto; }
 
-/* ── Utilitaires responsive ──────────────────────────────────────────────── */
-@media (max-width: 600px) {
+@media (max-width: 767px) {
+  .ev-header__nav  { display: none; }
+  .ev-hamburger    { display: block; }
   .ev-wrap         { padding: 0 16px; }
 }
 
