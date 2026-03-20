@@ -43,6 +43,14 @@ app.use(helmet({
   },
 }));
 
+// ── 1b. Docs subdomain redirect ─────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (req.hostname === 'docs.evidencia.tech' && req.path === '/') {
+    return res.redirect('/docs.html');
+  }
+  next();
+});
+
 // ── 2. Request ID ────────────────────────────────────────────────────────────
 // Généré avant tout traitement — inclus dans chaque réponse JSON via apiResponse.js
 app.use(requestId);
