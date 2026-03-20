@@ -51,6 +51,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── 1c. API subdomain guard ──────────────────────────────────────────────────
+// On api.evidencia.tech, only /v1/* and /health are reachable — everything else is 404
+app.use((req, res, next) => {
+  if (req.hostname === 'api.evidencia.tech' && !req.path.startsWith('/v1/') && req.path !== '/health') {
+    return fail(res, 404, 'NOT_FOUND',
+      `No route found for ${req.method} ${req.path}`);
+  }
+  next();
+});
+
 // ── 2. Request ID ────────────────────────────────────────────────────────────
 // Généré avant tout traitement — inclus dans chaque réponse JSON via apiResponse.js
 app.use(requestId);
