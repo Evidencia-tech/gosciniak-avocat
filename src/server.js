@@ -58,7 +58,8 @@ app.use((req, res, next) => {
     if (req.path === '/' && req.method === 'GET') {
       return res.redirect('/api-client.html');
     }
-    if (!req.path.startsWith('/v1/') && req.path !== '/health' && req.path !== '/api-client.html') {
+    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png'];
+    if (!req.path.startsWith('/v1/') && !allowed.includes(req.path)) {
       return fail(res, 404, 'NOT_FOUND',
         `No route found for ${req.method} ${req.path}`);
     }

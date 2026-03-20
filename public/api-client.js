@@ -3,17 +3,15 @@ const ENDPOINTS = {
   create:    { method: 'POST', path: '/v1/proofs',     auth: true,  label: 'Créer une preuve' },
   retrieve:  { method: 'GET',  path: '/v1/proofs/:id', auth: true,  label: 'Récupérer une preuve' },
   verify:    { method: 'POST', path: '/v1/verify',     auth: false, label: 'Vérifier une preuve' },
-  publicKey: { method: 'GET',  path: '/v1/public-key', auth: false, label: 'Clé publique' },
+  publicKey: { method: 'GET',  path: '/v1/publicKey',  auth: false, label: 'Clé publique' },
 };
 
 // ── État ──────────────────────────────────────────────────────────────────────
 let currentEndpoint = 'create';
-let computedHash    = null;
 
 // ── Sélection d'un endpoint ───────────────────────────────────────────────────
 function selectEndpoint(id) {
   currentEndpoint = id;
-  computedHash    = null;
 
   document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('is-active'));
   document.getElementById(`btn-${id}`).classList.add('is-active');
@@ -41,33 +39,27 @@ function renderFields(id) {
   if (id === 'create') {
     c.innerHTML = `
       <div class="field-group">
-        <label>Fichier (empreinte calculée localement)</label>
-        <div class="file-drop" id="createDrop">
-          <input type="file" id="createFile" />
-          <div class="file-drop__text">Déposer un fichier ou cliquer pour parcourir</div>
-          <div class="file-drop__sub">Le fichier n'est jamais envoyé — seule l'empreinte numérique est transmise</div>
+        <label>fileHash</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <input class="field-input" id="fFileHash" style="flex:1"
+                 placeholder="sha256:abc123..." />
+          <button class="send-btn" id="generateHashBtn" style="margin-left:0;white-space:nowrap;flex-shrink:0">
+            Générer un hash de test
+          </button>
         </div>
-        <div class="file-info" id="createFileInfo">
-          <div class="file-info__icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <div class="file-info__body">
-            <div class="file-info__name" id="createFileName"></div>
-            <div class="file-info__size" id="createFileSize"></div>
-            <div class="file-info__hash" id="createFileHash"></div>
-          </div>
-        </div>
+        <div class="field-hint">Empreinte SHA-256 du fichier (format : sha256:&lt;64 hex&gt;)</div>
       </div>
       <div class="field-group">
         <label>captureMethod</label>
-        <input class="field-input" id="fCaptureMethod" value="api_upload"
-               placeholder="api_upload" />
-        <div class="field-hint">Ex. : api_upload, sdk_js, sdk_ios_camera, sdk_web</div>
+        <input class="field-input" id="fCaptureMethod" value="camera" readonly
+               style="color:var(--ink-dim);cursor:default" />
+        <div class="field-hint">Fixé à "camera" pour les preuves issues de l'application mobile.</div>
       </div>
       <div class="field-group">
-        <label>metadata (JSON)</label>
-        <textarea class="field-input" id="fMetadata"
-                  placeholder='{"claimId":"CLM-001"}'>{}</textarea>
+        <label>mediaRef (optionnel)</label>
+        <input class="field-input" id="fMediaRef"
+               placeholder="photo_001.jpg" />
+        <div class="field-hint">Référence au média d'origine (nom de fichier, URI, etc.)</div>
       </div>
       <div class="editor-error" id="editorError">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,13 +69,11 @@ function renderFields(id) {
       </div>
     `;
 
-    document.getElementById('createFile').addEventListener('change', handleCreateFile);
-    var fCaptureMethod = document.getElementById('fCaptureMethod');
-    fCaptureMethod.addEventListener('change', updateCurl);
-    fCaptureMethod.addEventListener('input', updateCurl);
-    document.getElementById('fMetadata').addEventListener('change', updateCurl);
-
-    setupFileDrop('createDrop', 'createFile', handleCreateFile);
+    var fFileHash = document.getElementById('fFileHash');
+    fFileHash.addEventListener('change', updateCurl);
+    fFileHash.addEventListener('input', updateCurl);
+    document.getElementById('fMediaRef').addEventListener('input', updateCurl);
+    document.getElementById('generateHashBtn').addEventListener('click', generateTestHash);
   }
 
   else if (id === 'retrieve') {
@@ -184,7 +174,6 @@ function setupFileDrop(dropId, inputId, handler) {
     const file = e.dataTransfer.files[0];
     if (file) {
       const input = document.getElementById(inputId);
-      // On ne peut pas affecter FileList directement — on passe par un DataTransfer
       try {
         const dt = new DataTransfer();
         dt.items.add(file);
@@ -195,23 +184,17 @@ function setupFileDrop(dropId, inputId, handler) {
   });
 }
 
-// ── Gestion des fichiers ──────────────────────────────────────────────────────
-async function handleCreateFile() {
-  const file = document.getElementById('createFile')?.files[0];
-  if (!file) return;
-
-  const hash = await computeHashFromFile(file);
-  computedHash = hash;
-
-  document.getElementById('createDrop').style.display = 'none';
-  const info = document.getElementById('createFileInfo');
-  info.classList.add('is-visible');
-  document.getElementById('createFileName').textContent = file.name;
-  document.getElementById('createFileSize').textContent = formatBytes(file.size);
-  document.getElementById('createFileHash').textContent = hash;
+// ── Génération d'un hash de test ──────────────────────────────────────────────
+function generateTestHash() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+  const input = document.getElementById('fFileHash');
+  if (input) input.value = `sha256:${hex}`;
   updateCurl();
 }
 
+// ── Gestion des fichiers ──────────────────────────────────────────────────────
 async function handleVerifyFile() {
   const file = document.getElementById('verifyFile')?.files[0];
   if (!file) return;
@@ -250,12 +233,15 @@ function updateCurl() {
   let   cmd    = '';
 
   if (currentEndpoint === 'create') {
-    const hash   = computedHash || 'sha256:<votre-empreinte>';
-    const method = document.getElementById('fCaptureMethod')?.value || 'api_upload';
+    const hash     = document.getElementById('fFileHash')?.value || 'sha256:<votre-empreinte>';
+    const mediaRef = document.getElementById('fMediaRef')?.value || '';
+    let curlBody = `{"fileHash":"${hash}","captureMethod":"camera"`;
+    if (mediaRef) curlBody += `,"mediaRef":"${mediaRef}"`;
+    curlBody += '}';
     cmd = `curl -X POST ${base}/v1/proofs \\\n` +
           `  -H "Authorization: Bearer ${apiKey}" \\\n` +
           `  -H "Content-Type: application/json" \\\n` +
-          `  -d '{"fileHash":"${hash}","captureMethod":"${method}"}'`;
+          `  -d '${curlBody}'`;
   }
   else if (currentEndpoint === 'retrieve') {
     const id = document.getElementById('fProofId')?.value || 'prf_01KKBWGFY2RX44R9M0JA41TF34';
@@ -276,7 +262,7 @@ function updateCurl() {
     }
   }
   else if (currentEndpoint === 'publicKey') {
-    cmd = `curl ${base}/v1/public-key`;
+    cmd = `curl ${base}/v1/publicKey`;
   }
 
   const curlContainer = document.getElementById('curlContainer');
@@ -335,14 +321,15 @@ async function sendRequest() {
     if (ep.auth && apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
     if (currentEndpoint === 'create') {
-      if (!computedHash) { showEditorError('Sélectionnez d\'abord un fichier.'); return; }
+      const fileHash = document.getElementById('fFileHash')?.value?.trim();
+      if (!fileHash) { showEditorError('Saisissez ou générez un hash.'); return; }
       url    = `${base}/v1/proofs`;
       method = 'POST';
       headers['Content-Type'] = 'application/json';
-      const captureMethod = document.getElementById('fCaptureMethod')?.value || 'api_upload';
-      let meta = {};
-      try { meta = JSON.parse(document.getElementById('fMetadata')?.value || '{}'); } catch {}
-      body = JSON.stringify({ fileHash: computedHash, captureMethod, metadata: JSON.stringify(meta) });
+      const payload = { fileHash, captureMethod: 'camera' };
+      const mediaRef = document.getElementById('fMediaRef')?.value?.trim();
+      if (mediaRef) payload.mediaRef = mediaRef;
+      body = JSON.stringify(payload);
     }
     else if (currentEndpoint === 'retrieve') {
       const id = document.getElementById('fProofId')?.value?.trim();
@@ -370,7 +357,7 @@ async function sendRequest() {
       body = JSON.stringify(bodyObj);
     }
     else if (currentEndpoint === 'publicKey') {
-      url    = `${base}/v1/public-key`;
+      url    = `${base}/v1/publicKey`;
       method = 'GET';
     }
 
