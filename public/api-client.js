@@ -43,7 +43,7 @@ function renderFields(id) {
       <div class="field-group">
         <label>Fichier (empreinte calculée localement)</label>
         <div class="file-drop" id="createDrop">
-          <input type="file" id="createFile" onchange="handleCreateFile()" />
+          <input type="file" id="createFile" />
           <div class="file-drop__text">Déposer un fichier ou cliquer pour parcourir</div>
           <div class="file-drop__sub">Le fichier n'est jamais envoyé — seule l'empreinte numérique est transmise</div>
         </div>
@@ -61,14 +61,13 @@ function renderFields(id) {
       <div class="field-group">
         <label>captureMethod</label>
         <input class="field-input" id="fCaptureMethod" value="api_upload"
-               placeholder="api_upload" onchange="updateCurl()" oninput="updateCurl()" />
+               placeholder="api_upload" />
         <div class="field-hint">Ex. : api_upload, sdk_js, sdk_ios_camera, sdk_web</div>
       </div>
       <div class="field-group">
         <label>metadata (JSON)</label>
         <textarea class="field-input" id="fMetadata"
-                  placeholder='{"claimId":"CLM-001"}'
-                  onchange="updateCurl()">{}</textarea>
+                  placeholder='{"claimId":"CLM-001"}'>{}</textarea>
       </div>
       <div class="editor-error" id="editorError">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,6 +76,12 @@ function renderFields(id) {
         <span id="editorErrorMsg"></span>
       </div>
     `;
+
+    document.getElementById('createFile').addEventListener('change', handleCreateFile);
+    var fCaptureMethod = document.getElementById('fCaptureMethod');
+    fCaptureMethod.addEventListener('change', updateCurl);
+    fCaptureMethod.addEventListener('input', updateCurl);
+    document.getElementById('fMetadata').addEventListener('change', updateCurl);
 
     setupFileDrop('createDrop', 'createFile', handleCreateFile);
   }
@@ -86,8 +91,7 @@ function renderFields(id) {
       <div class="field-group">
         <label>Identifiant de preuve</label>
         <input class="field-input" id="fProofId"
-               placeholder="prf_01KKBWGFY2RX44R9M0JA41TF34"
-               onchange="updateCurl()" oninput="updateCurl()" />
+               placeholder="prf_01KKBWGFY2RX44R9M0JA41TF34" />
         <div class="field-hint">L'identifiant retourné lors de la création de la preuve.</div>
       </div>
       <div class="editor-error" id="editorError">
@@ -97,13 +101,17 @@ function renderFields(id) {
         <span id="editorErrorMsg"></span>
       </div>
     `;
+
+    var fProofId = document.getElementById('fProofId');
+    fProofId.addEventListener('change', updateCurl);
+    fProofId.addEventListener('input', updateCurl);
   }
 
   else if (id === 'verify') {
     c.innerHTML = `
       <div class="field-group">
         <label>Vérifier par</label>
-        <select class="field-input" id="fVerifyBy" onchange="toggleVerifyMode()">
+        <select class="field-input" id="fVerifyBy">
           <option value="proofId">Identifiant de preuve (lookup serveur)</option>
           <option value="receipt">Reçu JSON complet (hors-ligne)</option>
         </select>
@@ -111,23 +119,21 @@ function renderFields(id) {
       <div id="verifyProofIdField" class="field-group">
         <label>Identifiant de preuve</label>
         <input class="field-input" id="fVerifyProofId"
-               placeholder="prf_01KKBWGFY2RX44R9M0JA41TF34"
-               onchange="updateCurl()" oninput="updateCurl()" />
+               placeholder="prf_01KKBWGFY2RX44R9M0JA41TF34" />
       </div>
       <div id="verifyReceiptField" class="field-group" style="display:none">
         <label>Reçu JSON</label>
         <textarea class="field-input" id="fReceiptJson"
                   placeholder='{"schemaVersion":"1","proofId":"prf_...",...}'
-                  style="min-height:140px" onchange="updateCurl()"></textarea>
+                  style="min-height:140px"></textarea>
       </div>
       <div class="field-group">
         <label>Empreinte du fichier original (optionnel)</label>
         <input class="field-input" id="fVerifyHash"
-               placeholder="sha256:e3b0c44298fc1c14…"
-               onchange="updateCurl()" oninput="updateCurl()" />
+               placeholder="sha256:e3b0c44298fc1c14…" />
         <div class="field-hint">Ou déposez le fichier original pour calculer automatiquement l'empreinte :</div>
         <div class="file-drop" style="margin-top:8px" id="verifyDrop">
-          <input type="file" id="verifyFile" onchange="handleVerifyFile()" />
+          <input type="file" id="verifyFile" />
           <div class="file-drop__text">Déposer le fichier original</div>
         </div>
         <div class="file-info" id="verifyFileInfo">
@@ -147,6 +153,16 @@ function renderFields(id) {
         <span id="editorErrorMsg"></span>
       </div>
     `;
+
+    document.getElementById('fVerifyBy').addEventListener('change', toggleVerifyMode);
+    var fVerifyProofId = document.getElementById('fVerifyProofId');
+    fVerifyProofId.addEventListener('change', updateCurl);
+    fVerifyProofId.addEventListener('input', updateCurl);
+    document.getElementById('fReceiptJson').addEventListener('change', updateCurl);
+    var fVerifyHash = document.getElementById('fVerifyHash');
+    fVerifyHash.addEventListener('change', updateCurl);
+    fVerifyHash.addEventListener('input', updateCurl);
+    document.getElementById('verifyFile').addEventListener('change', handleVerifyFile);
 
     setupFileDrop('verifyDrop', 'verifyFile', handleVerifyFile);
   }
@@ -184,7 +200,7 @@ async function handleCreateFile() {
   const file = document.getElementById('createFile')?.files[0];
   if (!file) return;
 
-  const hash = await computeHash(file);
+  const hash = await computeHashFromFile(file);
   computedHash = hash;
 
   document.getElementById('createDrop').style.display = 'none';
@@ -200,7 +216,7 @@ async function handleVerifyFile() {
   const file = document.getElementById('verifyFile')?.files[0];
   if (!file) return;
 
-  const hash = await computeHash(file);
+  const hash = await computeHashFromFile(file);
   const inp = document.getElementById('fVerifyHash');
   if (inp) inp.value = hash;
 
@@ -213,7 +229,7 @@ async function handleVerifyFile() {
   updateCurl();
 }
 
-async function computeHash(file) {
+async function computeHashFromFile(file) {
   const buffer  = await file.arrayBuffer();
   const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
   const hex     = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
@@ -279,10 +295,11 @@ function showTab(tab) {
         <label>Commande curl générée</label>
         <div class="curl-box">
           <div class="curl-code" id="curlContainer"></div>
-          <button class="curl-copy" id="curlCopyBtn" onclick="copyCurl()">Copier</button>
+          <button class="curl-copy" id="curlCopyBtn">Copier</button>
         </div>
       </div>
     `;
+    document.getElementById('curlCopyBtn').addEventListener('click', copyCurl);
     updateCurl();
   } else {
     renderFields(currentEndpoint);
@@ -441,9 +458,25 @@ function formatBytes(b) {
 }
 
 // ── Initialisation ────────────────────────────────────────────────────────────
-selectEndpoint('create');
 
-// ── Hamburger slide-in menu ───────────────────────────────────────────────────
+// Sidebar endpoint buttons
+document.querySelectorAll('.endpoint-btn[data-endpoint]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    selectEndpoint(btn.dataset.endpoint);
+  });
+});
+
+// Send button
+document.getElementById('sendBtn').addEventListener('click', sendRequest);
+
+// Tab buttons
+document.querySelectorAll('.tab[data-tab]').forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    showTab(tab.dataset.tab);
+  });
+});
+
+// Hamburger slide-in menu
 (function () {
   var btn     = document.getElementById('topbarMenuBtn');
   var overlay = document.getElementById('apiNavOverlay');
@@ -464,3 +497,6 @@ selectEndpoint('create');
     if (e.target === overlay) overlay.classList.remove('is-open');
   });
 })();
+
+// Boot
+selectEndpoint('create');

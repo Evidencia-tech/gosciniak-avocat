@@ -678,23 +678,23 @@
   <!-- Sidebar : liste des endpoints -->
   <nav class="sidebar">
     <div class="sidebar-section">Preuves</div>
-    <button class="endpoint-btn is-active" id="btn-create" onclick="selectEndpoint('create')">
+    <button class="endpoint-btn is-active" id="btn-create" data-endpoint="create">
       <span class="method method--post">POST</span>
       <span class="endpoint-path">/v1/proofs</span>
     </button>
-    <button class="endpoint-btn" id="btn-retrieve" onclick="selectEndpoint('retrieve')">
+    <button class="endpoint-btn" id="btn-retrieve" data-endpoint="retrieve">
       <span class="method method--get">GET</span>
       <span class="endpoint-path">/v1/proofs/:id</span>
     </button>
 
     <div class="sidebar-section">Vérification</div>
-    <button class="endpoint-btn" id="btn-verify" onclick="selectEndpoint('verify')">
+    <button class="endpoint-btn" id="btn-verify" data-endpoint="verify">
       <span class="method method--post">POST</span>
       <span class="endpoint-path">/v1/verify</span>
     </button>
 
     <div class="sidebar-section">Clés</div>
-    <button class="endpoint-btn" id="btn-publicKey" onclick="selectEndpoint('publicKey')">
+    <button class="endpoint-btn" id="btn-publicKey" data-endpoint="publicKey">
       <span class="method method--get">GET</span>
       <span class="endpoint-path">/v1/public-key</span>
     </button>
@@ -706,7 +706,7 @@
       <span class="pane-title">Requête</span>
       <span class="req-method" id="reqMethod"></span>
       <span class="req-path" id="reqPath"></span>
-      <button class="send-btn" id="sendBtn" onclick="sendRequest()">
+      <button class="send-btn" id="sendBtn">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
@@ -715,8 +715,8 @@
     </div>
 
     <div class="tabs">
-      <div class="tab is-active" id="tab-params" onclick="showTab('params')">Paramètres</div>
-      <div class="tab" id="tab-curl"   onclick="showTab('curl')">curl</div>
+      <div class="tab is-active" id="tab-params" data-tab="params">Paramètres</div>
+      <div class="tab" id="tab-curl" data-tab="curl">curl</div>
     </div>
 
     <div class="editor-fields" id="editorFields"></div>

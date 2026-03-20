@@ -58,7 +58,7 @@ app.use((req, res, next) => {
     if (req.path === '/' && req.method === 'GET') {
       return res.redirect('/api-client.html');
     }
-    if (!req.path.startsWith('/v1/') && req.path !== '/health') {
+    if (!req.path.startsWith('/v1/') && req.path !== '/health' && req.path !== '/api-client.html') {
       return fail(res, 404, 'NOT_FOUND',
         `No route found for ${req.method} ${req.path}`);
     }
