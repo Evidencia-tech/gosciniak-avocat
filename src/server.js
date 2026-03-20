@@ -84,6 +84,14 @@ app.use((req, _res, next) => {
   next();
 });
 
+// ── 4b. Legal page routes ────────────────────────────────────────────────────
+app.get('/privacy', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/privacy.html'));
+});
+app.get('/legal', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/legal.html'));
+});
+
 // ── 5. Routes système ────────────────────────────────────────────────────────
 
 // Endpoint léger — aucune requête DB
