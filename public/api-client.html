@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/icon-evidencia.png">
   <title>Evidencia — Console API</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -629,6 +630,146 @@
       font-size: 12px;
       color:     var(--ink-dim);
       font-family: var(--mono);
+    }
+
+    /* ── Responsive mobile (max-width: 768px) ──────────────────────── */
+    @media (max-width: 768px) {
+      html, body { overflow: auto; font-size: 14px; }
+
+      /* Topbar: stack config inputs below logo row */
+      .topbar {
+        flex-wrap:  wrap;
+        height:     auto;
+        padding:    10px 12px;
+        gap:        8px;
+      }
+      .topbar-right {
+        order:      10;
+        width:      100%;
+        flex-wrap:  wrap;
+        gap:        6px;
+      }
+      .topbar-input--url,
+      .topbar-input--key {
+        width:      100%;
+        min-height: 44px;
+        font-size:  13px;
+        padding:    10px 12px;
+      }
+      .topbar-menu__btn { min-height: 44px; min-width: 44px; justify-content: center; }
+
+      /* Main: single column, no fixed height */
+      .main {
+        display:        flex;
+        flex-direction: column;
+        overflow:       visible;
+        min-height:     0;
+      }
+
+      /* Sidebar → horizontal scrollable tab bar */
+      .sidebar {
+        border-right:    none;
+        border-bottom:   1px solid var(--border);
+        overflow-x:      auto;
+        overflow-y:      hidden;
+        padding:         0;
+        display:         flex;
+        align-items:     center;
+        gap:             0;
+        -webkit-overflow-scrolling: touch;
+        flex-shrink:     0;
+      }
+      .sidebar-section {
+        display:      none;
+      }
+      .endpoint-btn {
+        flex-shrink:  0;
+        border-left:  none;
+        border-bottom: 2px solid transparent;
+        padding:      12px 14px;
+        min-height:   44px;
+        white-space:  nowrap;
+      }
+      .endpoint-btn.is-active {
+        border-left-color:   transparent;
+        border-bottom-color: var(--blue);
+        background:          var(--blue-bg);
+      }
+
+      /* Editor & response: full width, natural height */
+      .editor-pane {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow: visible;
+      }
+      .editor-fields {
+        overflow-y: visible;
+        padding:    14px;
+      }
+      .response-pane {
+        overflow:   visible;
+        min-height: 200px;
+      }
+      .response-body {
+        overflow-y: visible;
+        padding:    14px;
+        min-height: 150px;
+      }
+
+      /* Pane headers */
+      .pane-header {
+        flex-wrap: wrap;
+        gap:       8px;
+        padding:   10px 14px;
+      }
+      .send-btn {
+        min-height:  44px;
+        padding:     10px 20px;
+        font-size:   14px;
+        width:       100%;
+        justify-content: center;
+      }
+
+      /* Tabs */
+      .tab {
+        padding:    12px 16px;
+        min-height: 44px;
+        display:    flex;
+        align-items: center;
+        font-size:  11px;
+      }
+
+      /* Inputs full width with comfortable tap targets */
+      .field-input {
+        min-height: 44px;
+        font-size:  14px;
+        padding:    10px 12px;
+      }
+      textarea.field-input {
+        min-height: 120px;
+      }
+
+      /* File drop area */
+      .file-drop {
+        padding: 24px 14px;
+        min-height: 60px;
+      }
+
+      /* Curl box */
+      .curl-copy {
+        min-height: 44px;
+        min-width:  44px;
+        display:    flex;
+        align-items: center;
+        justify-content: center;
+        padding:    8px 12px;
+      }
+
+      /* Response empty state */
+      .response-empty {
+        padding: 32px 16px;
+        height:  auto;
+      }
     }
   </style>
 </head>
