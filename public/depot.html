@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/icon-evidencia.png">
+  <title>Evidencia — Certification de documents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/ev-system.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <style>
+    /* ── Mise en page ──────────────────────────────────────────────── */
+    .depot-layout {
+      padding: 56px 0 80px;
+    }
+
+    .depot-header {
+      text-align:    center;
+      margin-bottom: 48px;
+    }
+
+    .depot-eyebrow {
+      font-family:    var(--mono);
+      font-size:      11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--blue);
+      margin-bottom:  14px;
+    }
+
+    .depot-title {
+      font-family:    var(--serif);
+      font-size:      clamp(28px, 4vw, 40px);
+      color:          var(--ink);
+      letter-spacing: -0.02em;
+      line-height:    1.15;
+      margin-bottom:  10px;
+    }
+
+    .depot-sub {
+      font-size:   15px;
+      color:       var(--ink-mid);
+      max-width:   420px;
+      margin:      0 auto;
+      line-height: 1.65;
+    }
+
+    /* ── Phases ────────────────────────────────────────────────────── */
+    .phase { display: none; }
+    .phase.is-active {
+      display:   block;
+      animation: ev-fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .phase-card {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow:    var(--shadow-md);
+      overflow:      hidden;
+    }
+
+    .phase-card__header {
+      padding: 24px 28px 0;
+    }
+
+    .phase-card__body {
+      padding: 24px 28px 28px;
+    }
+
+    .phase-card__footer {
+      padding:         16px 28px 24px;
+      display:         flex;
+      align-items:     center;
+      justify-content: space-between;
+      gap:             12px;
+      flex-wrap:       wrap;
+    }
+
+    .phase-card__footer .ev-btn { font-size: 15px; padding: 12px 28px; }
+
+    .footer-note {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      line-height: 1.5;
+    }
+
+    /* ── Champ ─────────────────────────────────────────────────────── */
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .field-group label {
+      display:       block;
+      font-size:     12px;
+      font-weight:   500;
+      color:         var(--ink-mid);
+      margin-bottom: 6px;
+    }
+
+    /* ── Zone de dépôt ─────────────────────────────────────────────── */
+    .drop-zone {
+      display:         flex;
+      flex-direction:  column;
+      align-items:     center;
+      gap:             10px;
+      padding:         40px 28px;
+      background:      var(--panel);
+      border:          2px dashed var(--border);
+      border-radius:   var(--r-md);
+      cursor:          pointer;
+      transition:      all 0.2s;
+      text-align:      center;
+      position:        relative;
+      margin-bottom:   20px;
+    }
+    .drop-zone:hover,
+    .drop-zone.is-drag-over {
+      border-color: var(--blue);
+      background:   var(--blue-bg);
+    }
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+
+    .drop-zone__icon {
+      width:         52px;
+      height:        52px;
+      border-radius: var(--r-md);
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--ink-mid);
+    }
+
+    .drop-zone__label {
+      font-size:   14px;
+      font-weight: 600;
+      color:       var(--ink);
+    }
+
+    .drop-zone__sub {
+      font-size:   12px;
+      color:       var(--ink-dim);
+    }
+
+    /* ── Fichier prêt ──────────────────────────────────────────────── */
+    .file-ready-box {
+      display:       none;
+      align-items:   center;
+      gap:           14px;
+      background:    var(--green-bg);
+      border:        1px solid var(--green-ring);
+      border-radius: var(--r-md);
+      padding:       16px 18px;
+      margin-bottom: 20px;
+    }
+    .file-ready-box.is-visible { display: flex; }
+
+    .file-ready-box__icon {
+      width:         40px;
+      height:        40px;
+      background:    var(--green-ring);
+      border-radius: var(--r-sm);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      color:         var(--green);
+      flex-shrink:   0;
+    }
+
+    .file-ready-box__info { flex: 1; min-width: 0; }
+
+    .file-ready-box__name {
+      font-size:     14px;
+      font-weight:   600;
+      color:         var(--green-deep);
+      overflow:      hidden;
+      text-overflow: ellipsis;
+      white-space:   nowrap;
+      margin-bottom: 2px;
+    }
+
+    .file-ready-box__hash {
+      font-family: var(--mono);
+      font-size:   11px;
+      color:       var(--green);
+    }
+
+    .file-clear-btn {
+      background:  none;
+      border:      none;
+      color:       var(--ink-dim);
+      cursor:      pointer;
+      font-size:   20px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .file-clear-btn:hover { color: var(--red); }
+
+    /* ── Progression inline ────────────────────────────────────────── */
+    .cert-progress {
+      display:    none;
+      margin-top: 20px;
+    }
+    .cert-progress.is-visible { display: block; }
+
+    .cert-steps {
+      display:     flex;
+      align-items: center;
+      gap:         0;
+      flex-wrap:   wrap;
+    }
+
+    .cert-step {
+      display:       flex;
+      align-items:   center;
+      gap:           8px;
+      padding:       10px 0;
+      flex-shrink:   0;
+    }
+
+    .cert-step__dot {
+      width:         20px;
+      height:        20px;
+      border-radius: 50%;
+      border:        1.5px solid var(--border);
+      background:    var(--surface);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      flex-shrink:   0;
+      transition:    all 0.3s;
+    }
+    .cert-step.is-active .cert-step__dot {
+      border-color: var(--blue);
+      background:   var(--blue);
+    }
+    .cert-step.is-done .cert-step__dot {
+      border-color: var(--green);
+      background:   var(--green-bg);
+    }
+
+    .cert-step__dot svg { display: none; }
+    .cert-step.is-done .cert-step__dot svg { display: block; }
+    .cert-step.is-done .cert-step__dot::after { display: none; }
+
+    .cert-step__pulse {
+      width:         8px;
+      height:        8px;
+      border-radius: 50%;
+      background:    #fff;
+    }
+    .cert-step.is-active .cert-step__pulse {
+      animation: pulseDot 1s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.7); }
+    }
+    .cert-step.is-done .cert-step__pulse { display: none; }
+
+    .cert-step__label {
+      font-size:   12px;
+      color:       var(--ink-dim);
+      white-space: nowrap;
+    }
+    .cert-step.is-active .cert-step__label { color: var(--blue); font-weight: 500; }
+    .cert-step.is-done   .cert-step__label { color: var(--green); }
+
+    .cert-sep {
+      width:      28px;
+      height:     1px;
+      background: var(--border);
+      flex-shrink: 0;
+      margin:     0 4px;
+    }
+    @media (max-width: 480px) { .cert-sep { display: none; } .cert-steps { flex-direction: column; align-items: flex-start; } }
+
+    /* ── Phase résultat ────────────────────────────────────────────── */
+    .result-burst {
+      text-align:    center;
+      margin-bottom: 32px;
+    }
+
+    .result-burst__ring {
+      width:         72px;
+      height:        72px;
+      background:    var(--green-bg);
+      border:        2px solid var(--green-ring);
+      border-radius: 50%;
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      margin:        0 auto 16px;
+      color:         var(--green);
+      animation:     ring-pulse 2s ease-out 0.4s both;
+    }
+    @keyframes ring-pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(14,127,90,0.3); }
+      70%  { box-shadow: 0 0 0 16px rgba(14,127,90,0); }
+      100% { box-shadow: 0 0 0 0   rgba(14,127,90,0); }
+    }
+
+    .result-burst__title {
+      font-family:    var(--serif);
+      font-size:      26px;
+      color:          var(--ink);
+      letter-spacing: -0.01em;
+      margin-bottom:  6px;
+    }
+
+    .result-burst__sub {
+      font-size:   14px;
+      color:       var(--ink-mid);
+      line-height: 1.6;
+    }
+
+    /* Bannière ID preuve */
+    .proof-banner {
+      background:    var(--green-bg);
+      border:        1.5px solid var(--green-ring);
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      padding:       20px 28px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      flex-wrap:     wrap;
+      gap:           12px;
+    }
+
+    .proof-banner__label {
+      font-family:    var(--mono);
+      font-size:      10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--green);
+      margin-bottom:  4px;
+    }
+
+    .proof-banner__id {
+      font-family:    var(--mono);
+      font-size:      14px;
+      font-weight:    500;
+      color:          var(--green-deep);
+      letter-spacing: 0.02em;
+      word-break:     break-all;
+    }
+
+    /* Corps résultat */
+    .result-body {
+      background:    var(--surface);
+      border:        1.5px solid var(--border);
+      border-top:    none;
+      border-radius: 0 0 var(--r-lg) var(--r-lg);
+    }
+
+    .result-details {
+      padding:       24px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-actions {
+      padding:   20px 28px;
+      display:   flex;
+      gap:       10px;
+      flex-wrap: wrap;
+    }
+
+    .result-reset {
+      display:         inline-flex;
+      align-items:     center;
+      gap:             6px;
+      background:      none;
+      border:          1px solid var(--border);
+      border-radius:   var(--r-sm);
+      color:           var(--ink-dim);
+      font-family:     var(--sans);
+      font-size:       13px;
+      padding:         9px 18px;
+      cursor:          pointer;
+      transition:      all 0.2s;
+      margin-top:      24px;
+    }
+    .result-reset:hover { border-color: var(--border-hi); color: var(--ink); }
+  </style>
+</head>
+<body>
+<div class="ev-page">
+
+  <!-- En-tête -->
+  <header class="ev-header">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-header__inner">
+        <a class="ev-logo" href="/">
+          <img class="ev-logo__icon" src="/icon-evidencia.png" alt="" />
+          <span class="ev-logo__wordmark">Evidencia</span>
+        </a>
+        <nav class="ev-header__nav">
+          <a href="/">Accueil</a>
+          <a href="/demo.html">Démonstration</a>
+          <a href="/verify.html">Vérifier</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/docs.html">Docs</a>
+          <a href="/api-client.html">API</a>
+          <a href="/contact.html">Contact</a>
+          <a href="/depot" class="is-active">Dépôt document</a>
+        </nav>
+        <button class="ev-hamburger" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="ev-mobile-nav" id="mobileNav">
+    <div class="ev-mobile-nav__panel">
+      <button class="ev-mobile-nav__close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="ev-mobile-nav__links">
+        <a href="/">Accueil</a>
+        <a href="/demo.html">Démonstration</a>
+        <a href="/verify.html">Vérifier</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/api-client.html">API</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/depot" class="is-active">Dépôt document</a>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="ev-wrap">
+      <div class="depot-layout">
+
+        <!-- Titre -->
+        <div class="depot-header">
+          <p class="depot-eyebrow">Certification sécurisée</p>
+          <h1 class="depot-title">Certification de documents</h1>
+          <p class="depot-sub">Déposez votre document PDF — Evidencia calcule son empreinte localement et le signe cryptographiquement.</p>
+        </div>
+
+        <!-- ── Phase 1 : Authentification ──────────────────────────── -->
+        <div class="phase is-active" id="phaseAuth">
+          <div class="phase-card ev-card">
+
+            <div class="phase-card__body">
+              <div class="field-group">
+                <label for="accessCodeInput">Code d'accès</label>
+                <input class="ev-input" id="accessCodeInput" type="password"
+                       placeholder="Entrez votre code d'accès" autocomplete="current-password" />
+              </div>
+              <div class="ev-error" id="authError">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="authErrorMsg"></span>
+              </div>
+            </div>
+
+            <div class="phase-card__footer">
+              <div class="footer-note">Accès réservé aux partenaires autorisés.</div>
+              <button class="ev-btn ev-btn--primary" id="loginBtn">Connexion →</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Phase 2 : Dépôt ─────────────────────────────────────── -->
+        <div class="phase" id="phaseUpload">
+          <div class="phase-card ev-card">
+
+            <div class="phase-card__header">
+              <span class="ev-label">Document à certifier</span>
+            </div>
+
+            <div class="phase-card__body">
+
+              <!-- Zone de dépôt -->
+              <div class="drop-zone" id="dropZone">
+                <div class="drop-zone__icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg>
+                </div>
+                <div class="drop-zone__label">Glissez votre PDF ici</div>
+                <div class="drop-zone__sub">ou cliquez pour parcourir · PDF uniquement</div>
+                <input type="file" id="fileInput" accept="application/pdf" />
+              </div>
+
+              <!-- Fichier sélectionné -->
+              <div class="file-ready-box" id="fileReadyBox">
+                <div class="file-ready-box__icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="file-ready-box__info">
+                  <div class="file-ready-box__name" id="fileName"></div>
+                  <div class="file-ready-box__hash" id="fileHashDisplay"></div>
+                </div>
+                <button class="file-clear-btn" id="clearFileBtn" title="Retirer">×</button>
+              </div>
+
+              <!-- Erreur upload -->
+              <div class="ev-error" id="uploadError">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="uploadErrorMsg"></span>
+              </div>
+
+              <!-- Progression inline -->
+              <div class="cert-progress" id="certProgress">
+                <div class="cert-steps">
+                  <div class="cert-step" id="stepHash">
+                    <div class="cert-step__dot">
+                      <div class="cert-step__pulse"></div>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <span class="cert-step__label">Calcul de l'empreinte...</span>
+                  </div>
+                  <div class="cert-sep"></div>
+                  <div class="cert-step" id="stepSend">
+                    <div class="cert-step__dot">
+                      <div class="cert-step__pulse"></div>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <span class="cert-step__label">Envoi sécurisé...</span>
+                  </div>
+                  <div class="cert-sep"></div>
+                  <div class="cert-step" id="stepSign">
+                    <div class="cert-step__dot">
+                      <div class="cert-step__pulse"></div>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <span class="cert-step__label">Signature...</span>
+                  </div>
+                  <div class="cert-sep"></div>
+                  <div class="cert-step" id="stepDone">
+                    <div class="cert-step__dot">
+                      <div class="cert-step__pulse"></div>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <span class="cert-step__label">Prêt</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="phase-card__footer">
+              <div class="footer-note">L'empreinte est calculée localement · le PDF n'est jamais envoyé en clair.</div>
+              <button class="ev-btn ev-btn--primary" id="certifyBtn" disabled>Certifier ce document →</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Phase 3 : Résultat ──────────────────────────────────── -->
+        <div class="phase" id="phaseResult">
+
+          <div class="result-burst ev-anim-scale">
+            <div class="result-burst__ring">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="result-burst__title">Document certifié.</div>
+            <div class="result-burst__sub">Ce document a été horodaté et signé cryptographiquement par Evidencia.</div>
+          </div>
+
+          <div class="ev-anim-up" style="animation-delay:0.1s">
+
+            <!-- Bannière ID -->
+            <div class="proof-banner">
+              <div>
+                <div class="proof-banner__label">Identifiant de preuve</div>
+                <div class="proof-banner__id" id="resultProofId">—</div>
+              </div>
+              <div class="ev-badge ev-badge--green">
+                <div class="ev-badge__dot"></div>
+                Certifié
+              </div>
+            </div>
+
+            <!-- Corps -->
+            <div class="result-body">
+
+              <div class="result-details">
+                <span class="ev-label">Détails</span>
+                <div class="ev-detail-grid" id="resultDetails"></div>
+              </div>
+
+              <div class="result-actions">
+                <button class="ev-btn ev-btn--primary" id="downloadCertifiedBtn" disabled>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Télécharger le document certifié
+                </button>
+                <a class="ev-btn ev-btn--outline" id="verifyResultLink" href="#" target="_blank" rel="noopener">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                  Vérifier ce document
+                </a>
+              </div>
+
+            </div><!-- /result-body -->
+
+          </div>
+
+          <button class="result-reset" id="newDocBtn">
+            ← Certifier un nouveau document
+          </button>
+
+        </div><!-- /phaseResult -->
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Pied de page -->
+  <footer class="ev-footer">
+    <div class="ev-wrap ev-wrap--wide">
+      <div class="ev-footer__inner">
+        <span class="ev-footer__copy">© 2026 Evidencia · Infrastructure de preuve numérique</span>
+        <div class="ev-footer__links">
+          <a href="/">Accueil</a>
+          <a href="/depot">Dépôt</a>
+          <a href="/contact.html">Contact</a>
+          <a href="/privacy">Confidentialité</a>
+          <a href="/legal">Mentions légales</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /ev-page -->
+
+<script src="/nav.js"></script>
+<script src="/depot.js"></script>
+
+</body>
+</html>

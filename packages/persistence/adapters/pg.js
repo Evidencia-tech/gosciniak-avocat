@@ -24,6 +24,44 @@
 
 const { getPool } = require('../client');
 
+// ─── documents ───────────────────────────────────────────────────────────────
+
+async function documentStore(data) {
+  const pool = getPool();
+  await pool.query(
+    `INSERT INTO documents (proof_id, encrypted_data, iv, created_at, expires_at)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (proof_id) DO UPDATE SET
+       encrypted_data = EXCLUDED.encrypted_data,
+       iv             = EXCLUDED.iv,
+       expires_at     = EXCLUDED.expires_at`,
+    [
+      data.proofId,
+      data.encryptedData,
+      data.iv,
+      data.createdAt || new Date().toISOString(),
+      data.expiresAt,
+    ],
+  );
+}
+
+async function documentFindByProofId(proofId) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    'SELECT proof_id, encrypted_data, iv, created_at, expires_at FROM documents WHERE proof_id = $1',
+    [proofId],
+  );
+  if (rows.length === 0) return null;
+  const row = rows[0];
+  return {
+    proofId:       row.proof_id,
+    encryptedData: row.encrypted_data,
+    iv:            row.iv,
+    createdAt:     row.created_at,
+    expiresAt:     row.expires_at,
+  };
+}
+
 // ─── proofs ───────────────────────────────────────────────────────────────────
 
 /**
@@ -287,6 +325,8 @@ function rowToKey(row) {
 }
 
 module.exports = {
+  documentStore,
+  documentFindByProofId,
   proofCreate,
   proofFindById,
   proofFindByHash,

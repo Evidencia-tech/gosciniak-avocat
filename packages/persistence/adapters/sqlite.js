@@ -27,6 +27,14 @@ const { getSQLiteDb } = require('../client');
 const db = getSQLiteDb();
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS documents (
+    proof_id       TEXT    PRIMARY KEY,
+    encrypted_data TEXT    NOT NULL,
+    iv             TEXT    NOT NULL,
+    created_at     TEXT    NOT NULL,
+    expires_at     TEXT    NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS proofs (
     id              TEXT    PRIMARY KEY,
     file_hash       TEXT    NOT NULL,
@@ -109,6 +117,38 @@ const stmtKeyActive = db.prepare(`
 `);
 
 const stmtKeyById = db.prepare(`SELECT * FROM signing_keys WHERE id = ?`);
+
+const stmtDocInsert = db.prepare(`
+  INSERT OR REPLACE INTO documents (proof_id, encrypted_data, iv, created_at, expires_at)
+  VALUES (@proofId, @encryptedData, @iv, @createdAt, @expiresAt)
+`);
+
+const stmtDocByProofId = db.prepare(`
+  SELECT proof_id, encrypted_data, iv, created_at, expires_at
+  FROM documents WHERE proof_id = ?
+`);
+
+function documentStore(data) {
+  stmtDocInsert.run({
+    proofId:       data.proofId,
+    encryptedData: data.encryptedData,
+    iv:            data.iv,
+    createdAt:     data.createdAt || new Date().toISOString(),
+    expiresAt:     data.expiresAt,
+  });
+}
+
+function documentFindByProofId(proofId) {
+  const row = stmtDocByProofId.get(proofId);
+  if (!row) return null;
+  return {
+    proofId:       row.proof_id,
+    encryptedData: row.encrypted_data,
+    iv:            row.iv,
+    createdAt:     row.created_at,
+    expiresAt:     row.expires_at,
+  };
+}
 
 const stmtLogInsert = db.prepare(`
   INSERT INTO verification_log
@@ -328,6 +368,8 @@ function verificationLogInsert(data) {
 }
 
 module.exports = {
+  documentStore,
+  documentFindByProofId,
   proofCreate,
   proofFindById,
   proofFindByHash,

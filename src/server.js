@@ -18,6 +18,7 @@ const publicKeyRouter = require('./routes/publicKey');
 const demoRouter      = require('./routes/demo');
 const contactRouter   = require('./routes/contact');
 const keysRouter      = require('./routes/keys');
+const documentsRouter = require('./routes/documents');
 
 const app  = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -39,6 +40,7 @@ app.use(helmet({
       mediaSrc:    ["'self'", 'blob:'],
       connectSrc:  ["'self'"],
       workerSrc:   ["'self'", 'blob:'],
+      frameSrc:    ["'self'", 'blob:'],
     },
   },
 }));
@@ -58,7 +60,7 @@ app.use((req, res, next) => {
     if (req.path === '/' && req.method === 'GET') {
       return res.redirect('/api-client.html');
     }
-    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png'];
+    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png', '/depot', '/depot.html', '/depot.js', '/verify', '/verify.html'];
     if (!req.path.startsWith('/v1/') && !allowed.includes(req.path)) {
       return fail(res, 404, 'NOT_FOUND',
         `No route found for ${req.method} ${req.path}`);
@@ -70,6 +72,9 @@ app.use((req, res, next) => {
 // ── 2. Request ID ────────────────────────────────────────────────────────────
 // Généré avant tout traitement — inclus dans chaque réponse JSON via apiResponse.js
 app.use(requestId);
+
+// ── 2b. Documents router (before global body parsers — needs 20 MB for encrypted PDFs)
+app.use('/v1', documentsRouter);
 
 // ── 3. Static files & body parsers ──────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../public')));
@@ -91,6 +96,12 @@ app.get('/privacy', (_req, res) => {
 });
 app.get('/legal', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/legal.html'));
+});
+app.get('/depot', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/depot.html'));
+});
+app.get('/verify', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/verify.html'));
 });
 
 // ── 5. Routes système ────────────────────────────────────────────────────────

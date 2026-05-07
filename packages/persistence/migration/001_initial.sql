@@ -141,3 +141,15 @@ CREATE INDEX IF NOT EXISTS idx_vlog_result
 
 CREATE INDEX IF NOT EXISTS idx_vlog_verified_at
   ON verification_log (verified_at DESC);
+
+-- ─── documents ────────────────────────────────────────────────────────────────
+-- AES-256-GCM encrypted document blobs, linked to proofs.
+-- The decryption key is NEVER stored here — it lives in the URL fragment only.
+
+CREATE TABLE IF NOT EXISTS documents (
+  proof_id       TEXT        NOT NULL PRIMARY KEY REFERENCES proofs(id) ON DELETE CASCADE,
+  encrypted_data TEXT        NOT NULL,
+  iv             TEXT        NOT NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at     TIMESTAMPTZ NOT NULL
+);

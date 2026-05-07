@@ -170,4 +170,30 @@ const apiKeys = {
   },
 };
 
-module.exports = { proofs, keys, verificationLog, apiKeys };
+// ---- documents ---------------------------------------------------------------
+
+const documents = {
+  /**
+   * Store an encrypted document linked to a proof.
+   * @param {object} data
+   * @param {string} data.proofId
+   * @param {string} data.encryptedData  base64-encoded AES-GCM ciphertext
+   * @param {string} data.iv             base64-encoded 12-byte IV
+   * @param {string} [data.createdAt]    ISO 8601 (defaults to now)
+   * @param {string} data.expiresAt      ISO 8601 expiry
+   */
+  async store(data) {
+    return adapter.documentStore(data);
+  },
+
+  /**
+   * Retrieve an encrypted document by its proofId.
+   * @param {string} proofId
+   * @returns {Promise<{proofId, encryptedData, iv, createdAt, expiresAt}|null>}
+   */
+  async findByProofId(proofId) {
+    return adapter.documentFindByProofId(proofId);
+  },
+};
+
+module.exports = { proofs, keys, verificationLog, apiKeys, documents };

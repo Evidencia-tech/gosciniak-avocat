@@ -114,6 +114,7 @@ async function doVerify() {
     if (data.proofId) currentProofId = data.proofId;
     setPhase('result');
     renderCertificate(data);
+    maybeShowEncryptedDocument(data.proofId || currentProofId);
 
   } catch (err) {
     setPhase('search');
@@ -408,6 +409,66 @@ function setScanStatus(msg, cls) {
   const el = document.getElementById('scannerStatus');
   el.textContent  = msg;
   el.className    = 'scanner-status' + (cls ? ' ' + cls : '');
+}
+
+// ── Document chiffré (fragment #key=) ────────────────────────────────────────
+
+async function maybeShowEncryptedDocument(proofId) {
+  const fragment = window.location.hash.replace('#', '');
+  const fragParams = new URLSearchParams(fragment);
+  const encKeyB64 = fragParams.get('key');
+  if (!encKeyB64 || !proofId) return;
+
+  try {
+    const resp = await fetch(`${API_BASE}/v1/documents/${proofId}`);
+    if (!resp.ok) return;
+    const apiData = await resp.json();
+    const doc     = apiData.data ?? apiData;
+    if (!doc.encryptedData || !doc.iv) return;
+
+    // Décode la clé+iv depuis le fragment (32 octets clé AES-256 + 12 octets IV)
+    const keyAndIv   = fromBase64Url(encKeyB64);
+    if (keyAndIv.length !== 44) return;
+    const aesKeyBytes = keyAndIv.slice(0, 32);
+    const ivBytes     = keyAndIv.slice(32, 44);
+
+    const aesKey = await crypto.subtle.importKey(
+      'raw', aesKeyBytes, { name: 'AES-GCM' }, false, ['decrypt']
+    );
+
+    const encBytes        = fromBase64(doc.encryptedData);
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: ivBytes }, aesKey, encBytes
+    );
+
+    // Affichage inline du document déchiffré
+    const pdfBlob  = new Blob([decryptedBuffer], { type: 'application/pdf' });
+    const blobUrl  = URL.createObjectURL(pdfBlob);
+
+    const cert = document.getElementById('certificate');
+    if (!cert) return;
+
+    const section = document.createElement('div');
+    section.className = 'original-doc-section';
+    section.innerHTML = `
+      <span class="ev-label original-doc-label">Document original certifié</span>
+      <div class="doc-embed-wrapper">
+        <iframe src="${blobUrl}" class="doc-embed" title="Document original certifié"></iframe>
+      </div>
+      <p class="doc-embed-note">Ce document a été déchiffré localement dans votre navigateur — la clé n'a jamais quitté votre appareil.</p>
+    `;
+    cert.appendChild(section);
+  } catch (e) { /* fragment invalide ou document indisponible — non bloquant */ }
+}
+
+function fromBase64Url(str) {
+  const padded = str + '==='.slice((str.length + 3) % 4);
+  const bin    = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
+  return new Uint8Array(Array.from(bin, c => c.charCodeAt(0)));
+}
+
+function fromBase64(str) {
+  return new Uint8Array(Array.from(atob(str), c => c.charCodeAt(0)));
 }
 
 // ── Event listeners ───────────────────────────────────────────────────────────
