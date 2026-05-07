@@ -93,6 +93,9 @@ app.use((req, _res, next) => {
 });
 
 // ── 4b. Legal page routes ────────────────────────────────────────────────────
+app.get('/manifest.json', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/manifest.json'));
+});
 app.get('/privacy', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/privacy.html'));
 });
