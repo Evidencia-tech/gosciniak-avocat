@@ -5,6 +5,7 @@ const LS_KEY     = 'ev_dashboard_api_key';
 
 // ── State ──────────────────────────────────────────────────────────────────
 let apiKey       = null;
+let isAdmin      = false;
 let expandedRow  = null;   // proofId actuellement expand
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
@@ -47,15 +48,12 @@ function apiFetch(path, opts = {}) {
 
 function maskKey(key) {
   if (!key) return '—';
-  // show prefix + first 6 chars of random part, then mask rest
-  // e.g. evd_sk_live_abc123…
   if (key.length <= 20) return key;
   return key.slice(0, 20) + '…';
 }
 
 function envFromKey(key = '') {
   if (key.includes('_test_')) return 'test';
-  if (key.includes('_live_')) return 'live';
   return 'live';
 }
 
@@ -67,7 +65,6 @@ function formatDate(iso) {
 }
 
 function truncateHash(hash = '') {
-  // "sha256:aabbcc…" → "aabb…ccdd"
   const hex = hash.replace('sha256:', '');
   if (hex.length <= 16) return hex;
   return hex.slice(0, 8) + '…' + hex.slice(-8);
@@ -94,49 +91,71 @@ function showDash() {
   authScreen.style.display = 'none';
   dashScreen.style.display = 'block';
 
-  const env = envFromKey(apiKey);
+  const env = isAdmin ? 'admin' : envFromKey(apiKey);
   keyDisplay.textContent = maskKey(apiKey);
   envBadge.textContent   = env;
-  envBadge.className     = 'ev-badge ' + (env === 'test' ? 'ev-badge--amber' : 'ev-badge--green');
+  envBadge.className     = 'ev-badge ' + (env === 'admin' ? 'ev-badge--green' : env === 'test' ? 'ev-badge--amber' : 'ev-badge--green');
   statEnv.textContent    = env;
 
   loadProofs();
+
+  if (isAdmin) {
+    loadAccessRequests();
+    loadApiKeys();
+    const keysSection = document.getElementById('keysSection');
+    const keysCard    = document.getElementById('keysCard');
+    if (keysSection) keysSection.style.display = 'flex';
+    if (keysCard)    keysCard.style.display    = 'block';
+  } else {
+    // Clients: hide admin-only sections
+    const accessSection = document.getElementById('accessSection');
+    const accessCard    = document.getElementById('accessCard');
+    const keysSection   = document.getElementById('keysSection');
+    const keysCard      = document.getElementById('keysCard');
+    if (accessSection) accessSection.style.display = 'none';
+    if (accessCard)    accessCard.style.display    = 'none';
+    if (keysSection)   keysSection.style.display   = 'none';
+    if (keysCard)      keysCard.style.display       = 'none';
+  }
 }
 
 async function tryConnect(key) {
-  connectBtn.disabled     = true;
-  connectBtn.textContent  = 'Connexion…';
+  connectBtn.disabled    = true;
+  connectBtn.textContent = 'Connexion…';
   hideAuthError();
 
-  // Validate format
-  if (!/^evd_sk_(live|test)_[0-9a-f]{64}$/.test(key)) {
-    showAuthError('Format invalide. Attendu : evd_sk_live_… ou evd_sk_test_…');
+  if (!key) {
+    showAuthError('Clé requise.');
     connectBtn.disabled    = false;
     connectBtn.textContent = 'Accéder au dashboard';
     return;
   }
 
-  // Test the key against GET /v1/proofs
   apiKey = key;
   try {
-    const res = await apiFetch('/v1/proofs?limit=1');
+    const res = await apiFetch('/v1/me');
     if (res.status === 401 || res.status === 403) {
       showAuthError('Clé invalide ou révoquée.');
-      apiKey = null;
+      apiKey  = null;
+      isAdmin = false;
       connectBtn.disabled    = false;
       connectBtn.textContent = 'Accéder au dashboard';
       return;
     }
     if (!res.ok) {
       showAuthError('Erreur serveur. Réessayez.');
-      apiKey = null;
+      apiKey  = null;
+      isAdmin = false;
       connectBtn.disabled    = false;
       connectBtn.textContent = 'Accéder au dashboard';
       return;
     }
+    const body = await res.json();
+    isAdmin = body.data && body.data.isAdmin === true;
   } catch {
     showAuthError('Impossible de contacter le serveur.');
-    apiKey = null;
+    apiKey  = null;
+    isAdmin = false;
     connectBtn.disabled    = false;
     connectBtn.textContent = 'Accéder au dashboard';
     return;
@@ -157,7 +176,8 @@ apiKeyInput.addEventListener('keydown', e => {
 });
 
 logoutBtn.addEventListener('click', () => {
-  apiKey = null;
+  apiKey  = null;
+  isAdmin = false;
   localStorage.removeItem(LS_KEY);
   showAuth();
 });
@@ -405,12 +425,224 @@ function esc(str) {
     .replace(/"/g, '&quot;');
 }
 
+// ── Access requests (admin only) ───────────────────────────────────────────
+
+const accessSection    = document.getElementById('accessSection');
+const accessCard       = document.getElementById('accessCard');
+const accessLoading    = document.getElementById('accessLoading');
+const accessEmpty      = document.getElementById('accessEmpty');
+const accessTable      = document.getElementById('accessTable');
+const accessTbody      = document.getElementById('accessTbody');
+const refreshAccessBtn = document.getElementById('refreshAccessBtn');
+
+async function loadAccessRequests() {
+  accessSection.style.display = 'flex';
+  accessCard.style.display    = 'block';
+  accessLoading.style.display = 'flex';
+  accessEmpty.style.display   = 'none';
+  accessTable.style.display   = 'none';
+  accessTbody.innerHTML       = '';
+
+  let data;
+  try {
+    const res = await apiFetch('/v1/access-requests');
+    if (res.status === 403) {
+      accessSection.style.display = 'none';
+      accessCard.style.display    = 'none';
+      return;
+    }
+    if (!res.ok) {
+      accessLoading.style.display = 'none';
+      accessEmpty.style.display   = 'block';
+      accessEmpty.textContent     = 'Erreur de chargement.';
+      return;
+    }
+    const body = await res.json();
+    data = body.data;
+  } catch {
+    accessLoading.style.display = 'none';
+    accessEmpty.style.display   = 'block';
+    accessEmpty.textContent     = 'Impossible de charger les demandes.';
+    return;
+  }
+
+  accessLoading.style.display = 'none';
+
+  const requests = data.requests || [];
+  if (requests.length === 0) {
+    accessEmpty.style.display = 'block';
+    return;
+  }
+
+  requests.forEach(r => renderAccessRow(r));
+  accessTable.style.display = 'table';
+}
+
+function statusBadge(status) {
+  const labels = { pending: 'En attente', approved: 'Approuvée', refused: 'Refusée' };
+  return `<span class="access-status access-status--${esc(status)}">${esc(labels[status] || status)}</span>`;
+}
+
+function renderAccessRow(r) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${esc(r.name)}</td>
+    <td><a href="mailto:${esc(r.email)}" style="color:var(--blue)">${esc(r.email)}</a></td>
+    <td>${esc(r.organization || '—')}</td>
+    <td>${statusBadge(r.status)}</td>
+    <td class="proof-date">${esc(formatDate(r.createdAt))}</td>
+    <td>
+      <div class="access-actions" id="actions-${esc(r.id)}">
+        ${r.status === 'pending' ? `
+          <button class="access-approve-btn" data-approve-token="${esc(r.approveToken)}" data-id="${esc(r.id)}">Approuver</button>
+          <button class="access-refuse-btn"  data-refuse-token="${esc(r.refuseToken)}"   data-id="${esc(r.id)}">Refuser</button>
+        ` : '—'}
+      </div>
+    </td>
+  `;
+  accessTbody.appendChild(tr);
+
+  if (r.status === 'pending') {
+    tr.querySelector('.access-approve-btn').addEventListener('click', function () {
+      doAccessAction(this.dataset.approveToken, 'approve', this.dataset.id, this);
+    });
+    tr.querySelector('.access-refuse-btn').addEventListener('click', function () {
+      doAccessAction(this.dataset.refuseToken, 'refuse', this.dataset.id, this);
+    });
+  }
+}
+
+async function doAccessAction(token, action, id, btn) {
+  btn.disabled    = true;
+  btn.textContent = '…';
+
+  try {
+    const url = `/admin/${action}?token=${encodeURIComponent(token)}&format=json`;
+    const res  = await fetch(url);
+    const body = await res.json().catch(() => ({}));
+
+    const cell = document.getElementById(`actions-${id}`);
+    if (res.ok && body.status) {
+      const labels = { approved: 'Approuvée', refused: 'Refusée' };
+      if (cell) cell.innerHTML = statusBadge(body.status) + `<span style="font-size:11px;color:var(--ink-dim);margin-left:6px">${esc(labels[body.status] || body.status)}</span>`;
+      const statusTd = cell && cell.closest('tr') && cell.closest('tr').children[3];
+      if (statusTd) statusTd.innerHTML = statusBadge(body.status);
+    } else {
+      btn.disabled    = false;
+      btn.textContent = action === 'approve' ? 'Approuver' : 'Refuser';
+      alert(body.error || 'Erreur lors de l\'action.');
+    }
+  } catch {
+    btn.disabled    = false;
+    btn.textContent = action === 'approve' ? 'Approuver' : 'Refuser';
+    alert('Erreur réseau.');
+  }
+}
+
+refreshAccessBtn.addEventListener('click', loadAccessRequests);
+
+// ── API Keys (admin only) ──────────────────────────────────────────────────
+
+const keysSection   = document.getElementById('keysSection');
+const keysCard      = document.getElementById('keysCard');
+const keysLoading   = document.getElementById('keysLoading');
+const keysEmpty     = document.getElementById('keysEmpty');
+const keysTable     = document.getElementById('keysTable');
+const keysTbody     = document.getElementById('keysTbody');
+const refreshKeysBtn = document.getElementById('refreshKeysBtn');
+
+async function loadApiKeys() {
+  keysLoading.style.display = 'flex';
+  keysEmpty.style.display   = 'none';
+  keysTable.style.display   = 'none';
+  keysTbody.innerHTML       = '';
+
+  let data;
+  try {
+    const res = await apiFetch('/v1/keys');
+    if (!res.ok) {
+      keysLoading.style.display = 'none';
+      keysEmpty.style.display   = 'block';
+      keysEmpty.textContent     = 'Erreur de chargement.';
+      return;
+    }
+    const body = await res.json();
+    data = body.data;
+  } catch {
+    keysLoading.style.display = 'none';
+    keysEmpty.style.display   = 'block';
+    keysEmpty.textContent     = 'Impossible de charger les clés.';
+    return;
+  }
+
+  keysLoading.style.display = 'none';
+
+  const keys = data.keys || [];
+  if (keys.length === 0) {
+    keysEmpty.style.display = 'block';
+    return;
+  }
+
+  keys.forEach(k => renderKeyRow(k));
+  keysTable.style.display = 'table';
+}
+
+function renderKeyRow(k) {
+  const tr = document.createElement('tr');
+  const env = k.environment || 'live';
+  tr.innerHTML = `
+    <td>${esc(k.label || k.id)}</td>
+    <td><span class="ev-badge ${env === 'test' ? 'ev-badge--amber' : 'ev-badge--green'}">${esc(env)}</span></td>
+    <td>${esc(String(k.proofCount ?? 0))}</td>
+    <td class="proof-date">${esc(formatDate(k.createdAt))}</td>
+    <td>
+      <button class="access-refuse-btn revoke-key-btn" data-id="${esc(k.id)}" data-label="${esc(k.label || k.id)}">
+        Révoquer
+      </button>
+    </td>
+  `;
+  keysTbody.appendChild(tr);
+
+  tr.querySelector('.revoke-key-btn').addEventListener('click', function () {
+    revokeKey(this.dataset.id, this.dataset.label, this);
+  });
+}
+
+async function revokeKey(id, label, btn) {
+  if (!confirm(`Révoquer la clé "${label}" ? Cette action est irréversible.`)) return;
+
+  btn.disabled    = true;
+  btn.textContent = '…';
+
+  try {
+    const res  = await apiFetch(`/v1/keys/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) {
+      btn.closest('tr').remove();
+      if (keysTbody.children.length === 0) {
+        keysTable.style.display = 'none';
+        keysEmpty.style.display = 'block';
+        keysEmpty.textContent   = 'Aucune clé active.';
+      }
+    } else {
+      btn.disabled    = false;
+      btn.textContent = 'Révoquer';
+      alert(body.error?.message || 'Erreur lors de la révocation.');
+    }
+  } catch {
+    btn.disabled    = false;
+    btn.textContent = 'Révoquer';
+    alert('Erreur réseau.');
+  }
+}
+
+if (refreshKeysBtn) refreshKeysBtn.addEventListener('click', loadApiKeys);
+
 // ── Boot ───────────────────────────────────────────────────────────────────
 (function init() {
   const saved = localStorage.getItem(LS_KEY);
   if (saved) {
-    apiKey = saved;
-    showDash();
+    tryConnect(saved);
   } else {
     showAuth();
   }

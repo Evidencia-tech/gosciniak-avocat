@@ -58,6 +58,10 @@ const proofs = {
    * @param {object} data.receipt        full receipt object
    * @returns {Promise<object>} the persisted receipt
    */
+  /**
+   * @param {object} data
+   * @param {string} [data.apiKeyId]  The client API key that created this proof.
+   */
   async create(data) {
     return adapter.proofCreate(data);
   },
@@ -65,10 +69,11 @@ const proofs = {
   /**
    * Find a proof by its unique proofId.
    * @param {string} id  "prf_<ULID>"
+   * @param {string|null} [apiKeyId]  If provided, only return if owned by this key.
    * @returns {Promise<object|null>}
    */
-  async findById(id) {
-    return adapter.proofFindById(id);
+  async findById(id, apiKeyId = null) {
+    return adapter.proofFindById(id, apiKeyId);
   },
 
   /**
@@ -84,15 +89,19 @@ const proofs = {
   /**
    * Return the N most recent proofs, newest first.
    * @param {number} [limit=20]
+   * @param {string|null} [apiKeyId]  If provided, filter to this key's proofs.
    * @returns {Promise<object[]>}
    */
-  async findRecent(limit = 20) {
-    return adapter.proofFindRecent(limit);
+  async findRecent(limit = 20, apiKeyId = null) {
+    return adapter.proofFindRecent(limit, apiKeyId);
   },
 
-  /** Total number of proofs in the database. */
-  async count() {
-    return adapter.proofCount();
+  /**
+   * Total number of proofs.
+   * @param {string|null} [apiKeyId]  If provided, count only this key's proofs.
+   */
+  async count(apiKeyId = null) {
+    return adapter.proofCount(apiKeyId);
   },
 };
 
@@ -159,6 +168,9 @@ const apiKeys = {
   async findAllActive() {
     return adapter.apiKeyFindAllActive();
   },
+  async findAllWithStats() {
+    return adapter.apiKeyFindAllWithStats();
+  },
   async findById(id) {
     return adapter.apiKeyFindById(id);
   },
@@ -196,4 +208,24 @@ const documents = {
   },
 };
 
-module.exports = { proofs, keys, verificationLog, apiKeys, documents };
+// ---- accessRequests ----------------------------------------------------------
+
+const accessRequests = {
+  async create(data) {
+    return adapter.accessRequestCreate(data);
+  },
+  async findByApproveToken(token) {
+    return adapter.accessRequestFindByApproveToken(token);
+  },
+  async findByRefuseToken(token) {
+    return adapter.accessRequestFindByRefuseToken(token);
+  },
+  async updateStatus(id, status, apiKeyId) {
+    return adapter.accessRequestUpdateStatus(id, status, apiKeyId);
+  },
+  async findAll() {
+    return adapter.accessRequestFindAll();
+  },
+};
+
+module.exports = { proofs, keys, verificationLog, apiKeys, documents, accessRequests };

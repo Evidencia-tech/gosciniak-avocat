@@ -20,6 +20,17 @@ const { ok }          = require('../lib/apiResponse');
 
 const router = express.Router();
 
+// ── GET /v1/keys ─────────────────────────────────────────────────────────────
+
+router.get('/', requireApiKey, requireAdmin, async (req, res, next) => {
+  try {
+    const activeKeys = await apiKeys.findAllWithStats();
+    return ok(res, { keys: activeKeys });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── POST /v1/keys ────────────────────────────────────────────────────────────
 
 router.post('/', requireApiKey, requireAdmin, async (req, res, next) => {

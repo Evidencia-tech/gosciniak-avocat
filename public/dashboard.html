@@ -341,6 +341,90 @@
       .proofs-table th:nth-child(2),
       .proofs-table td:nth-child(2) { display: none; }
     }
+
+    /* Access requests section */
+    .access-card { margin-bottom: 32px; overflow: hidden; }
+
+    .access-table {
+      width:           100%;
+      border-collapse: collapse;
+    }
+
+    .access-table th {
+      text-align:     left;
+      font-family:    var(--mono);
+      font-size:      10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color:          var(--ink-dim);
+      padding:        12px 20px;
+      border-bottom:  1.5px solid var(--border);
+      background:     var(--panel);
+      white-space:    nowrap;
+    }
+
+    .access-table td {
+      padding:       12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size:     13px;
+      vertical-align: middle;
+    }
+
+    .access-table tr:last-child td { border-bottom: none; }
+    .access-table tr:hover td      { background: var(--panel); }
+
+    .access-status {
+      display:       inline-flex;
+      align-items:   center;
+      gap:           5px;
+      font-size:     11px;
+      font-weight:   500;
+      border-radius: 999px;
+      padding:       3px 10px;
+    }
+    .access-status--pending  { background: var(--amber-bg,#fffbeb); color: #92400e; border: 1px solid #fde68a; }
+    .access-status--approved { background: var(--green-bg);         color: var(--green-deep); border: 1px solid var(--green-ring); }
+    .access-status--refused  { background: var(--red-bg);           color: var(--red);        border: 1px solid var(--red-ring); }
+
+    .access-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .access-approve-btn {
+      font-size:     12px;
+      padding:       5px 12px;
+      background:    var(--green-bg);
+      color:         var(--green-deep);
+      border:        1px solid var(--green-ring);
+      border-radius: var(--r-sm);
+      cursor:        pointer;
+      font-family:   var(--sans);
+      transition:    all 0.15s;
+    }
+    .access-approve-btn:hover { background: var(--green-ring); }
+
+    .access-refuse-btn {
+      font-size:     12px;
+      padding:       5px 12px;
+      background:    var(--red-bg);
+      color:         var(--red);
+      border:        1px solid var(--red-ring);
+      border-radius: var(--r-sm);
+      cursor:        pointer;
+      font-family:   var(--sans);
+      transition:    all 0.15s;
+    }
+    .access-refuse-btn:hover { filter: brightness(0.92); }
+
+    .access-empty {
+      text-align: center;
+      padding:    40px 24px;
+      color:      var(--ink-dim);
+      font-size:  14px;
+    }
+
+    @media (max-width: 600px) {
+      .access-table th:nth-child(3),
+      .access-table td:nth-child(3) { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -493,6 +577,63 @@
             </tr>
           </thead>
           <tbody id="proofsTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Access requests (admin only) -->
+      <div class="section-head" id="accessSection" style="display:none;">
+        <h2 class="section-title">Demandes d'accès</h2>
+        <button class="ev-btn ev-btn--outline ev-btn--sm" id="refreshAccessBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Rafraîchir
+        </button>
+      </div>
+
+      <div class="ev-card access-card" id="accessCard" style="display:none;">
+        <div id="accessLoading" class="proofs-loading">
+          <div class="ev-spinner"></div>
+        </div>
+        <div id="accessEmpty" class="access-empty" style="display:none;">Aucune demande.</div>
+        <table class="access-table" id="accessTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Organisation</th>
+              <th>Statut</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="accessTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- API Keys (admin only) -->
+      <div class="section-head" id="keysSection" style="display:none;">
+        <h2 class="section-title">Clés API actives</h2>
+        <button class="ev-btn ev-btn--outline ev-btn--sm" id="refreshKeysBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Rafraîchir
+        </button>
+      </div>
+
+      <div class="ev-card access-card" id="keysCard" style="display:none;">
+        <div id="keysLoading" class="proofs-loading">
+          <div class="ev-spinner"></div>
+        </div>
+        <div id="keysEmpty" class="access-empty" style="display:none;">Aucune clé active.</div>
+        <table class="access-table" id="keysTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Libellé</th>
+              <th>Env</th>
+              <th>Preuves</th>
+              <th>Créée le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="keysTbody"></tbody>
         </table>
       </div>
 

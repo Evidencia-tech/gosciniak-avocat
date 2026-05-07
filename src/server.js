@@ -12,6 +12,7 @@ const { ensureActiveKey } = require('../packages/signing/keystore');
 const { ADAPTER, getPool } = require('../packages/persistence/client');
 
 // Routes
+const { requireApiKey } = require('./middleware/auth');
 const proofsRouter    = require('./routes/proofs');
 const verifyRouter    = require('./routes/verify');
 const publicKeyRouter = require('./routes/publicKey');
@@ -19,6 +20,7 @@ const demoRouter      = require('./routes/demo');
 const contactRouter   = require('./routes/contact');
 const keysRouter      = require('./routes/keys');
 const documentsRouter = require('./routes/documents');
+const accessRouter    = require('./routes/access');
 
 const app  = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -60,7 +62,7 @@ app.use((req, res, next) => {
     if (req.path === '/' && req.method === 'GET') {
       return res.redirect('/api-client.html');
     }
-    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png', '/depot', '/depot.html', '/depot.js', '/verify', '/verify.html'];
+    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png', '/depot', '/depot.html', '/depot.js', '/verify', '/verify.html', '/acces', '/acces.html', '/acces.js'];
     if (!req.path.startsWith('/v1/') && !allowed.includes(req.path)) {
       return fail(res, 404, 'NOT_FOUND',
         `No route found for ${req.method} ${req.path}`);
@@ -103,6 +105,9 @@ app.get('/depot', (_req, res) => {
 app.get('/verify', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/verify.html'));
 });
+app.get('/acces', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/acces.html'));
+});
 
 // ── 5. Routes système ────────────────────────────────────────────────────────
 
@@ -133,12 +138,25 @@ app.get('/v1/info', (req, res) => {
 });
 
 // ── 6. API routes ────────────────────────────────────────────────────────────
+
+// Identity endpoint — returns role and key metadata for the authenticated key
+app.get('/v1/me', requireApiKey, (req, res) => {
+  return ok(res, {
+    keyId:       req.apiKey.id,
+    label:       req.apiKey.label,
+    environment: req.apiKey.environment,
+    isAdmin:     req.apiKey.isAdmin,
+  });
+});
+
 app.use('/v1/proofs',      proofsRouter);
 app.use('/v1/verify',      verifyRouter);
 app.use('/v1/publicKey',   publicKeyRouter);
 app.use('/v1/demo/proofs', demoRouter);
 app.use('/v1/contact',     contactRouter);
 app.use('/v1/keys',        keysRouter);
+app.use('/v1',             accessRouter);  // POST /v1/access-requests, GET /v1/access-requests
+app.use('/',               accessRouter);  // GET /admin/approve, GET /admin/refuse
 
 // ── 7. 404 ───────────────────────────────────────────────────────────────────
 app.use((req, res) => {

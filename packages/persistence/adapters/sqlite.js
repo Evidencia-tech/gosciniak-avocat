@@ -35,6 +35,26 @@ db.exec(`
     expires_at     TEXT    NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS access_requests (
+    id              TEXT    PRIMARY KEY,
+    name            TEXT    NOT NULL,
+    email           TEXT    NOT NULL,
+    organization    TEXT,
+    use_case        TEXT    NOT NULL,
+    status          TEXT    NOT NULL DEFAULT 'pending',
+    approve_token   TEXT    NOT NULL,
+    refuse_token    TEXT    NOT NULL,
+    api_key_id      TEXT,
+    created_at      TEXT    NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_access_requests_status
+    ON access_requests(status);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_approve_token
+    ON access_requests(approve_token);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_refuse_token
+    ON access_requests(refuse_token);
+
   CREATE TABLE IF NOT EXISTS proofs (
     id              TEXT    PRIMARY KEY,
     file_hash       TEXT    NOT NULL,
@@ -84,14 +104,24 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_vlog_result   ON verification_log(result);
 `);
 
+// ─── api_key_id column migration (idempotent) ─────────────────────────────────
+{
+  const cols = db.prepare('PRAGMA table_info(proofs)').all();
+  if (!cols.find(c => c.name === 'api_key_id')) {
+    db.exec('ALTER TABLE proofs ADD COLUMN api_key_id TEXT');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_proofs_api_key_id ON proofs(api_key_id)');
+  }
+}
+
 // ─── Prepared statements ──────────────────────────────────────────────────────
 
 const stmtProofInsert = db.prepare(`
-  INSERT INTO proofs (id, file_hash, timestamp, capture_method, key_id, receipt_json, created_at)
-  VALUES (@id, @fileHash, @timestamp, @captureMethod, @keyId, @receiptJson, @createdAt)
+  INSERT INTO proofs (id, file_hash, timestamp, capture_method, key_id, receipt_json, created_at, api_key_id)
+  VALUES (@id, @fileHash, @timestamp, @captureMethod, @keyId, @receiptJson, @createdAt, @apiKeyId)
 `);
 
 const stmtProofById   = db.prepare(`SELECT receipt_json FROM proofs WHERE id = ?`);
+const stmtProofByIdForKey = db.prepare(`SELECT receipt_json FROM proofs WHERE id = ? AND api_key_id = ?`);
 
 const stmtProofByHash = db.prepare(`
   SELECT receipt_json FROM proofs WHERE file_hash = ? ORDER BY created_at DESC
@@ -100,8 +130,12 @@ const stmtProofByHash = db.prepare(`
 const stmtProofRecent = db.prepare(`
   SELECT receipt_json FROM proofs ORDER BY created_at DESC LIMIT ?
 `);
+const stmtProofRecentByKey = db.prepare(`
+  SELECT receipt_json FROM proofs WHERE api_key_id = ? ORDER BY created_at DESC LIMIT ?
+`);
 
 const stmtProofCount = db.prepare(`SELECT COUNT(*) AS n FROM proofs`);
+const stmtProofCountByKey = db.prepare(`SELECT COUNT(*) AS n FROM proofs WHERE api_key_id = ?`);
 
 const stmtKeyUpsert = db.prepare(`
   INSERT INTO signing_keys (id, public_key, algorithm, status, created_at)
@@ -148,6 +182,74 @@ function documentFindByProofId(proofId) {
     createdAt:     row.created_at,
     expiresAt:     row.expires_at,
   };
+}
+
+// ─── access_requests ──────────────────────────────────────────────────────────
+
+const stmtAccessInsert = db.prepare(`
+  INSERT INTO access_requests (id, name, email, organization, use_case, status, approve_token, refuse_token, api_key_id, created_at)
+  VALUES (@id, @name, @email, @organization, @useCase, 'pending', @approveToken, @refuseToken, NULL, @createdAt)
+`);
+
+const stmtAccessByApproveToken = db.prepare(`
+  SELECT * FROM access_requests WHERE approve_token = ?
+`);
+
+const stmtAccessByRefuseToken = db.prepare(`
+  SELECT * FROM access_requests WHERE refuse_token = ?
+`);
+
+const stmtAccessUpdateStatus = db.prepare(`
+  UPDATE access_requests SET status = @status, api_key_id = @apiKeyId WHERE id = @id
+`);
+
+const stmtAccessFindAll = db.prepare(`
+  SELECT * FROM access_requests ORDER BY created_at DESC
+`);
+
+function rowToAccessRequest(row) {
+  if (!row) return null;
+  return {
+    id:           row.id,
+    name:         row.name,
+    email:        row.email,
+    organization: row.organization,
+    useCase:      row.use_case,
+    status:       row.status,
+    approveToken: row.approve_token,
+    refuseToken:  row.refuse_token,
+    apiKeyId:     row.api_key_id,
+    createdAt:    row.created_at,
+  };
+}
+
+function accessRequestCreate(data) {
+  stmtAccessInsert.run({
+    id:           data.id,
+    name:         data.name,
+    email:        data.email,
+    organization: data.organization || null,
+    useCase:      data.useCase,
+    approveToken: data.approveToken,
+    refuseToken:  data.refuseToken,
+    createdAt:    data.createdAt || new Date().toISOString(),
+  });
+}
+
+function accessRequestFindByApproveToken(token) {
+  return rowToAccessRequest(stmtAccessByApproveToken.get(token));
+}
+
+function accessRequestFindByRefuseToken(token) {
+  return rowToAccessRequest(stmtAccessByRefuseToken.get(token));
+}
+
+function accessRequestUpdateStatus(id, status, apiKeyId) {
+  stmtAccessUpdateStatus.run({ id, status, apiKeyId: apiKeyId || null });
+}
+
+function accessRequestFindAll() {
+  return stmtAccessFindAll.all().map(rowToAccessRequest);
 }
 
 const stmtLogInsert = db.prepare(`
@@ -212,6 +314,23 @@ function apiKeyRevoke(id) {
   stmtApiKeyRevoke.run(id);
 }
 
+const stmtApiKeyAllWithStats = db.prepare(`
+  SELECT ak.id, ak.key_hash, ak.label, ak.environment, ak.status,
+         ak.created_at, ak.last_used_at, COUNT(p.id) AS proof_count
+  FROM api_keys ak
+  LEFT JOIN proofs p ON p.api_key_id = ak.id
+  WHERE ak.status = 'active'
+  GROUP BY ak.id
+  ORDER BY ak.created_at DESC
+`);
+
+function apiKeyFindAllWithStats() {
+  return stmtApiKeyAllWithStats.all().map(row => ({
+    ...rowToApiKey(row),
+    proofCount: row.proof_count,
+  }));
+}
+
 function rowToApiKey(row) {
   return {
     id:         row.id,
@@ -246,6 +365,7 @@ function proofCreate(data) {
     keyId:         data.keyId,
     receiptJson:   JSON.stringify(data.receipt),
     createdAt:     Date.now(),
+    apiKeyId:      data.apiKeyId || null,
   });
   return data.receipt;
 }
@@ -253,9 +373,14 @@ function proofCreate(data) {
 /**
  * Find a proof by its proofId.
  * @param {string} id
+ * @param {string|null} [apiKeyId]  If provided, only return proofs owned by this key.
  * @returns {object|null} receipt object, or null
  */
-function proofFindById(id) {
+function proofFindById(id, apiKeyId = null) {
+  if (apiKeyId) {
+    const row = stmtProofByIdForKey.get(id, apiKeyId);
+    return row ? JSON.parse(row.receipt_json) : null;
+  }
   const row = stmtProofById.get(id);
   return row ? JSON.parse(row.receipt_json) : null;
 }
@@ -275,15 +400,22 @@ function proofFindByHash(hash) {
 /**
  * Return the N most recent proofs, newest first.
  * @param {number} [limit=20]
+ * @param {string|null} [apiKeyId]  If provided, filter to this key's proofs only.
  * @returns {object[]}
  */
-function proofFindRecent(limit = 20) {
-  const rows = stmtProofRecent.all(limit);
-  return rows.map(r => JSON.parse(r.receipt_json));
+function proofFindRecent(limit = 20, apiKeyId = null) {
+  if (apiKeyId) {
+    return stmtProofRecentByKey.all(apiKeyId, limit).map(r => JSON.parse(r.receipt_json));
+  }
+  return stmtProofRecent.all(limit).map(r => JSON.parse(r.receipt_json));
 }
 
-/** Total number of proofs in the database. */
-function proofCount() {
+/**
+ * Total number of proofs.
+ * @param {string|null} [apiKeyId]  If provided, count only this key's proofs.
+ */
+function proofCount(apiKeyId = null) {
+  if (apiKeyId) return stmtProofCountByKey.get(apiKeyId).n;
   return stmtProofCount.get().n;
 }
 
@@ -370,6 +502,11 @@ function verificationLogInsert(data) {
 module.exports = {
   documentStore,
   documentFindByProofId,
+  accessRequestCreate,
+  accessRequestFindByApproveToken,
+  accessRequestFindByRefuseToken,
+  accessRequestUpdateStatus,
+  accessRequestFindAll,
   proofCreate,
   proofFindById,
   proofFindByHash,
@@ -381,6 +518,7 @@ module.exports = {
   verificationLogInsert,
   apiKeyCreate,
   apiKeyFindAllActive,
+  apiKeyFindAllWithStats,
   apiKeyFindById,
   apiKeyTouchLastUsed,
   apiKeyRevoke,

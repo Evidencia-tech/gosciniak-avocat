@@ -84,6 +84,7 @@ router.post('/', requireApiKey, upload.single('file'), async (req, res, next) =>
       timestamp:     receipt.timestamp,
       captureMethod: receipt.captureMethod,
       keyId:         receipt.publicKeyId,
+      apiKeyId:      req.apiKey ? req.apiKey.id : null,
       receipt,
     });
 
@@ -105,10 +106,11 @@ router.post('/', requireApiKey, upload.single('file'), async (req, res, next) =>
 
 router.get('/', requireApiKey, async (req, res, next) => {
   try {
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const limit    = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const keyFilter = req.apiKey && !req.apiKey.isAdmin ? req.apiKey.id : null;
     const [items, total] = await Promise.all([
-      proofs.findRecent(limit),
-      proofs.count(),
+      proofs.findRecent(limit, keyFilter),
+      proofs.count(keyFilter),
     ]);
     return ok(res, { proofs: items, total, limit });
   } catch (err) {
@@ -127,7 +129,8 @@ router.get('/:id', requireApiKey, async (req, res, next) => {
         'Proof IDs must start with "prf_".'));
     }
 
-    const receipt = await proofs.findById(id);
+    const keyFilter = req.apiKey && !req.apiKey.isAdmin ? req.apiKey.id : null;
+    const receipt = await proofs.findById(id, keyFilter);
 
     if (!receipt) {
       return next(createError(404, 'PROOF_NOT_FOUND',

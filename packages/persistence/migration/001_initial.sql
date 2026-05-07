@@ -67,9 +67,12 @@ CREATE TABLE IF NOT EXISTS proofs (
 
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-  expires_at      TIMESTAMPTZ
+  expires_at      TIMESTAMPTZ,
   -- NULL = permanent proof
   -- Non-null reserved for sandbox/demo (e.g. 30-day TTL)
+
+  api_key_id      TEXT
+  -- The client API key that created this proof (NULL for admin-created or legacy proofs)
 );
 
 -- file_hash lookup (most frequent query path — not unique by design)
@@ -87,6 +90,10 @@ CREATE INDEX IF NOT EXISTS idx_proofs_key_id
 -- Mode/source filtering
 CREATE INDEX IF NOT EXISTS idx_proofs_proof_mode
   ON proofs (proof_mode);
+
+-- Client API key filtering (data isolation)
+CREATE INDEX IF NOT EXISTS idx_proofs_api_key_id
+  ON proofs (api_key_id);
 
 -- ─── api_keys ─────────────────────────────────────────────────────────────
 -- Multi-tenant API keys. Only the scrypt hash is stored, never the raw key.
@@ -141,6 +148,27 @@ CREATE INDEX IF NOT EXISTS idx_vlog_result
 
 CREATE INDEX IF NOT EXISTS idx_vlog_verified_at
   ON verification_log (verified_at DESC);
+
+-- ─── access_requests ─────────────────────────────────────────────────────────
+-- Access request submissions from /acces form.
+-- Tokens are single-use approval/refusal links sent to the admin by email.
+
+CREATE TABLE IF NOT EXISTS access_requests (
+  id              TEXT        NOT NULL PRIMARY KEY,
+  name            TEXT        NOT NULL,
+  email           TEXT        NOT NULL,
+  organization    TEXT,
+  use_case        TEXT        NOT NULL,
+  status          TEXT        NOT NULL DEFAULT 'pending',
+  -- 'pending' | 'approved' | 'refused'
+  approve_token   TEXT        NOT NULL UNIQUE,
+  refuse_token    TEXT        NOT NULL UNIQUE,
+  api_key_id      TEXT        REFERENCES api_keys(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_access_requests_status
+  ON access_requests (status);
 
 -- ─── documents ────────────────────────────────────────────────────────────────
 -- AES-256-GCM encrypted document blobs, linked to proofs.

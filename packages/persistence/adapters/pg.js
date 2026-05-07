@@ -62,6 +62,75 @@ async function documentFindByProofId(proofId) {
   };
 }
 
+// ─── access_requests ──────────────────────────────────────────────────────────
+
+async function accessRequestCreate(data) {
+  const pool = getPool();
+  await pool.query(
+    `INSERT INTO access_requests (id, name, email, organization, use_case, status, approve_token, refuse_token, api_key_id, created_at)
+     VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, NULL, $8)`,
+    [
+      data.id,
+      data.name,
+      data.email,
+      data.organization || null,
+      data.useCase,
+      data.approveToken,
+      data.refuseToken,
+      data.createdAt || new Date().toISOString(),
+    ],
+  );
+}
+
+async function accessRequestFindByApproveToken(token) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM access_requests WHERE approve_token = $1',
+    [token],
+  );
+  return rows.length === 0 ? null : rowToAccessRequest(rows[0]);
+}
+
+async function accessRequestFindByRefuseToken(token) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM access_requests WHERE refuse_token = $1',
+    [token],
+  );
+  return rows.length === 0 ? null : rowToAccessRequest(rows[0]);
+}
+
+async function accessRequestUpdateStatus(id, status, apiKeyId) {
+  const pool = getPool();
+  await pool.query(
+    'UPDATE access_requests SET status = $1, api_key_id = $2 WHERE id = $3',
+    [status, apiKeyId || null, id],
+  );
+}
+
+async function accessRequestFindAll() {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM access_requests ORDER BY created_at DESC',
+  );
+  return rows.map(rowToAccessRequest);
+}
+
+function rowToAccessRequest(row) {
+  return {
+    id:           row.id,
+    name:         row.name,
+    email:        row.email,
+    organization: row.organization,
+    useCase:      row.use_case,
+    status:       row.status,
+    approveToken: row.approve_token,
+    refuseToken:  row.refuse_token,
+    apiKeyId:     row.api_key_id,
+    createdAt:    row.created_at,
+  };
+}
+
 // ─── proofs ───────────────────────────────────────────────────────────────────
 
 /**
@@ -86,8 +155,8 @@ async function proofCreate(data) {
 
   await pool.query(
     `INSERT INTO proofs
-       (id, file_hash, algorithm, key_id, receipt, proof_mode, capture_source, metadata, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+       (id, file_hash, algorithm, key_id, receipt, proof_mode, capture_source, metadata, created_at, api_key_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)`,
     [
       data.proofId,
       data.fileHash,
@@ -97,6 +166,7 @@ async function proofCreate(data) {
       proofMode,
       captureSource,
       data.receipt.metadata ? JSON.stringify(data.receipt.metadata) : null,
+      data.apiKeyId || null,
     ],
   );
 
@@ -109,14 +179,12 @@ async function proofCreate(data) {
  * @param {string} id
  * @returns {Promise<object|null>} receipt object, or null
  */
-async function proofFindById(id) {
+async function proofFindById(id, apiKeyId = null) {
   const pool = getPool();
-  const { rows } = await pool.query(
-    'SELECT receipt FROM proofs WHERE id = $1',
-    [id],
-  );
+  const { rows } = apiKeyId
+    ? await pool.query('SELECT receipt FROM proofs WHERE id = $1 AND api_key_id = $2', [id, apiKeyId])
+    : await pool.query('SELECT receipt FROM proofs WHERE id = $1', [id]);
   if (rows.length === 0) return null;
-  // pg parses JSONB automatically — receipt is already an object
   return rows[0].receipt;
 }
 
@@ -136,18 +204,19 @@ async function proofFindByHash(hash) {
   return rows.map(r => r.receipt);
 }
 
-async function proofFindRecent(limit = 20) {
+async function proofFindRecent(limit = 20, apiKeyId = null) {
   const pool = getPool();
-  const { rows } = await pool.query(
-    'SELECT receipt FROM proofs ORDER BY created_at DESC LIMIT $1',
-    [limit],
-  );
+  const { rows } = apiKeyId
+    ? await pool.query('SELECT receipt FROM proofs WHERE api_key_id = $1 ORDER BY created_at DESC LIMIT $2', [apiKeyId, limit])
+    : await pool.query('SELECT receipt FROM proofs ORDER BY created_at DESC LIMIT $1', [limit]);
   return rows.map(r => r.receipt);
 }
 
-async function proofCount() {
+async function proofCount(apiKeyId = null) {
   const pool = getPool();
-  const { rows } = await pool.query('SELECT COUNT(*) AS n FROM proofs');
+  const { rows } = apiKeyId
+    ? await pool.query('SELECT COUNT(*) AS n FROM proofs WHERE api_key_id = $1', [apiKeyId])
+    : await pool.query('SELECT COUNT(*) AS n FROM proofs');
   return parseInt(rows[0].n, 10);
 }
 
@@ -300,6 +369,20 @@ async function apiKeyRevoke(id) {
   await pool.query(`UPDATE api_keys SET status = 'revoked' WHERE id = $1`, [id]);
 }
 
+async function apiKeyFindAllWithStats() {
+  const pool = getPool();
+  const { rows } = await pool.query(`
+    SELECT ak.id, ak.key_hash, ak.label, ak.environment, ak.status,
+           ak.created_at, ak.last_used_at, COUNT(p.id)::int AS proof_count
+    FROM api_keys ak
+    LEFT JOIN proofs p ON p.api_key_id = ak.id
+    WHERE ak.status = 'active'
+    GROUP BY ak.id
+    ORDER BY ak.created_at DESC
+  `);
+  return rows.map(row => ({ ...rowToApiKey(row), proofCount: row.proof_count }));
+}
+
 function rowToApiKey(row) {
   return {
     id:          row.id,
@@ -327,6 +410,11 @@ function rowToKey(row) {
 module.exports = {
   documentStore,
   documentFindByProofId,
+  accessRequestCreate,
+  accessRequestFindByApproveToken,
+  accessRequestFindByRefuseToken,
+  accessRequestUpdateStatus,
+  accessRequestFindAll,
   proofCreate,
   proofFindById,
   proofFindByHash,
@@ -338,6 +426,7 @@ module.exports = {
   verificationLogInsert,
   apiKeyCreate,
   apiKeyFindAllActive,
+  apiKeyFindAllWithStats,
   apiKeyFindById,
   apiKeyTouchLastUsed,
   apiKeyRevoke,
