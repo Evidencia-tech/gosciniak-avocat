@@ -979,6 +979,7 @@ document.querySelectorAll('.ev-logo__icon').forEach(img => {
 // Phase 1 — Capture
 document.getElementById('btnPhoto').addEventListener('click', () => onCaptureClick('photo'));
 document.getElementById('btnVideo').addEventListener('click', () => onCaptureClick('video'));
+document.getElementById('btnDocument').addEventListener('click', () => { window.location.href = '/depot'; });
 document.getElementById('inputPhoto').addEventListener('change', function() { handleCapture(this, 'photo'); });
 document.getElementById('inputVideo').addEventListener('change', function() { handleCapture(this, 'video'); });
 document.getElementById('captureClearBtn').addEventListener('click', clearCapture);
