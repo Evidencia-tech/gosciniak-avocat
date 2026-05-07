@@ -139,6 +139,7 @@ async function processCapture(file, mode) {
   document.getElementById('captureHash').textContent = pendingHash.slice(0, 24) + '…';
 
   document.getElementById('captureGrid').style.display = 'none';
+  document.querySelector('.capture-doc-row').style.display = 'none';
   document.getElementById('capturePreview').classList.add('is-visible');
   document.getElementById('certifyBtn').disabled = false;
 }
@@ -155,6 +156,7 @@ function clearCapture() {
   });
   document.getElementById('capturePreview').classList.remove('is-visible');
   document.getElementById('captureGrid').style.display = '';
+  document.querySelector('.capture-doc-row').style.display = '';
   document.getElementById('certifyBtn').disabled = true;
   hideError();
 }

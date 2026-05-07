@@ -560,9 +560,19 @@
       display:               grid;
       grid-template-columns: 1fr 1fr;
       gap:                   12px;
-      margin-bottom:         20px;
+      margin-bottom:         12px;
     }
     @media (max-width: 460px) { .capture-grid { grid-template-columns: 1fr; } }
+
+    .capture-doc-row {
+      display:         flex;
+      justify-content: center;
+      margin-bottom:   20px;
+    }
+    .capture-doc-row .capture-btn {
+      width: calc(50% - 6px);
+    }
+    @media (max-width: 460px) { .capture-doc-row .capture-btn { width: 100%; } }
 
     .capture-btn {
       position:       relative;
@@ -1075,7 +1085,11 @@
                   <div class="capture-btn__sub">Ouvre directement la caméra</div>
                 </div>
 
-                <!-- Certifier un document -->
+
+              </div>
+
+              <!-- Certifier un document -->
+              <div class="capture-doc-row">
                 <div class="capture-btn" id="btnDocument">
                   <div class="capture-btn__ring">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1089,7 +1103,6 @@
                   <div class="capture-btn__label">Certifier un document</div>
                   <div class="capture-btn__sub">PDF, contrat, ordonnance...</div>
                 </div>
-
               </div>
 
               <!-- Référence facultative -->
