@@ -248,124 +248,158 @@ async function certifyDocument() {
   }
 }
 
-// ── Step 5 : PDF certifié côté client ────────────────────────────────────────
+// ── Step 5 : Image certifiée côté client ─────────────────────────────────────
 async function generateCertifiedPdf() {
   certifiedPdfBlob = null;
 
-  // Générer le QR code
-  let qrDataUrl = null;
-  const qrWrap = document.createElement('div');
-  qrWrap.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:128px;height:128px;background:#fff';
-  document.body.appendChild(qrWrap);
-  try {
-    new QRCode(qrWrap, {
-      text:          certResult.verifyUrl,
-      width:         128,
-      height:        128,
-      colorDark:     '#1a1814',
-      colorLight:    '#ffffff',
-      correctLevel:  QRCode.CorrectLevel.M,
-    });
-    await sleep(120);
-    const qrCanvas = qrWrap.querySelector('canvas');
-    const qrImg    = qrWrap.querySelector('img');
-    if (qrCanvas) qrDataUrl = qrCanvas.toDataURL('image/png');
-    else if (qrImg) qrDataUrl = qrImg.src;
-  } catch (e) { /* QRCode indisponible */ }
-  document.body.removeChild(qrWrap);
+  const SIDEBAR_W = 180;
 
-  // Rendre la première page du PDF original sur canvas via PDF.js
-  let pageDataUrl = null;
+  // 1. Render PDF page 1 via PDF.js
+  let pdfCanvas = null;
   try {
     const pdfjsLib = window.pdfjsLib;
     if (pdfjsLib && fileBuffer) {
-      // Worker blob : importScripts dans le worker hérite de script-src (cdnjs autorisé)
       const workerBlob = new Blob(
         ['importScripts("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js")'],
         { type: 'application/javascript' }
       );
       pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
-
       const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(fileBuffer) });
       const pdfDoc  = await loadingTask.promise;
       const page    = await pdfDoc.getPage(1);
       const vp      = page.getViewport({ scale: 1.5 });
-      const canvas  = document.createElement('canvas');
-      canvas.width  = vp.width;
-      canvas.height = vp.height;
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-      pageDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      pdfCanvas     = document.createElement('canvas');
+      pdfCanvas.width  = vp.width;
+      pdfCanvas.height = vp.height;
+      await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport: vp }).promise;
     }
   } catch (e) { console.warn('[depot] Rendu PDF :', e); }
 
-  // Construire le PDF certifié avec jsPDF
+  // 2. Generate QR code into an offscreen div (keep alive until drawImage)
+  const qrWrap = document.createElement('div');
+  qrWrap.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:128px;height:128px;background:#fff';
+  document.body.appendChild(qrWrap);
+  let qrEl = null;
   try {
-    const { jsPDF } = window.jspdf;
-    if (!jsPDF) return;
+    new QRCode(qrWrap, {
+      text:         certResult.verifyUrl,
+      width:        128,
+      height:       128,
+      colorDark:    '#000000',
+      colorLight:   '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    await sleep(150);
+    qrEl = qrWrap.querySelector('canvas') || qrWrap.querySelector('img');
+  } catch (e) { /* QRCode indisponible */ }
 
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const W = 210, H = 297;
+  // 3. Build composite canvas: PDF on left, dark sidebar on right
+  const pdfW = pdfCanvas ? pdfCanvas.width  : 893;
+  const pdfH = pdfCanvas ? pdfCanvas.height : 1263;
 
-    if (pageDataUrl) {
-      // Page originale en fond
-      pdf.addImage(pageDataUrl, 'JPEG', 0, 0, W, H);
+  const canvas = document.createElement('canvas');
+  canvas.width  = pdfW + SIDEBAR_W;
+  canvas.height = pdfH;
+  const ctx = canvas.getContext('2d');
 
-      // Badge Evidencia — coin inférieur droit
-      const bx = W - 78, by = H - 44;
-      pdf.setFillColor(14, 127, 90);
-      pdf.roundedRect(bx, by, 73, 38, 3, 3, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
-      pdf.text('CERTIFIÉ PAR EVIDENCIA', bx + 4, by + 8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(6);
-      pdf.text(truncate(certResult.proofId, 36), bx + 4, by + 15);
-      pdf.text(formatDateShort(certResult.timestamp), bx + 4, by + 21);
-      pdf.text('Fichier : ' + truncate(certResult.filename, 28), bx + 4, by + 27);
-      pdf.text('evidencia.tech', bx + 4, by + 33);
-
-      // QR code — coin inférieur gauche
-      if (qrDataUrl) pdf.addImage(qrDataUrl, 'PNG', 5, H - 44, 35, 35);
-    } else {
-      // Page de certificat de secours
-      pdf.setFillColor(244, 241, 235);
-      pdf.rect(0, 0, W, H, 'F');
-
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(22);
-      pdf.setTextColor(26, 24, 20);
-      pdf.text('Certificat Evidencia', 20, 48);
-
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      pdf.setTextColor(80, 76, 70);
-      pdf.text('Document certifié par signature cryptographique Ed25519', 20, 60);
-
-      pdf.setFontSize(9);
-      pdf.setTextColor(26, 24, 20);
-      pdf.text(`Identifiant : ${certResult.proofId}`, 20, 82);
-      pdf.text(`Fichier     : ${certResult.filename}`, 20, 92);
-      pdf.text(`Empreinte   : ${certResult.fileHash.slice(0, 40)}…`, 20, 102);
-      pdf.text(`Date        : ${formatDate(certResult.timestamp)}`, 20, 112);
-
-      if (qrDataUrl) {
-        pdf.addImage(qrDataUrl, 'PNG', 20, 130, 64, 64);
-        pdf.setFontSize(8);
-        pdf.setTextColor(100, 96, 90);
-        pdf.text('Scanner pour vérifier ce document sur evidencia.tech', 20, 200);
-      }
-
-      pdf.setFontSize(8);
-      pdf.setTextColor(140, 136, 130);
-      pdf.text('Evidencia · Infrastructure de preuve numérique · evidencia.tech', 20, H - 18);
-    }
-
-    certifiedPdfBlob = pdf.output('blob');
-    document.getElementById('downloadCertifiedBtn').disabled = false;
-  } catch (e) {
-    console.warn('[depot] Génération PDF :', e);
+  // Left: PDF page (or fallback background)
+  if (pdfCanvas) {
+    ctx.drawImage(pdfCanvas, 0, 0);
+  } else {
+    ctx.fillStyle = '#f4f1eb';
+    ctx.fillRect(0, 0, pdfW, pdfH);
+    ctx.fillStyle = '#1a1814';
+    ctx.font = 'bold 28px serif';
+    ctx.fillText('Document certifié', 48, 100);
   }
+
+  // Right: dark sidebar
+  const sx = pdfW;
+  ctx.fillStyle = '#0b1220';
+  ctx.fillRect(sx, 0, SIDEBAR_W, pdfH);
+
+  const cx = sx + SIDEBAR_W / 2;  // horizontal center of sidebar
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'top';
+
+  let y = 20;
+
+  const sep = (yPos) => {
+    ctx.strokeStyle = '#ffffff33';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(sx + 12, yPos + 0.5);
+    ctx.lineTo(sx + SIDEBAR_W - 12, yPos + 0.5);
+    ctx.stroke();
+  };
+
+  // Logo
+  await new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const logoW = 80;
+      const logoH = Math.round(img.height * (logoW / img.width));
+      ctx.drawImage(img, cx - logoW / 2, y, logoW, logoH);
+      y += logoH + 12;
+      resolve();
+    };
+    img.onerror = () => { y += 12; resolve(); };
+    img.src = '/logo-dtr.png';
+  });
+
+  // "CERTIFIÉ PAR EVIDENCIA"
+  ctx.fillStyle = '#ffffff';
+  ctx.font      = 'bold 9px sans-serif';
+  ctx.fillText('CERTIFIÉ PAR EVIDENCIA', cx, y);
+  y += 14;
+
+  sep(y); y += 10;
+
+  // "Certifié le" label
+  ctx.fillStyle = '#8a9ab0';
+  ctx.font      = '9px sans-serif';
+  ctx.fillText('Certifié le', cx, y);
+  y += 14;
+
+  // Date
+  ctx.fillStyle = '#ffffff';
+  ctx.font      = '10px sans-serif';
+  ctx.fillText(formatDateShort(certResult.timestamp), cx, y);
+  y += 16;
+
+  sep(y); y += 10;
+
+  // Proof ID (truncated)
+  const shortId = certResult.proofId.slice(0, 14) + '…';
+  ctx.fillStyle = '#8a9ab0';
+  ctx.font      = '9px monospace';
+  ctx.fillText(shortId, cx, y);
+  y += 16;
+
+  sep(y); y += 12;
+
+  // QR code (~120px, white background border)
+  const QR_SIZE = 120;
+  const qrX = cx - QR_SIZE / 2;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(qrX - 5, y - 5, QR_SIZE + 10, QR_SIZE + 10);
+  if (qrEl) {
+    ctx.drawImage(qrEl, qrX, y, QR_SIZE, QR_SIZE);
+  }
+  y += QR_SIZE + 12;
+
+  // "Scanner pour vérifier"
+  ctx.fillStyle = '#8a9ab0';
+  ctx.font      = '9px sans-serif';
+  ctx.fillText('Scanner pour vérifier', cx, y);
+
+  document.body.removeChild(qrWrap);
+
+  // Export as PNG blob
+  canvas.toBlob((blob) => {
+    certifiedPdfBlob = blob;
+    document.getElementById('downloadCertifiedBtn').disabled = false;
+  }, 'image/png');
 }
 
 // ── Rendu du résultat ─────────────────────────────────────────────────────────
@@ -394,7 +428,7 @@ function downloadCertified() {
   const url = URL.createObjectURL(certifiedPdfBlob);
   const a   = document.createElement('a');
   a.href     = url;
-  a.download = `document-certifie-${certResult.proofId}.pdf`;
+  a.download = `document-certifie-${certResult.proofId}.png`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
