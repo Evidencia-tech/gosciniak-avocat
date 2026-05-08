@@ -316,9 +316,12 @@ function apiKeyRevoke(id) {
 
 const stmtApiKeyAllWithStats = db.prepare(`
   SELECT ak.id, ak.key_hash, ak.label, ak.environment, ak.status,
-         ak.created_at, ak.last_used_at, COUNT(p.id) AS proof_count
+         ak.created_at, ak.last_used_at, COUNT(p.id) AS proof_count,
+         ar.name AS requester_name, ar.email AS requester_email,
+         ar.organization AS requester_organization
   FROM api_keys ak
   LEFT JOIN proofs p ON p.api_key_id = ak.id
+  LEFT JOIN access_requests ar ON ar.api_key_id = ak.id AND ar.status = 'approved'
   WHERE ak.status = 'active'
   GROUP BY ak.id
   ORDER BY ak.created_at DESC
@@ -327,7 +330,10 @@ const stmtApiKeyAllWithStats = db.prepare(`
 function apiKeyFindAllWithStats() {
   return stmtApiKeyAllWithStats.all().map(row => ({
     ...rowToApiKey(row),
-    proofCount: row.proof_count,
+    proofCount:            row.proof_count,
+    requesterName:         row.requester_name         || null,
+    requesterEmail:        row.requester_email        || null,
+    requesterOrganization: row.requester_organization || null,
   }));
 }
 

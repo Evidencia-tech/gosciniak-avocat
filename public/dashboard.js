@@ -590,8 +590,18 @@ async function loadApiKeys() {
 function renderKeyRow(k) {
   const tr = document.createElement('tr');
   const env = k.environment || 'live';
+
+  const titulaire = k.requesterName
+    ? esc(k.requesterName) + (k.requesterOrganization ? `<br><small style="color:var(--ink-dim)">${esc(k.requesterOrganization)}</small>` : '')
+    : `<span style="color:var(--ink-dim)">Admin</span>`;
+
+  const email = k.requesterEmail
+    ? `<a href="mailto:${esc(k.requesterEmail)}" style="color:var(--blue)">${esc(k.requesterEmail)}</a>`
+    : '—';
+
   tr.innerHTML = `
-    <td>${esc(k.label || k.id)}</td>
+    <td>${titulaire}</td>
+    <td>${email}</td>
     <td><span class="ev-badge ${env === 'test' ? 'ev-badge--amber' : 'ev-badge--green'}">${esc(env)}</span></td>
     <td>${esc(String(k.proofCount ?? 0))}</td>
     <td class="proof-date">${esc(formatDate(k.createdAt))}</td>
