@@ -981,22 +981,15 @@ document.querySelectorAll('.ev-logo__icon').forEach(img => {
 // Phase 1 — Capture
 document.getElementById('btnPhoto').addEventListener('click', () => onCaptureClick('photo'));
 document.getElementById('btnVideo').addEventListener('click', () => onCaptureClick('video'));
-// Certifier un document — isolated DOMContentLoaded guard so this listener
-// is always attached regardless of execution order or errors elsewhere.
-(function () {
-  function attachDocBtn() {
-    var btn = document.getElementById('btnDocument');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
+document.addEventListener('DOMContentLoaded', function() {
+  var docCard = document.querySelector('#btnDocument');
+  console.log('docCard found:', docCard);
+  if (docCard) {
+    docCard.addEventListener('click', function() {
       window.location.href = '/depot';
     });
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachDocBtn);
-  } else {
-    attachDocBtn();
-  }
-}());
+});
 document.getElementById('inputPhoto').addEventListener('change', function() { handleCapture(this, 'photo'); });
 document.getElementById('inputVideo').addEventListener('change', function() { handleCapture(this, 'video'); });
 document.getElementById('captureClearBtn').addEventListener('click', clearCapture);
