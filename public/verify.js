@@ -363,14 +363,18 @@ function handleScanResult(raw) {
   setScanStatus('QR code détecté…', 'is-ok');
 
   // Extraire le proofId — accepte une URL complète ou un id direct
-  let proofId = null;
+  let proofId  = null;
+  let fullUrl  = null;
+  let hasKey   = false;
 
   try {
-    // Cas 1 : URL complète (https://…/verify.html?id=prf_xxx)
+    // Cas 1 : URL complète (https://…/verify?proofId=prf_xxx#key=…)
     const url = new URL(raw);
     proofId = url.searchParams.get('id') || url.searchParams.get('proofId')
-           || url.hash.replace('#', '')
            || url.pathname.match(/\/(prf_[A-Z0-9]+)/i)?.[1];
+    const fragParams = new URLSearchParams(url.hash.replace('#', ''));
+    hasKey  = fragParams.has('key');
+    fullUrl = raw;
   } catch {
     // Cas 2 : identifiant direct prf_xxx
     if (raw.trim().startsWith('prf_')) proofId = raw.trim();
@@ -383,11 +387,17 @@ function handleScanResult(raw) {
     return;
   }
 
-  // Succès — on ferme et on lance la vérification
+  // Succès
   setTimeout(() => {
     closeScanner();
-    document.getElementById('proofInput').value = proofId;
-    doVerify();
+    if (hasKey && fullUrl) {
+      // URL avec fragment #key= : navigation complète pour préserver la clé
+      window.location.href = fullUrl;
+    } else {
+      // proofId seul : vérification sans déchiffrement
+      document.getElementById('proofInput').value = proofId;
+      doVerify();
+    }
   }, 500);
 }
 
