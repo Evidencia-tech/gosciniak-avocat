@@ -392,7 +392,13 @@ function handleScanResult(raw) {
     closeScanner();
     if (hasKey && fullUrl) {
       // URL avec fragment #key= : navigation complète pour préserver la clé
+      const scannedUrl = new URL(fullUrl);
+      const sameBase   = window.location.pathname === scannedUrl.pathname &&
+                         window.location.search   === scannedUrl.search;
       window.location.href = fullUrl;
+      // Si seul le fragment change, le navigateur ne recharge pas la page —
+      // forcer un rechargement pour que le hash soit lu au démarrage
+      if (sameBase) window.location.reload();
     } else {
       // proofId seul : vérification sans déchiffrement
       document.getElementById('proofInput').value = proofId;
@@ -495,6 +501,9 @@ async function maybeShowEncryptedDocument(proofId) {
     pagesContainer.className = 'doc-pages-container';
     section.appendChild(pagesContainer);
 
+    // Insérer dans le DOM avant le rendu pour que clientWidth soit mesurable
+    cert.appendChild(section);
+
     let rendered = false;
     if (typeof pdfjsLib !== 'undefined') {
       try {
@@ -502,12 +511,15 @@ async function maybeShowEncryptedDocument(proofId) {
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(decryptedBuffer) }).promise;
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page     = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.5 });
-          const canvas   = document.createElement('canvas');
-          canvas.width   = viewport.width;
-          canvas.height  = viewport.height;
-          canvas.className = 'doc-page-canvas';
+          const page         = await pdf.getPage(pageNum);
+          const baseViewport = page.getViewport({ scale: 1 });
+          const containerW   = pagesContainer.clientWidth || 600;
+          const scale        = containerW / baseViewport.width;
+          const viewport     = page.getViewport({ scale });
+          const canvas       = document.createElement('canvas');
+          canvas.width       = viewport.width;
+          canvas.height      = viewport.height;
+          canvas.className   = 'doc-page-canvas';
           pagesContainer.appendChild(canvas);
           await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
         }
@@ -526,8 +538,6 @@ async function maybeShowEncryptedDocument(proofId) {
     note.className = 'doc-embed-note';
     note.textContent = 'Ce document a été déchiffré localement dans votre navigateur — la clé n\'a jamais quitté votre appareil.';
     section.appendChild(note);
-
-    cert.appendChild(section);
   } catch (e) { /* fragment invalide ou document indisponible — non bloquant */ }
 }
 
