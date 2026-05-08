@@ -414,10 +414,38 @@ function setScanStatus(msg, cls) {
 // ── Document chiffré (fragment #key=) ────────────────────────────────────────
 
 async function maybeShowEncryptedDocument(proofId) {
-  const fragment = window.location.hash.replace('#', '');
+  const fragment   = window.location.hash.replace('#', '');
   const fragParams = new URLSearchParams(fragment);
-  const encKeyB64 = fragParams.get('key');
-  if (!encKeyB64 || !proofId) return;
+  const encKeyB64  = fragParams.get('key');
+
+  // Cas 3 : proofId connu mais pas de clé — vérifier si un document existe
+  if (!encKeyB64) {
+    if (!proofId) return;
+    try {
+      const resp = await fetch(`${API_BASE}/v1/documents/${proofId}`);
+      if (resp.ok) {
+        const apiData = await resp.json();
+        const doc     = apiData.data ?? apiData;
+        if (doc && doc.encryptedData) {
+          const cert = document.getElementById('certificate');
+          if (!cert) return;
+          const section = document.createElement('div');
+          section.className = 'original-doc-section';
+          section.innerHTML = `
+            <span class="ev-label original-doc-label">📄 Document associé</span>
+            <div class="doc-no-key-info">
+              Ce document a été certifié via le module Certification Documents.<br/>
+              Pour afficher le document original, utilisez le lien QR code fourni lors de la certification — il contient la clé de déchiffrement nécessaire.
+            </div>
+          `;
+          cert.appendChild(section);
+        }
+      }
+    } catch (e) { /* non-bloquant */ }
+    return;
+  }
+
+  if (!proofId) return;
 
   try {
     const resp = await fetch(`${API_BASE}/v1/documents/${proofId}`);
@@ -427,7 +455,7 @@ async function maybeShowEncryptedDocument(proofId) {
     if (!doc.encryptedData || !doc.iv) return;
 
     // Décode la clé+iv depuis le fragment (32 octets clé AES-256 + 12 octets IV)
-    const keyAndIv   = fromBase64Url(encKeyB64);
+    const keyAndIv    = fromBase64Url(encKeyB64);
     if (keyAndIv.length !== 44) return;
     const aesKeyBytes = keyAndIv.slice(0, 32);
     const ivBytes     = keyAndIv.slice(32, 44);
@@ -441,22 +469,54 @@ async function maybeShowEncryptedDocument(proofId) {
       { name: 'AES-GCM', iv: ivBytes }, aesKey, encBytes
     );
 
-    // Affichage inline du document déchiffré
-    const pdfBlob  = new Blob([decryptedBuffer], { type: 'application/pdf' });
-    const blobUrl  = URL.createObjectURL(pdfBlob);
-
     const cert = document.getElementById('certificate');
     if (!cert) return;
 
     const section = document.createElement('div');
     section.className = 'original-doc-section';
-    section.innerHTML = `
-      <span class="ev-label original-doc-label">Document original certifié</span>
-      <div class="doc-embed-wrapper">
-        <iframe src="${blobUrl}" class="doc-embed" title="Document original certifié"></iframe>
-      </div>
-      <p class="doc-embed-note">Ce document a été déchiffré localement dans votre navigateur — la clé n'a jamais quitté votre appareil.</p>
-    `;
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ev-label original-doc-label';
+    labelEl.textContent = 'Document original certifié';
+    section.appendChild(labelEl);
+
+    // Cas 2 : rendu de toutes les pages PDF via PDF.js (canvas par page)
+    const pagesContainer = document.createElement('div');
+    pagesContainer.className = 'doc-pages-container';
+    section.appendChild(pagesContainer);
+
+    let rendered = false;
+    if (typeof pdfjsLib !== 'undefined') {
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(decryptedBuffer) }).promise;
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page     = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas   = document.createElement('canvas');
+          canvas.width   = viewport.width;
+          canvas.height  = viewport.height;
+          canvas.className = 'doc-page-canvas';
+          pagesContainer.appendChild(canvas);
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        }
+        rendered = true;
+      } catch (e) { /* PDF.js indisponible — repli sur iframe */ }
+    }
+
+    if (!rendered) {
+      const pdfBlob = new Blob([decryptedBuffer], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      pagesContainer.innerHTML =
+        `<iframe src="${blobUrl}" class="doc-embed" title="Document original certifié"></iframe>`;
+    }
+
+    const note = document.createElement('p');
+    note.className = 'doc-embed-note';
+    note.textContent = 'Ce document a été déchiffré localement dans votre navigateur — la clé n\'a jamais quitté votre appareil.';
+    section.appendChild(note);
+
     cert.appendChild(section);
   } catch (e) { /* fragment invalide ou document indisponible — non bloquant */ }
 }

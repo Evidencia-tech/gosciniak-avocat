@@ -31,7 +31,19 @@
       "Bash(pkill:*)",
       "Bash(sleep:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(node --check /home/runner/workspace/src/routes/documents.js)",
+      "Bash(node --check /home/runner/workspace/src/server.js)",
+      "Bash(node --check /home/runner/workspace/packages/persistence/index.js)",
+      "Bash(node --check /home/runner/workspace/packages/persistence/adapters/sqlite.js)",
+      "Bash(node --check /home/runner/workspace/packages/persistence/adapters/pg.js)",
+      "Bash(node --check /home/runner/workspace/public/depot.js)",
+      "Bash(node --check /home/runner/workspace/public/verify.js)",
+      "Bash(python3 -m json.tool)",
+      "Bash(kill %1)",
+      "Bash(env)",
+      "Bash(node *)",
+      "Bash(git checkout *)"
     ]
   }
 }
