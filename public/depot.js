@@ -399,6 +399,7 @@ async function generateCertifiedPdf() {
   canvas.toBlob((blob) => {
     certifiedPdfBlob = blob;
     document.getElementById('downloadCertifiedBtn').disabled = false;
+    document.getElementById('shareCertifiedBtn').disabled = false;
   }, 'image/png');
 }
 
@@ -420,6 +421,40 @@ function renderResult() {
   `).join('');
 
   document.getElementById('verifyResultLink').href = certResult.verifyUrl;
+}
+
+// ── Partage ───────────────────────────────────────────────────────────────────
+async function shareCertified() {
+  if (!certResult) return;
+  const url = certResult.verifyUrl;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Document certifié par Évidencia',
+        text:  "Vérifiez l'authenticité de ce document sur Évidencia",
+        url,
+      });
+    } catch (e) { /* annulé par l'utilisateur — non bloquant */ }
+  } else {
+    // Fallback : copie dans le presse-papier
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    const lbl = document.getElementById('shareLabel');
+    if (lbl) {
+      lbl.textContent = 'Lien copié !';
+      setTimeout(() => { lbl.textContent = 'Partager →'; }, 2000);
+    }
+  }
 }
 
 // ── Téléchargement ────────────────────────────────────────────────────────────
@@ -444,6 +479,7 @@ function resetForm() {
   hideCertProgress();
   document.getElementById('certifyBtn').disabled = true;
   document.getElementById('downloadCertifiedBtn').disabled = true;
+  document.getElementById('shareCertifiedBtn').disabled = true;
   showPhase('phaseUpload');
 }
 
@@ -500,6 +536,7 @@ document.getElementById('fileInput').addEventListener('change', e => {
 document.getElementById('clearFileBtn').addEventListener('click', clearFile);
 document.getElementById('certifyBtn').addEventListener('click', certifyDocument);
 document.getElementById('downloadCertifiedBtn').addEventListener('click', downloadCertified);
+document.getElementById('shareCertifiedBtn').addEventListener('click', shareCertified);
 document.getElementById('newDocBtn').addEventListener('click', resetForm);
 
 // Drag & drop sur la drop zone
