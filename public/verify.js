@@ -391,14 +391,9 @@ function handleScanResult(raw) {
   setTimeout(() => {
     closeScanner();
     if (hasKey && fullUrl) {
-      // URL avec fragment #key= : navigation complète pour préserver la clé
-      const scannedUrl = new URL(fullUrl);
-      const sameBase   = window.location.pathname === scannedUrl.pathname &&
-                         window.location.search   === scannedUrl.search;
-      window.location.href = fullUrl;
-      // Si seul le fragment change, le navigateur ne recharge pas la page —
-      // forcer un rechargement pour que le hash soit lu au démarrage
-      if (sameBase) window.location.reload();
+      console.log('QR scanned URL: ' + fullUrl);
+      // window.location.replace force un rechargement complet avec le fragment intact
+      window.location.replace(fullUrl);
     } else {
       // proofId seul : vérification sans déchiffrement
       document.getElementById('proofInput').value = proofId;
@@ -430,6 +425,7 @@ function setScanStatus(msg, cls) {
 // ── Document chiffré (fragment #key=) ────────────────────────────────────────
 
 async function maybeShowEncryptedDocument(proofId) {
+  console.log('Fragment detected: ' + window.location.hash);
   const fragment   = window.location.hash.replace('#', '');
   const fragParams = new URLSearchParams(fragment);
   const encKeyB64  = fragParams.get('key');
@@ -438,6 +434,7 @@ async function maybeShowEncryptedDocument(proofId) {
   if (!encKeyB64) {
     if (!proofId) return;
     try {
+      console.log('Fetching document for proofId: ' + proofId);
       const resp = await fetch(`${API_BASE}/v1/documents/${proofId}`);
       if (resp.ok) {
         const apiData = await resp.json();
@@ -464,6 +461,7 @@ async function maybeShowEncryptedDocument(proofId) {
   if (!proofId) return;
 
   try {
+    console.log('Fetching document for proofId: ' + proofId);
     const resp = await fetch(`${API_BASE}/v1/documents/${proofId}`);
     if (!resp.ok) return;
     const apiData = await resp.json();
@@ -496,7 +494,6 @@ async function maybeShowEncryptedDocument(proofId) {
     labelEl.textContent = 'Document original certifié';
     section.appendChild(labelEl);
 
-    // Cas 2 : rendu de toutes les pages PDF via PDF.js (canvas par page)
     const pagesContainer = document.createElement('div');
     pagesContainer.className = 'doc-pages-container';
     section.appendChild(pagesContainer);
@@ -511,17 +508,18 @@ async function maybeShowEncryptedDocument(proofId) {
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(decryptedBuffer) }).promise;
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page         = await pdf.getPage(pageNum);
-          const baseViewport = page.getViewport({ scale: 1 });
-          const containerW   = pagesContainer.clientWidth || 600;
-          const scale        = containerW / baseViewport.width;
-          const viewport     = page.getViewport({ scale });
-          const canvas       = document.createElement('canvas');
-          canvas.width       = viewport.width;
-          canvas.height      = viewport.height;
-          canvas.className   = 'doc-page-canvas';
+          const page     = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas   = document.createElement('canvas');
+          canvas.width   = viewport.width;
+          canvas.height  = viewport.height;
+          canvas.style.width        = '100%';
+          canvas.style.height       = 'auto';
+          canvas.style.display      = 'block';
+          canvas.style.marginBottom = '8px';
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
           pagesContainer.appendChild(canvas);
-          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
         }
         rendered = true;
       } catch (e) { /* PDF.js indisponible — repli sur iframe */ }
