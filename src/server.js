@@ -62,7 +62,7 @@ app.use((req, res, next) => {
     if (req.path === '/' && req.method === 'GET') {
       return res.redirect('/api-client.html');
     }
-    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png', '/depot', '/depot.html', '/depot.js', '/verify', '/verify.html', '/acces', '/acces.html', '/acces.js'];
+    const allowed = ['/health', '/api-client.html', '/api-client.js', '/ev-system.css', '/nav.js', '/icon-evidencia.png', '/depot', '/depot.html', '/depot.js', '/verify', '/verify.html', '/acces', '/acces.html', '/acces.js', '/plaquette', '/plaquette.html'];
     if (!req.path.startsWith('/v1/') && !allowed.includes(req.path)) {
       return fail(res, 404, 'NOT_FOUND',
         `No route found for ${req.method} ${req.path}`);
@@ -110,6 +110,9 @@ app.get('/verify', (_req, res) => {
 });
 app.get('/acces', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/acces.html'));
+});
+app.get('/plaquette', (_req, res) => {
+  res.sendFile('plaquette.html', { root: path.join(__dirname, '../public') });
 });
 
 // ── 5. Routes système ────────────────────────────────────────────────────────

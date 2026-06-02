@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Évidencia — Dossier de présentation</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --dark: #0f0e0c;
+  --cream: #f9f6f0;
+  --warm: #f2ede4;
+  --gold: #c4a882;
+  --gold-dark: #8a6d4a;
+  --green: #1a5c3a;
+  --text: #1a1814;
+  --muted: #6b6560;
+  --border: #e2dbd0;
+}
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #e8e4de;
+  color: var(--text);
+  font-size: 11pt;
+  line-height: 1.75;
+}
+
+.page {
+  max-width: 800px;
+  margin: 32px auto;
+  background: white;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+}
+
+/* COVER */
+.cover {
+  background: #0f0e0c;
+  padding: 64px 60px 56px;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cover-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 60px;
+}
+
+.cover-logo-text {
+  font-size: 28pt;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.cover-hex {
+  font-size: 32pt;
+  color: #c4a882;
+  line-height: 1;
+}
+
+.cover-eyebrow {
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #c4a882;
+  margin-bottom: 20px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+}
+
+.cover-title {
+  font-size: 44pt;
+  color: white;
+  line-height: 1.1;
+  margin-bottom: 32px;
+  font-weight: bold;
+}
+
+.cover-subtitle {
+  font-size: 13pt;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+  max-width: 480px;
+  margin-bottom: 40px;
+  font-family: Arial, sans-serif;
+  font-weight: 300;
+}
+
+.cover-rule {
+  height: 1px;
+  background: rgba(196,168,130,0.3);
+  margin-bottom: 32px;
+}
+
+.cover-tagline {
+  font-size: 13pt;
+  color: rgba(255,255,255,0.7);
+  font-style: italic;
+  line-height: 1.65;
+  border-left: 2px solid #c4a882;
+  padding-left: 20px;
+  margin-bottom: 48px;
+}
+
+.cover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.cover-footer-label {
+  font-size: 9pt;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: Arial, sans-serif;
+}
+
+.cover-footer-url {
+  font-size: 10pt;
+  color: #c4a882;
+  font-family: Arial, sans-serif;
+}
+
+/* SECTIONS */
+.section {
+  padding: 56px 60px;
+  border-bottom: 1px solid var(--border);
+  background: white;
+}
+
+.section-warm {
+  padding: 56px 60px;
+  border-bottom: 1px solid var(--border);
+  background: #f9f6f0;
+}
+
+.section-dark {
+  padding: 56px 60px;
+  background: #0f0e0c;
+}
+
+.eyebrow {
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--gold-dark);
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.section-dark .eyebrow { color: #c4a882; }
+
+h2 {
+  font-size: 28pt;
+  color: var(--text);
+  line-height: 1.15;
+  margin-bottom: 24px;
+  font-weight: bold;
+}
+
+.section-dark h2 { color: white; }
+
+.rule {
+  height: 2px;
+  background: linear-gradient(to right, #c4a882, transparent);
+  margin-bottom: 32px;
+}
+
+p { margin-bottom: 14px; color: #333; font-family: Arial, sans-serif; font-size: 10.5pt; line-height: 1.7; }
+.section-dark p { color: rgba(255,255,255,0.6); }
+
+/* HIGHLIGHT BOX */
+.highlight-box {
+  background: #f2ede4;
+  border-left: 3px solid #c4a882;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.hl-label {
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold-dark);
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.dark-highlight {
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid #c4a882;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.dark-highlight p { color: rgba(255,255,255,0.75); margin: 0; }
+
+/* LISTS */
+.bul-list { list-style: none; margin: 14px 0; }
+.bul-list li {
+  padding: 7px 0 7px 22px;
+  position: relative;
+  color: #444;
+  border-bottom: 1px solid var(--border);
+  font-size: 10pt;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+.bul-list li:last-child { border-bottom: none; }
+.bul-list li::before { content: '→'; position: absolute; left: 0; color: var(--gold-dark); font-weight: bold; }
+
+/* CARDS GRID */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 20px 18px;
+}
+
+.card-icon { font-size: 20pt; margin-bottom: 8px; display: block; }
+.card-title { font-size: 12pt; font-weight: bold; color: var(--text); margin-bottom: 8px; }
+.card-body { font-size: 9.5pt; color: #555; line-height: 1.65; margin: 0; font-family: Arial, sans-serif; }
+.card-tags { margin-top: 10px; font-size: 8.5pt; color: var(--gold-dark); font-style: italic; font-family: Arial, sans-serif; }
+
+/* WHY NOW */
+.why-item { display: grid; grid-template-columns: 48px 1fr; gap: 20px; margin-bottom: 28px; align-items: start; }
+.why-num { font-size: 36pt; color: #c4a882; font-weight: bold; line-height: 1; }
+.why-title { font-weight: bold; font-size: 11pt; color: var(--text); margin-bottom: 6px; font-family: Arial, sans-serif; }
+.why-body { font-size: 9.5pt; color: #555; line-height: 1.65; margin: 0; font-family: Arial, sans-serif; }
+
+/* ADVANTAGES */
+.adv-row {
+  display: flex;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.adv-row:last-child { border-bottom: none; }
+.adv-check {
+  width: 22px; height: 22px;
+  background: #1a5c3a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 3px;
+  font-size: 12pt;
+  color: white;
+  line-height: 1;
+}
+.adv-title { font-weight: bold; font-size: 10.5pt; color: var(--text); margin-bottom: 4px; font-family: Arial, sans-serif; }
+.adv-body { font-size: 9.5pt; color: #555; line-height: 1.65; margin: 0; font-family: Arial, sans-serif; }
+
+/* PRICING */
+.pricing-table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+.pricing-table th {
+  padding: 14px 10px;
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+}
+.pricing-table td {
+  padding: 12px 10px;
+  vertical-align: top;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+.pricing-table tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+
+.th-starter { background: #f2ede4; color: #6b6560; }
+.th-business { background: #0f0e0c; color: #c4a882; }
+.th-enterprise { background: #f2ede4; color: #6b6560; }
+.th-oem { background: #f2ede4; color: #6b6560; }
+
+.td-starter { background: white; }
+.td-business { background: #faf7f2; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+.td-enterprise { background: white; }
+.td-oem { background: white; }
+
+.price-main { font-size: 18pt; font-weight: bold; color: var(--text); font-family: Georgia, serif; }
+.price-period { font-size: 9pt; color: var(--muted); }
+.price-annual { font-size: 9pt; color: #1a5c3a; font-weight: bold; margin-top: 3px; }
+.price-gift { font-size: 8.5pt; color: #1a5c3a; font-style: italic; }
+.price-volume { font-size: 9pt; color: #555; }
+.price-features { font-size: 8.5pt; color: #777; line-height: 1.6; font-style: italic; }
+.price-target { font-size: 8.5pt; font-weight: bold; color: var(--text); }
+
+/* INTEGRATION */
+.mode-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.mode-row:last-child { border-bottom: none; }
+.mode-num { font-size: 36pt; color: var(--border); font-weight: bold; font-family: Georgia, serif; text-align: center; }
+.mode-title { font-weight: bold; font-size: 10.5pt; color: var(--text); margin-bottom: 5px; font-family: Arial, sans-serif; }
+.mode-body { font-size: 9.5pt; color: #555; line-height: 1.65; margin: 0; font-family: Arial, sans-serif; }
+.mode-tag {
+  display: inline-block;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 5px 12px;
+  font-size: 8.5pt;
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+/* CONTACT */
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 32px; }
+.contact-label { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.12em; color: #c4a882; margin-bottom: 6px; font-family: Arial, sans-serif; font-weight: bold; }
+.contact-val { font-size: 12pt; color: white; font-weight: bold; font-family: Arial, sans-serif; }
+.contact-sub { font-size: 9.5pt; color: rgba(255,255,255,0.4); margin-top: 4px; font-family: Arial, sans-serif; }
+
+.pilot-box {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(196,168,130,0.3);
+  padding: 28px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.pilot-title { font-size: 16pt; color: white; margin-bottom: 8px; font-weight: bold; }
+.pilot-sub { font-size: 10pt; color: rgba(255,255,255,0.5); font-family: Arial, sans-serif; }
+.pilot-tags { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.pilot-tag {
+  font-size: 9pt;
+  color: #c4a882;
+  border: 1px solid rgba(196,168,130,0.3);
+  padding: 5px 14px;
+  font-family: Arial, sans-serif;
+}
+
+/* FOOTER */
+.doc-footer {
+  padding: 20px 60px;
+  background: #f2ede4;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.doc-footer-brand { font-size: 12pt; font-weight: bold; color: var(--text); }
+.doc-footer-info { font-size: 8.5pt; color: var(--muted); text-align: right; font-family: Arial, sans-serif; }
+
+@media print {
+  body { background: white; }
+  .page { box-shadow: none; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-top">
+      <span class="cover-hex">&#11042;</span>
+      <span class="cover-logo-text">ÉVIDENCIA</span>
+    </div>
+
+    <div>
+      <div class="cover-eyebrow">Infrastructure de preuve numérique</div>
+      <div class="cover-title">Certifiez.<br>Prouvez.<br>Protégez.</div>
+      <div class="cover-subtitle">Dans un monde où l'intelligence artificielle peut générer n'importe quelle image ou document en 30 secondes, Évidencia rend chaque preuve incontestable.</div>
+      <div class="cover-rule"></div>
+      <div class="cover-tagline">
+        «&thinsp;Rendre les preuves numériques incontestables,<br>
+        afin de restaurer la confiance dans un monde<br>
+        où les contenus visuels peuvent être manipulés.&thinsp;»
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <div class="cover-footer-label">Dossier de présentation · Juin 2026 · Confidentiel</div>
+      <div class="cover-footer-url">evidencia.tech</div>
+    </div>
+  </div>
+
+  <!-- 1. LE PRODUIT -->
+  <div class="section">
+    <div class="eyebrow">Le produit</div>
+    <h2>Qu'est-ce qu'Évidencia ?</h2>
+    <div class="rule"></div>
+    <p>Évidencia est une infrastructure de certification cryptographique qui transforme n'importe quelle photo, vidéo ou document en une preuve numérique inaltérable, horodatée et vérifiable.</p>
+    <p>Le principe est simple : au moment de la capture ou du dépôt, Évidencia calcule une empreinte numérique unique (hash SHA-256) et la signe cryptographiquement. Toute modification ultérieure — même d'un seul pixel — est instantanément détectable par quiconque scanne le QR code de vérification.</p>
+    <p>La vérification est publique et accessible à quiconque dispose du QR code — sans compte, sans abonnement requis.</p>
+
+    <div class="highlight-box">
+      <div class="hl-label">Deux modes complémentaires</div>
+      <ul class="bul-list">
+        <li><strong>Mode Capture — Photos &amp; Vidéos :</strong> capture en temps réel via SDK mobile. L'empreinte est calculée sur l'appareil — le fichier ne quitte jamais le téléphone.</li>
+        <li><strong>Mode Dépôt — Documents PDF :</strong> le document est déposé sur la plateforme, chiffré dans le navigateur avant tout envoi. Un QR code de vérification est généré instantanément.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2. CAS D'USAGE -->
+  <div class="section-warm">
+    <div class="eyebrow">Les applications</div>
+    <h2>Un champ d'application infini.</h2>
+    <div class="rule"></div>
+    <p>Évidencia s'adapte à tout secteur où l'authenticité d'une preuve visuelle ou documentaire est un enjeu critique.</p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">🏥</span>
+        <div class="card-title">Médical</div>
+        <p class="card-body">Fausses ordonnances, modifications de posologie : Évidencia certifie chaque document médical à la source. Le pharmacien scanne le QR code et voit en 3 secondes si le document est authentique.</p>
+        <div class="card-tags">Médecins · Pharmacies · Cliniques · Logiciels médicaux</div>
+      </div>
+      <div class="card">
+        <span class="card-icon">🏛️</span>
+        <div class="card-title">Assurance</div>
+        <p class="card-body">Photos de sinistre retouchées, fraudes organisées : Évidencia certifie chaque photo au moment de la capture. La preuve est inattaquable devant un tribunal.</p>
+        <div class="card-tags">Assureurs · Mutuelles · Experts · Cabinets expertise</div>
+      </div>
+      <div class="card">
+        <span class="card-icon">🏠</span>
+        <div class="card-title">Immobilier</div>
+        <p class="card-body">États des lieux contestés, litiges locatifs, constats de chantier : Évidencia horodate et certifie chaque photo ou document. Tout litige résolu en 10 secondes.</p>
+        <div class="card-tags">Agences · Gestionnaires · Experts BTP · Notaires</div>
+      </div>
+      <div class="card">
+        <span class="card-icon">🛒</span>
+        <div class="card-title">Marketplace</div>
+        <p class="card-body">Écart entre photo d'annonce et produit reçu : le vendeur certifie ses photos à la mise en vente. L'acheteur vérifie à la réception. Litige résolu objectivement.</p>
+        <div class="card-tags">Plateformes C2C · B2C · Enchères · Location</div>
+      </div>
+      <div class="card">
+        <span class="card-icon">⚖️</span>
+        <div class="card-title">Juridique &amp; Institutionnel</div>
+        <p class="card-body">Preuves pour procédures judiciaires, documents officiels : Évidencia fournit une chaîne de custody numérique certifiée, recevable en justice.</p>
+        <div class="card-tags">Avocats · Huissiers · Notaires · Institutions · Ministères</div>
+      </div>
+      <div class="card">
+        <span class="card-icon">📰</span>
+        <div class="card-title">Journalisme &amp; Médias</div>
+        <p class="card-body">Authenticité des photos de terrain, vérification des sources, lutte contre les deepfakes : Évidencia certifie l'origine et l'intégrité de chaque contenu visuel.</p>
+        <div class="card-tags">Rédactions · Agences de presse · Fact-checkers</div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="hl-label">Les possibilités ne s'arrêtent pas là</div>
+      <p style="margin:0; color:#333;">Évidencia est une infrastructure générique : toute organisation qui a besoin de prouver l'authenticité d'un contenu visuel ou documentaire peut l'intégrer en moins d'une semaine. Chaque nouveau cas d'usage ouvre de nouvelles opportunités commerciales pour nos partenaires.</p>
+    </div>
+  </div>
+
+  <!-- 3. POURQUOI MAINTENANT -->
+  <div class="section">
+    <div class="eyebrow">Le contexte</div>
+    <h2>Pourquoi maintenant ?</h2>
+    <div class="rule"></div>
+
+    <div class="why-item">
+      <div class="why-num">1</div>
+      <div>
+        <div class="why-title">L'explosion des contenus générés par IA</div>
+        <p class="why-body">+2 137 % de tentatives de fraude par deepfake en 3 ans (Accenture, 2024). N'importe qui peut générer une photo photoréaliste en 30 secondes. La confiance dans les contenus visuels s'effondre — la demande de certification explose.</p>
+      </div>
+    </div>
+    <div class="why-item">
+      <div class="why-num">2</div>
+      <div>
+        <div class="why-title">L'AI Act européen (en vigueur depuis août 2024)</div>
+        <p class="why-body">Ce texte crée une obligation de traçabilité des contenus générés ou modifiés par IA. Les entreprises qui ne peuvent pas prouver l'authenticité de leurs contenus seront en situation de non-conformité réglementaire.</p>
+      </div>
+    </div>
+    <div class="why-item">
+      <div class="why-num">3</div>
+      <div>
+        <div class="why-title">Aucun concurrent européen n'a occupé ce marché</div>
+        <p class="why-body">Les solutions existantes (Truepic, Adobe CAI) sont américaines et non verticalisées pour les cas d'usage B2B européens. Évidencia est la première infrastructure de certification conçue pour le marché européen.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. AVANTAGES -->
+  <div class="section-warm">
+    <div class="eyebrow">Les avantages</div>
+    <h2>Pourquoi choisir Évidencia ?</h2>
+    <div class="rule"></div>
+
+    <div class="adv-row">
+      <div class="adv-check">✓</div>
+      <div>
+        <div class="adv-title">Privacy by design — zéro stockage de données sensibles</div>
+        <p class="adv-body">Évidencia ne stocke jamais les fichiers originaux. Seule l'empreinte numérique est conservée. Cette architecture répond nativement aux exigences RGPD et lève la principale objection des DSI et responsables conformité.</p>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div class="adv-check">✓</div>
+      <div>
+        <div class="adv-title">Intégration en moins d'une semaine</div>
+        <p class="adv-body">API REST + SDK mobile iOS / Android / Flutter. Une semaine de développement suffit pour intégrer Évidencia dans n'importe quelle application existante. Pas de refonte, pas de migration.</p>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div class="adv-check">✓</div>
+      <div>
+        <div class="adv-title">Vérification publique et accessible</div>
+        <p class="adv-body">La vérification fonctionne via simple scan du QR code — sans compte, sans abonnement, accessible à n'importe quel tiers (tribunal, pharmacien, acheteur, expert).</p>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div class="adv-check">✓</div>
+      <div>
+        <div class="adv-title">Infrastructure générique et intégrable partout</div>
+        <p class="adv-body">Évidencia n'est pas une application — c'est une infrastructure. Elle s'intègre dans vos outils existants, dans les logiciels de vos clients, dans les workflows de vos partenaires.</p>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div class="adv-check">✓</div>
+      <div>
+        <div class="adv-title">Modèle économique simple et transparent</div>
+        <p class="adv-body">Abonnement mensuel sans engagement ou facturation à l'usage. 2 mois offerts pour tout engagement annuel. Tarification claire et prévisible, adaptée à chaque taille d'organisation.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. TARIFS -->
+  <div class="section">
+    <div class="eyebrow">Les formules</div>
+    <h2>Une offre pour chaque besoin.</h2>
+    <div class="rule"></div>
+    <p>Quatre formules adaptées à chaque profil. Tous les abonnements bénéficient de <strong>2 mois offerts</strong> en cas d'engagement annuel.</p>
+
+    <table class="pricing-table">
+      <thead>
+        <tr>
+          <th class="th-starter">STARTER</th>
+          <th class="th-business">BUSINESS</th>
+          <th class="th-enterprise">ENTERPRISE</th>
+          <th class="th-oem">PARTENAIRE OEM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-starter">
+            <div class="price-main">149 € HT</div>
+            <div class="price-period">/ mois</div>
+            <div class="price-annual">ou 1 490 € HT / an</div>
+            <div class="price-gift">2 mois offerts</div>
+          </td>
+          <td class="td-business">
+            <div class="price-main">489 € HT</div>
+            <div class="price-period">/ mois</div>
+            <div class="price-annual">ou 4 890 € HT / an</div>
+            <div class="price-gift">2 mois offerts</div>
+          </td>
+          <td class="td-enterprise">
+            <div class="price-main">990 € HT</div>
+            <div class="price-period">/ mois</div>
+            <div class="price-annual">ou 9 900 € HT / an</div>
+            <div class="price-gift">2 mois offerts</div>
+          </td>
+          <td class="td-oem">
+            <div class="price-main">Sur devis</div>
+            <div class="price-gift">0,02 € à 0,05 € / preuve</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-starter"><div class="price-volume">500 certifications / mois</div></td>
+          <td class="td-business"><div class="price-volume">5 000 certifications / mois</div></td>
+          <td class="td-enterprise"><div class="price-volume">Volume illimité</div></td>
+          <td class="td-oem"><div class="price-volume">Prix dégressif au volume</div></td>
+        </tr>
+        <tr>
+          <td class="td-starter"><div class="price-features">API REST · Dashboard · Receipt PDF · QR code</div></td>
+          <td class="td-business"><div class="price-features">API + SDK · Multi-utilisateurs · Support email · Webhooks</div></td>
+          <td class="td-enterprise"><div class="price-features">Tout inclus · SLA 99,9 % · Support dédié · Rapport conformité AI Act</div></td>
+          <td class="td-oem"><div class="price-features">White-label · Intégration sur mesure · Account manager dédié</div></td>
+        </tr>
+        <tr>
+          <td class="td-starter"><div class="price-target">PME · Experts · Cabinets</div></td>
+          <td class="td-business"><div class="price-target">Scale-ups · Assureurs · Marketplaces</div></td>
+          <td class="td-enterprise"><div class="price-target">Grands comptes · Groupements · Institutions</div></td>
+          <td class="td-oem"><div class="price-target">Éditeurs · Intégrateurs · Apporteurs</div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-box">
+      <div class="hl-label">Formule Partenaire OEM — Pour les apporteurs d'affaires et intégrateurs</div>
+      <ul class="bul-list">
+        <li>Facturation à l'usage : 0,02 € à 0,05 € par certification selon le volume</li>
+        <li>White-label disponible : la solution présentée sous votre marque</li>
+        <li>Commission sur les clients apportés : conditions définies dans le contrat d'apporteur</li>
+        <li>Pilote gratuit 30 jours pour chaque prospect qualifié que vous apportez</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 6. INTEGRATION -->
+  <div class="section-warm">
+    <div class="eyebrow">L'intégration</div>
+    <h2>Aussi simple que d'ajouter un module.</h2>
+    <div class="rule"></div>
+
+    <div class="mode-row">
+      <div class="mode-num">01</div>
+      <div>
+        <div class="mode-title">Plateforme web directe</div>
+        <p class="mode-body">Vos clients accèdent directement à evidencia.tech/depot pour certifier leurs documents. Aucune intégration technique requise. Idéal pour démarrer immédiatement.</p>
+      </div>
+      <div><span class="mode-tag">0 jour de dev.</span></div>
+    </div>
+    <div class="mode-row">
+      <div class="mode-num">02</div>
+      <div>
+        <div class="mode-title">API REST — Intégration backend</div>
+        <p class="mode-body">Votre backend appelle l'API Évidencia pour créer, vérifier et récupérer les preuves. Compatible avec n'importe quel langage ou framework. Documentation complète sur docs.evidencia.tech.</p>
+      </div>
+      <div><span class="mode-tag">2–3 jours de dev.</span></div>
+    </div>
+    <div class="mode-row">
+      <div class="mode-num">03</div>
+      <div>
+        <div class="mode-title">SDK Mobile natif</div>
+        <p class="mode-body">Le SDK Évidencia s'intègre directement dans votre application iOS (Swift), Android (Kotlin) ou Flutter. L'utilisateur certifie sans quitter votre application.</p>
+      </div>
+      <div><span class="mode-tag">3–5 jours de dev.</span></div>
+    </div>
+  </div>
+
+  <!-- 7. CONTACT -->
+  <div class="section-dark">
+    <div class="eyebrow">Contact</div>
+    <h2>Parlons de votre projet.</h2>
+    <div class="rule"></div>
+    <p>Évidencia propose un pilote gratuit de 30 jours sans engagement pour chaque nouveau partenaire. Aucune carte bancaire requise pour démarrer.</p>
+
+    <div class="contact-grid">
+      <div>
+        <div class="contact-label">Fondateur</div>
+        <div class="contact-val">Jordan Lopez</div>
+        <div class="contact-sub">Disponible pour une démo ou un appel de découverte</div>
+      </div>
+      <div>
+        <div class="contact-label">Email</div>
+        <div class="contact-val">hello@evidencia.tech</div>
+        <div class="contact-sub">Réponse sous 24h</div>
+      </div>
+      <div>
+        <div class="contact-label">Site</div>
+        <div class="contact-val">evidencia.tech</div>
+        <div class="contact-sub">Démo en ligne disponible</div>
+      </div>
+      <div>
+        <div class="contact-label">Documentation</div>
+        <div class="contact-val">docs.evidencia.tech</div>
+        <div class="contact-sub">API · SDK · Guides d'intégration</div>
+      </div>
+
+      <div class="pilot-box">
+        <div class="pilot-title">Pilote gratuit · 30 jours · Zéro engagement</div>
+        <div class="pilot-sub">Testez Évidencia sur votre propre cas d'usage avant tout engagement commercial.</div>
+        <div class="pilot-tags">
+          <span class="pilot-tag">Intégration en 1 semaine</span>
+          <span class="pilot-tag">Support technique inclus</span>
+          <span class="pilot-tag">Aucune carte bancaire</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <div class="doc-footer-brand">Évidencia</div>
+    <div class="doc-footer-info">Dossier de présentation · Juin 2026 · Confidentiel<br>Ce document est destiné aux partenaires et prospects d'Évidencia.</div>
+  </div>
+
+</div>
+</body>
+</html>
