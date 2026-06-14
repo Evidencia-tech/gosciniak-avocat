@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Prendre rendez-vous — Maître Gosciniak, Avocat Aix-en-Provence</title>
+  <meta name="description" content="Contactez Maître Dounia Gosciniak, avocate en droit bancaire et contentieux commercial à Aix-en-Provence. Consultations au cabinet ou en visioconférence." />
+  <link rel="canonical" href="https://www.gosciniak-avocat.fr/pages/contact.html" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23FAF7F2'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-size='28' font-weight='600' fill='%237C2D3E'>DG</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav__container">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-initials">DG</span>
+      <span class="nav__logo-text">Gosciniak<small>Avocat</small></span>
+    </a>
+    <ul class="nav__links">
+      <li><a href="../index.html">Accueil</a></li>
+      <li><a href="cabinet.html">Le Cabinet</a></li>
+      <li><a href="specialisations.html">Spécialisations</a></li>
+      <li><a href="honoraires.html">Honoraires</a></li>
+      <li><a href="actualites.html">Actualités</a></li>
+      <li><a href="contact.html" aria-current="page">Contact</a></li>
+    </ul>
+    <a href="contact.html" class="btn btn--primary nav__cta">Prendre rendez-vous</a>
+    <button class="nav__burger" id="navBurger" aria-expanded="false" aria-label="Ouvrir le menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav__mobile" id="navMobile">
+  <a href="../index.html">Accueil</a>
+  <a href="cabinet.html">Le Cabinet</a>
+  <a href="specialisations.html">Spécialisations</a>
+  <a href="honoraires.html">Honoraires</a>
+  <a href="actualites.html">Actualités</a>
+  <a href="contact.html">Contact</a>
+  <a href="contact.html" class="btn btn--primary btn--large">Prendre rendez-vous</a>
+</div>
+
+<main>
+
+  <section class="page-hero">
+    <div class="container">
+      <span class="page-hero__tag">Contact</span>
+      <h1 class="fade-up">Prendre contact</h1>
+      <p class="fade-up">Vous souhaitez évoquer votre situation ? Le cabinet vous répond dans les meilleurs délais. Les consultations peuvent se tenir au cabinet ou en visioconférence.</p>
+    </div>
+  </section>
+
+  <section class="section section--lg">
+    <div class="container">
+      <div class="contact-layout">
+
+        <!-- Formulaire -->
+        <div class="fade-up">
+          <span class="section__tag">Formulaire de contact</span>
+          <h2 style="margin-bottom:0.5rem">Décrivez votre situation</h2>
+          <span class="accent-line"></span>
+          <p style="margin-bottom:2rem">Toutes les informations que vous partagez sont strictement confidentielles. Le cabinet vous répondra dans les 48 heures ouvrées.</p>
+
+          <form id="contactForm" novalidate>
+            <div class="form-group">
+              <label for="nom">Nom &amp; Prénom <span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="nom" name="nom" autocomplete="name" placeholder="Marie Dupont" required />
+              <span class="form-error" id="nomError" role="alert"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="societe">Société <span style="color:var(--text-sec);font-weight:400">(optionnel)</span></label>
+              <input type="text" id="societe" name="societe" autocomplete="organization" placeholder="Nom de votre entreprise" />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Adresse email <span class="req" aria-hidden="true">*</span></label>
+              <input type="email" id="email" name="email" autocomplete="email" placeholder="marie@exemple.fr" required />
+              <span class="form-error" id="emailError" role="alert"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="objet">Objet de la demande <span class="req" aria-hidden="true">*</span></label>
+              <select id="objet" name="objet" required>
+                <option value="">Sélectionnez un objet…</option>
+                <option value="Cautionnement bancaire">Cautionnement bancaire</option>
+                <option value="Responsabilité bancaire">Responsabilité bancaire</option>
+                <option value="Fraude bancaire">Fraude bancaire</option>
+                <option value="Crédit professionnel">Crédit professionnel</option>
+                <option value="Crédit à la consommation">Crédit à la consommation</option>
+                <option value="Recouvrement de créances">Recouvrement de créances</option>
+                <option value="Voies d'exécution">Voies d'exécution</option>
+                <option value="Litige B2B">Litige B2B</option>
+                <option value="Autre">Autre</option>
+              </select>
+              <span class="form-error" id="objetError" role="alert"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="message">Votre message <span class="req" aria-hidden="true">*</span></label>
+              <textarea id="message" name="message" placeholder="Décrivez brièvement votre situation…" required></textarea>
+              <span class="form-error" id="messageError" role="alert"></span>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--large" style="width:100%">
+              Envoyer ma demande
+            </button>
+          </form>
+
+          <div class="form-success" id="formSuccess" role="alert">
+            <h3>Message transmis</h3>
+            <p>Votre demande a bien été envoyée. Maître Gosciniak vous répondra dans les 48 heures ouvrées.</p>
+          </div>
+        </div>
+
+        <!-- Informations -->
+        <div class="contact-info fade-up">
+          <span class="section__tag">Coordonnées</span>
+          <h2 style="margin-bottom:0.5rem">Le Cabinet</h2>
+          <span class="accent-line"></span>
+
+          <address>
+            <div class="contact-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div class="contact-detail-text">
+                <strong>Adresse</strong>
+                <p>13 place John Rewald, Espace Forbin<br>13100 Aix-en-Provence</p>
+              </div>
+            </div>
+            <div class="contact-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <div class="contact-detail-text">
+                <strong>Email</strong>
+                <p><a href="mailto:contact@gosciniak-avocat.fr" style="color:var(--primary)">contact@gosciniak-avocat.fr</a></p>
+              </div>
+            </div>
+            <div class="contact-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <div class="contact-detail-text">
+                <strong>Visioconférence</strong>
+                <p>Consultations disponibles en visioconférence sur simple demande.</p>
+              </div>
+            </div>
+          </address>
+
+          <!-- Encart discrétion -->
+          <div style="margin-top:2.5rem;padding:2rem;background:var(--primary);border-radius:2px">
+            <h3 style="color:#fff;font-size:1.1rem;margin-bottom:0.75rem">Confidentialité garantie</h3>
+            <p style="color:rgba(255,255,255,0.75);font-size:0.875rem;margin:0">Chaque échange avec le cabinet est couvert par le secret professionnel. Vous pouvez partager votre situation librement et en toute confiance.</p>
+          </div>
+
+          <!-- Assurance PJ -->
+          <div style="margin-top:1.5rem;padding:1.75rem;background:var(--white);border:1px solid var(--border);border-radius:2px">
+            <h3 style="font-size:1rem;margin-bottom:0.5rem">Vous avez peut-être une protection juridique</h3>
+            <p style="font-size:0.875rem;margin:0">Beaucoup de contrats d'assurance (habitation, auto, prévoyance) incluent une garantie protection juridique. Le cabinet peut vous aider à l'identifier et à l'activer pour réduire votre reste à charge.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <div class="footer__logo">DG</div>
+        <p>Maître Dounia Gosciniak<br>Avocate au Barreau d'Aix-en-Provence<br><br>13 place John Rewald, Espace Forbin<br>13100 Aix-en-Provence</p>
+      </div>
+      <nav class="footer__col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="../index.html">Accueil</a></li>
+          <li><a href="cabinet.html">Le Cabinet</a></li>
+          <li><a href="specialisations.html">Spécialisations</a></li>
+          <li><a href="honoraires.html">Honoraires</a></li>
+          <li><a href="actualites.html">Actualités</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <nav class="footer__col">
+        <h4>Spécialisations</h4>
+        <ul>
+          <li><a href="specialisations/cautionnement.html">Cautionnement</a></li>
+          <li><a href="specialisations/responsabilite-bancaire.html">Responsabilité bancaire</a></li>
+          <li><a href="specialisations/fraude-escroquerie.html">Fraude bancaire</a></li>
+          <li><a href="specialisations/recouvrement.html">Recouvrement</a></li>
+          <li><a href="specialisations/litiges-b2b.html">Litiges B2B</a></li>
+        </ul>
+      </nav>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <address style="font-style:normal">
+          <p><a href="mailto:contact@gosciniak-avocat.fr" style="color:rgba(255,255,255,0.5)">contact@gosciniak-avocat.fr</a></p>
+          <p style="margin-top:0.5rem;font-size:0.875rem">Consultations au cabinet<br>ou en visioconférence</p>
+        </address>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© 2025 Maître Dounia Gosciniak — Avocat au Barreau d'Aix-en-Provence</p>
+      <p>Membre du Barreau d'Aix-en-Provence — Bouches-du-Rhône</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../script.js"></script>
+</body>
+</html>
