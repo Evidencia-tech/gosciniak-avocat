@@ -47,7 +47,9 @@
       "Bash(xargs sed -i 's|<div class=\"footer__logo\" aria-hidden=\"true\">DG</div>|<div class=\"footer__logo\" aria-hidden=\"true\">Gosciniak</div>|g')",
       "Bash(xargs sed -i \"s|#C9A96E|#C4872A|g\")",
       "Bash(xargs sed -i 's|fill%3D%27%237C2D3E%27|fill%3D%27%231B4D3E%27|g')",
-      "Bash(xargs sed -i 's|<div class=\"footer__logo\">DG</div>|<div class=\"footer__logo\">Gosciniak</div>|g')"
+      "Bash(xargs sed -i 's|<div class=\"footer__logo\">DG</div>|<div class=\"footer__logo\">Gosciniak</div>|g')",
+      "Bash(xargs sed -i 's/© 2025/© 2026/g')",
+      "Bash(xargs sed -i 's|style=\"color:rgba\\(255,255,255,0.5\\)\"||g')"
     ]
   }
 }

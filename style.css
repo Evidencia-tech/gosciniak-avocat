@@ -931,8 +931,12 @@ strong { color: var(--color-text); font-weight: 500; }
    FOOTER — Vert impérial
    ============================================================ */
 .footer {
-  background: var(--color-dark-green);
-  color: rgba(255,255,255,0.62);
+  /* Marbre en fond avec overlay vert foncé semi-transparent */
+  background:
+    linear-gradient(rgba(10, 40, 25, 0.82), rgba(10, 40, 25, 0.82)),
+    url('assets/marble-hero.jpg') center/cover no-repeat;
+  background-color: var(--color-dark-green); /* fallback */
+  color: rgba(255,255,255,0.8);
   padding: 5rem 0 0;
 }
 .footer__grid {
@@ -943,44 +947,66 @@ strong { color: var(--color-text); font-weight: 500; }
 }
 .footer__brand .footer__logo {
   font-family: var(--font-h);
-  font-size: 1.4rem;
+  font-size: 2rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-gold);
   margin-bottom: 1rem;
   display: block;
-  /* Supprimer l'ancien style box */
   width: auto; height: auto;
   background: none;
   border-radius: 0;
   align-items: unset;
   justify-content: unset;
 }
-.footer__brand p { font-size: 0.875rem; line-height: 1.7; }
+.footer__brand p {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.8);
+}
+/* Liens dans le footer brand (email, etc.) */
+.footer__brand a {
+  color: rgba(255,255,255,0.8) !important;
+  transition: color var(--transition);
+}
+.footer__brand a:hover { color: var(--color-gold) !important; }
+
 .footer__col h4 {
-  color: rgba(255,255,255,0.9);
-  font-size: 0.68rem;
+  font-family: var(--font-b);
+  color: var(--color-gold);
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   margin-bottom: 1.25rem;
 }
 .footer__col ul li { margin-bottom: 0.6rem; }
 .footer__col a {
   font-size: 0.875rem;
-  color: rgba(255,255,255,0.48);
+  color: rgba(255,255,255,0.8);
   transition: color var(--transition);
 }
 .footer__col a:hover { color: var(--color-gold); }
+/* Textes libres dans les colonnes footer (adresse, etc.) */
+.footer__col p,
+.footer address p {
+  color: rgba(255,255,255,0.8);
+}
+.footer address a {
+  color: rgba(255,255,255,0.8) !important;
+  transition: color var(--transition);
+}
+.footer address a:hover { color: var(--color-gold) !important; }
+
 .footer__bottom {
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(196, 135, 42, 0.3);
   padding: 1.5rem 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-.footer__bottom p { font-size: 0.78rem; color: rgba(255,255,255,0.32); margin: 0; }
+.footer__bottom p { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin: 0; }
 
 @media (min-width: 640px) {
   .footer__grid { grid-template-columns: repeat(2, 1fr); }
