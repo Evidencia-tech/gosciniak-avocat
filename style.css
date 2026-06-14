@@ -196,9 +196,9 @@ strong { color: var(--color-text); font-weight: 500; }
 .nav__logo-initials { display: none; } /* remplacé par le style texte */
 .nav__logo-text {
   font-family: var(--font-h);
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-white);
   line-height: 1.15;
@@ -207,7 +207,7 @@ strong { color: var(--color-text); font-weight: 500; }
 .nav--scrolled .nav__logo-text { color: var(--color-dark-green); }
 .nav__logo-text small {
   font-family: var(--font-b);
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 300;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -351,27 +351,39 @@ strong { color: var(--color-text); font-weight: 500; }
 
 .hero__eyebrow {
   font-family: var(--font-b);
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   font-weight: 300;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--color-gold);
+  color: #C4872A;
   display: block;
   margin-bottom: 1.75rem;
 }
 
-/* "GOSCINIAK" — nom du cabinet en grand */
+/* "GOSCINIAK" — nom du cabinet */
 .hero h1,
 .hero__name {
   font-family: var(--font-h);
-  font-size: clamp(4rem, 13vw, 10.5rem);
+  font-size: clamp(3rem, 6vw, 5rem);
   font-weight: 300;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-white);
   line-height: 1;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   font-style: normal;
+}
+
+/* "Maître Dounia Gosciniak" — prénom de l'avocate */
+.hero__avocat-name {
+  font-family: var(--font-h);
+  font-size: 1.8rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--color-white);
+  display: block;
+  margin-bottom: 2rem;
+  letter-spacing: 0.03em;
 }
 
 .hero__sub {
@@ -1041,7 +1053,8 @@ strong { color: var(--color-text); font-weight: 500; }
   .pillar { border-right: none; border-bottom: 1px solid var(--color-border); }
   .pillars { border: none; gap: 0; }
   .two-col--reverse .two-col__visual { order: 0; }
-  .hero h1, .hero__name { font-size: clamp(3.2rem, 18vw, 7rem); }
+  .hero h1, .hero__name { font-size: clamp(2.5rem, 10vw, 3.5rem); }
+  .hero__avocat-name { font-size: 1.35rem; }
 }
 
 @media print {
