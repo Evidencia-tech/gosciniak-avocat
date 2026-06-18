@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OG Image Template — Gosciniak Avocat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 1200px; height: 630px; overflow: hidden; }
+    .og-frame {
+      width: 1200px;
+      height: 630px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+    .og-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('assets/marble-hero.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+    .og-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 50, 35, 0.55);
+    }
+    .og-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .og-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 108px;
+      font-weight: 400;
+      letter-spacing: 0.17em;
+      color: #ffffff;
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .og-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      color: #C4872A;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .og-divider {
+      width: 240px;
+      height: 1px;
+      background: rgba(196, 135, 42, 0.5);
+      margin-bottom: 28px;
+    }
+    .og-specialty {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.85);
+    }
+  </style>
+</head>
+<body>
+  <div class="og-frame">
+    <div class="og-bg"></div>
+    <div class="og-overlay"></div>
+    <div class="og-content">
+      <div class="og-name">GOSCINIAK</div>
+      <div class="og-subtitle">Avocat — Barreau d'Aix-en-Provence</div>
+      <div class="og-divider"></div>
+      <div class="og-specialty">Droit bancaire &amp; Contentieux commercial</div>
+    </div>
+  </div>
+</body>
+</html>
