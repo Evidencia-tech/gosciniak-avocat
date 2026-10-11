@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration — Gosciniak Avocat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #1B4D3E;
+      --green-dark: #153d31;
+      --gold:       #C4872A;
+      --gold-dark:  #a97224;
+      --bg:         #FAFAF8;
+      --bg2:        #F2F0EB;
+      --text:       #1A1A1A;
+      --text-light: #6B6B6B;
+      --border:     #E0DBD3;
+      --white:      #FFFFFF;
+      --red:        #C0392B;
+      --font-h: 'Cormorant Garamond', Georgia, serif;
+      --font-b: 'Inter', system-ui, sans-serif;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==============================
+       ÉCRAN DE CONNEXION
+       ============================== */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+    }
+
+    .login-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .login-logo__initials {
+      width: 56px;
+      height: 56px;
+      background: var(--green);
+      color: var(--gold);
+      font-family: var(--font-h);
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-logo__title {
+      font-family: var(--font-h);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--green);
+      text-align: center;
+    }
+
+    .login-logo__sub {
+      font-size: 0.8125rem;
+      color: var(--text-light);
+      text-align: center;
+      margin-top: -6px;
+    }
+
+    /* ==============================
+       FORM ELEMENTS
+       ============================== */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+
+    .form-group label .hint {
+      font-weight: 400;
+      color: var(--text-light);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: var(--font-b);
+      font-size: 0.9375rem;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color 0.2s;
+      outline: none;
+      appearance: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(27,77,62,0.08);
+    }
+
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B6B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .textarea--short { min-height: 80px; }
+    .textarea--tall  { min-height: 260px; font-size: 0.875rem; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ==============================
+       BUTTONS
+       ============================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 2px;
+      font-family: var(--font-b);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn--primary { background: var(--green); color: var(--white); }
+    .btn--primary:hover:not(:disabled) { background: var(--green-dark); }
+
+    .btn--gold { background: var(--gold); color: var(--white); }
+    .btn--gold:hover:not(:disabled) { background: var(--gold-dark); }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--text-light);
+      border: 1px solid var(--border);
+    }
+    .btn--ghost:hover:not(:disabled) {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .btn--danger {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid currentColor;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+    .btn--danger:hover:not(:disabled) {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    .btn--full { width: 100%; }
+
+    /* ==============================
+       MESSAGES
+       ============================== */
+    .msg {
+      padding: 11px 14px;
+      border-radius: 2px;
+      font-size: 0.875rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .msg.visible { display: block; }
+
+    .msg--success {
+      background: #e8f5e9;
+      color: #256029;
+      border: 1px solid #a5d6a7;
+    }
+    .msg--error {
+      background: #fff0f0;
+      color: var(--red);
+      border: 1px solid #f5c6c6;
+    }
+
+    /* ==============================
+       ADMIN LAYOUT
+       ============================== */
+    #adminPanel { min-height: 100vh; }
+
+    .admin-header {
+      background: var(--green);
+      color: var(--white);
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
+    .admin-header__brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .admin-header__initials {
+      width: 36px;
+      height: 36px;
+      background: rgba(196,135,42,0.15);
+      border: 1px solid rgba(196,135,42,0.5);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-h);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .admin-header__name {
+      font-family: var(--font-h);
+      font-size: 1.125rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .admin-header__section {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 1px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .admin-header__logout {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 7px 16px;
+      border-radius: 2px;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      font-family: var(--font-b);
+      transition: background 0.2s, color 0.2s;
+    }
+    .admin-header__logout:hover {
+      background: rgba(255,255,255,0.18);
+      color: var(--white);
+    }
+
+    .admin-main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 36px 28px 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .admin-main {
+        grid-template-columns: 1fr;
+        padding: 20px 16px 48px;
+      }
+      .form-row { grid-template-columns: 1fr; gap: 0; }
+      .admin-header { padding: 0 20px; }
+    }
+
+    /* ==============================
+       PANELS
+       ============================== */
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .panel__header {
+      background: var(--bg2);
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel__title {
+      font-family: var(--font-h);
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--green);
+    }
+
+    .panel__count {
+      font-size: 0.8125rem;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
+    .panel__body { padding: 22px; }
+
+    /* ==============================
+       ARTICLES LIST
+       ============================== */
+    #articlesList {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 560px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    #articlesList::-webkit-scrollbar { width: 4px; }
+    #articlesList::-webkit-scrollbar-track { background: var(--bg2); }
+    #articlesList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .article-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: var(--bg);
+      transition: border-color 0.15s;
+    }
+
+    .article-item:hover { border-color: #c5bfb8; }
+
+    .article-item__id {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 2px 6px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .article-item__info { flex: 1; min-width: 0; }
+
+    .article-item__titre {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+
+    .article-item__meta {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .article-item__cat {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    .articles-empty,
+    .articles-loading {
+      text-align: center;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      padding: 36px 0;
+    }
+
+    .articles-loading::after {
+      content: '…';
+      animation: dots 1s steps(3,end) infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: ''; }
+      33%  { content: '.'; }
+      66%  { content: '..'; }
+      100% { content: '…'; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     ÉCRAN DE CONNEXION
+     ============================================================ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo__initials">DG</div>
+      <div class="login-logo__title">Administration</div>
+      <div class="login-logo__sub">Gosciniak Avocat — Accès réservé</div>
+    </div>
+
+    <form id="loginForm" onsubmit="return handleLogin(event)">
+      <div class="form-group">
+        <label for="loginPassword">Mot de passe</label>
+        <input
+          type="password"
+          id="loginPassword"
+          placeholder="••••••••••••"
+          autocomplete="current-password"
+          autofocus
+          required
+        >
+      </div>
+      <div class="msg msg--error" id="loginError">
+        Mot de passe incorrect — accès refusé.
+      </div>
+      <button type="submit" class="btn btn--primary btn--full" style="margin-top:20px">
+        Se connecter
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================
+     PANNEAU ADMINISTRATION
+     ============================================================ -->
+<div id="adminPanel" style="display:none">
+
+  <header class="admin-header">
+    <div class="admin-header__brand">
+      <div class="admin-header__initials">DG</div>
+      <div>
+        <div class="admin-header__name">Gosciniak Avocat</div>
+        <div class="admin-header__section">Administration du blog</div>
+      </div>
+    </div>
+    <button class="admin-header__logout" onclick="handleLogout()">Déconnexion</button>
+  </header>
+
+  <main class="admin-main">
+
+    <!-- ---- Panel : Formulaire ---- -->
+    <div class="panel">
+      <div class="panel__header">
+        <h2 class="panel__title">Nouvel article</h2>
+      </div>
+      <div class="panel__body">
+        <form id="articleForm" onsubmit="return handlePublish(event)">
+
+          <div class="form-group">
+            <label for="fTitre">Titre de l'article</label>
+            <input type="text" id="fTitre" placeholder="Titre complet de l'article" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fDate">Date</label>
+              <input type="date" id="fDate" required>
+            </div>
+            <div class="form-group">
+              <label for="fCategorie">Catégorie</label>
+              <select id="fCategorie" required>
+                <option value="">Sélectionner…</option>
+                <option value="Droit bancaire">Droit bancaire</option>
+                <option value="Contentieux commercial">Contentieux commercial</option>
+                <option value="Fraude bancaire">Fraude bancaire</option>
+                <option value="Recouvrement">Recouvrement</option>
+                <option value="Voies d'exécution">Voies d'exécution</option>
+                <option value="Actualité juridique">Actualité juridique</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fExtrait">
+              Extrait
+              <span class="hint">(2-3 phrases, affiché dans la liste des articles)</span>
+            </label>
+            <textarea
+              id="fExtrait"
+              class="textarea--short"
+              placeholder="Résumé court de l'article…"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="fContenu">
+              Contenu
+              <span class="hint">(lignes vides = nouveaux paragraphes)</span>
+            </label>
+            <textarea
+              id="fContenu"
+              class="textarea--tall"
+              placeholder="Rédigez le corps de l'article ici.
+
+Séparez chaque paragraphe par une ligne vide.
+Les sauts de ligne simples sont ignorés.
+
+Troisième paragraphe…"
+              required
+            ></textarea>
+          </div>
+
+          <div class="msg msg--success" id="publishSuccess">
+            Article publié avec succès.
+          </div>
+          <div class="msg msg--error" id="publishError">
+            Une erreur est survenue. Veuillez réessayer.
+          </div>
+
+          <button type="submit" id="publishBtn" class="btn btn--gold btn--full" style="margin-top:10px">
+            Publier l'article
+          </button>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- ---- Panel : Articles existants ---- -->
+    <div class="panel">
+      <div class="panel__header">
+        <h2 class="panel__title">Articles existants</h2>
+        <span class="panel__count" id="articlesCount"></span>
+      </div>
+      <div class="panel__body" style="padding:16px">
+        <div id="articlesList">
+          <div class="articles-loading">Chargement</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const PASSWORD = 'Gosciniak2026!';
+
+  /* ---- Auth ---- */
+
+  function checkAuth() {
+    return sessionStorage.getItem('admin_auth') === '1';
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const input = document.getElementById('loginPassword');
+    const error = document.getElementById('loginError');
+    if (input.value === PASSWORD) {
+      sessionStorage.setItem('admin_auth', '1');
+      error.classList.remove('visible');
+      showAdminPanel();
+    } else {
+      error.classList.add('visible');
+      input.value = '';
+      input.focus();
+    }
+    return false;
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem('admin_auth');
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginPassword').focus();
+  }
+
+  function showAdminPanel() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    prefillDate();
+    loadArticles();
+  }
+
+  /* ---- Date ---- */
+
+  function prefillDate() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const dd   = String(d.getDate()).padStart(2, '0');
+    document.getElementById('fDate').value = `${yyyy}-${mm}-${dd}`;
+  }
+
+  /* ---- Helpers ---- */
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function authHeaders(extra) {
+    return Object.assign({ 'Authorization': `Bearer ${PASSWORD}` }, extra || {});
+  }
+
+  /* ---- Load articles ---- */
+
+  async function loadArticles() {
+    const list  = document.getElementById('articlesList');
+    const count = document.getElementById('articlesCount');
+    list.innerHTML = '<div class="articles-loading">Chargement</div>';
+
+    try {
+      const res  = await fetch('/api/admin/articles', { headers: authHeaders() });
+      const data = await res.json();
+
+      if (!data.ok) {
+        list.innerHTML = '<div class="articles-empty">Erreur de chargement.</div>';
+        return;
+      }
+
+      const arts = data.articles;
+      count.textContent = `${arts.length} article${arts.length !== 1 ? 's' : ''}`;
+
+      if (arts.length === 0) {
+        list.innerHTML = '<div class="articles-empty">Aucun article publié.</div>';
+        return;
+      }
+
+      list.innerHTML = arts.map(a => `
+        <div class="article-item" id="art-${a.id}">
+          <span class="article-item__id">#${a.id}</span>
+          <div class="article-item__info">
+            <div class="article-item__titre" title="${esc(a.titre)}">${esc(a.titre)}</div>
+            <div class="article-item__meta">
+              <span>${esc(a.date)}</span>
+              <span>·</span>
+              <span class="article-item__cat">${esc(a.categorie)}</span>
+            </div>
+          </div>
+          <button
+            class="btn btn--danger"
+            onclick="handleDelete(${a.id}, this)"
+            aria-label="Supprimer ${esc(a.titre)}"
+          >Supprimer</button>
+        </div>
+      `).join('');
+
+    } catch (_) {
+      list.innerHTML = '<div class="articles-empty">Erreur réseau.</div>';
+    }
+  }
+
+  /* ---- Publish ---- */
+
+  async function handlePublish(e) {
+    e.preventDefault();
+
+    const btn     = document.getElementById('publishBtn');
+    const success = document.getElementById('publishSuccess');
+    const error   = document.getElementById('publishError');
+
+    success.classList.remove('visible');
+    error.classList.remove('visible');
+    btn.disabled    = true;
+    btn.textContent = 'Publication…';
+
+    const payload = {
+      titre:     document.getElementById('fTitre').value.trim(),
+      date:      document.getElementById('fDate').value,
+      categorie: document.getElementById('fCategorie').value,
+      extrait:   document.getElementById('fExtrait').value.trim(),
+      contenu:   document.getElementById('fContenu').value.trim(),
+    };
+
+    try {
+      const res  = await fetch('/api/admin/article', {
+        method:  'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        success.classList.add('visible');
+        document.getElementById('articleForm').reset();
+        prefillDate();
+        loadArticles();
+        setTimeout(() => success.classList.remove('visible'), 5000);
+      } else {
+        error.textContent = data.error || 'Une erreur est survenue.';
+        error.classList.add('visible');
+      }
+    } catch (_) {
+      error.textContent = 'Erreur réseau — vérifiez votre connexion.';
+      error.classList.add('visible');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Publier l\'article';
+    }
+
+    return false;
+  }
+
+  /* ---- Delete ---- */
+
+  async function handleDelete(id, btn) {
+    if (!confirm('Supprimer cet article définitivement ?')) return;
+
+    btn.disabled    = true;
+    btn.textContent = '…';
+
+    try {
+      const res  = await fetch(`/api/admin/article/${id}`, {
+        method:  'DELETE',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        const item = document.getElementById(`art-${id}`);
+        if (item) item.remove();
+        const remaining = document.querySelectorAll('.article-item').length;
+        document.getElementById('articlesCount').textContent =
+          `${remaining} article${remaining !== 1 ? 's' : ''}`;
+        if (remaining === 0) {
+          document.getElementById('articlesList').innerHTML =
+            '<div class="articles-empty">Aucun article publié.</div>';
+        }
+      } else {
+        alert(data.error || 'Erreur lors de la suppression.');
+        btn.disabled    = false;
+        btn.textContent = 'Supprimer';
+      }
+    } catch (_) {
+      alert('Erreur réseau.');
+      btn.disabled    = false;
+      btn.textContent = 'Supprimer';
+    }
+  }
+
+  /* ---- Init ---- */
+  if (checkAuth()) showAdminPanel();
+</script>
+
+</body>
+</html>

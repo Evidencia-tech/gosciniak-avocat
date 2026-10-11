@@ -49,7 +49,14 @@
       "Bash(xargs sed -i 's|fill%3D%27%237C2D3E%27|fill%3D%27%231B4D3E%27|g')",
       "Bash(xargs sed -i 's|<div class=\"footer__logo\">DG</div>|<div class=\"footer__logo\">Gosciniak</div>|g')",
       "Bash(xargs sed -i 's/© 2025/© 2026/g')",
-      "Bash(xargs sed -i 's|style=\"color:rgba\\(255,255,255,0.5\\)\"||g')"
+      "Bash(xargs sed -i 's|style=\"color:rgba\\(255,255,255,0.5\\)\"||g')",
+      "Bash(npm init *)",
+      "Bash(npm list *)",
+      "Bash(convert --version)",
+      "Bash(identify /home/runner/workspace/assets/marble-hero.jpg)",
+      "Bash(fc-list)",
+      "Bash(pip3 show *)",
+      "Bash(identify *)"
     ]
   }
 }

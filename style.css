@@ -203,17 +203,19 @@ strong { color: var(--color-text); font-weight: 500; }
   color: var(--color-white);
   line-height: 1.15;
   transition: color var(--transition);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9);
 }
 .nav--scrolled .nav__logo-text { color: var(--color-dark-green); }
 .nav__logo-text small {
   font-family: var(--font-b);
-  font-size: 0.65rem;
-  font-weight: 300;
+  font-size: 0.7rem;
+  font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--color-gold);
+  color: #C4872A;
   display: block;
   margin-top: 1px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9);
 }
 
 /* Links */
@@ -349,15 +351,16 @@ strong { color: var(--color-text); font-weight: 500; }
   width: 100%;
 }
 
-.hero__eyebrow {
-  font-family: var(--font-b);
-  font-size: 0.95rem;
+/* "Maître Dounia" — prénom au-dessus du nom */
+.hero__prenom {
+  font-family: var(--font-h);
+  font-size: 2rem;
   font-weight: 300;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: #C4872A;
+  font-style: italic;
+  color: var(--color-white);
   display: block;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
 }
 
 /* "GOSCINIAK" — nom du cabinet */
@@ -365,25 +368,26 @@ strong { color: var(--color-text); font-weight: 500; }
 .hero__name {
   font-family: var(--font-h);
   font-size: clamp(3rem, 6vw, 5rem);
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-white);
   line-height: 1;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   font-style: normal;
 }
 
-/* "Maître Dounia Gosciniak" — prénom de l'avocate */
-.hero__avocat-name {
-  font-family: var(--font-h);
-  font-size: 1.8rem;
-  font-weight: 300;
-  font-style: italic;
-  color: var(--color-white);
+/* "AVOCAT — BARREAU D'AIX-EN-PROVENCE" */
+.hero__barreau {
+  font-family: var(--font-b);
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #C4872A;
   display: block;
-  margin-bottom: 2rem;
-  letter-spacing: 0.03em;
+  margin-bottom: 1.75rem;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.8);
 }
 
 .hero__sub {
@@ -397,10 +401,13 @@ strong { color: var(--color-text); font-weight: 500; }
 }
 
 .hero__body {
-  color: rgba(255,255,255,0.78);
-  font-size: 1.0625rem;
+  font-family: var(--font-h);
+  font-size: 1.25rem;
+  font-weight: 300;
+  font-style: normal;
+  color: rgba(255,255,255,0.92);
   max-width: 520px;
-  line-height: 1.75;
+  line-height: 1.8;
   margin-bottom: 2.75rem;
 }
 
@@ -832,6 +839,20 @@ strong { color: var(--color-text); font-weight: 500; }
 .form-success h3 { font-size: 1.2rem; color: var(--color-dark-green); margin-bottom: 0.5rem; }
 .form-success p { font-size: 0.9rem; margin: 0; }
 
+.form-error-msg {
+  display: none;
+  padding: 1.5rem;
+  background: rgba(180,30,30,0.06);
+  border: 1px solid #c0392b;
+  border-radius: var(--radius);
+  text-align: center;
+  margin-top: 1.5rem;
+}
+.form-error-msg.visible { display: block; }
+.form-error-msg h3 { font-size: 1.2rem; color: #c0392b; margin-bottom: 0.5rem; }
+.form-error-msg p { font-size: 0.9rem; margin: 0; }
+.form-error-msg a { color: #c0392b; }
+
 .contact-info address { font-style: normal; }
 .contact-detail {
   display: flex;
@@ -1054,7 +1075,7 @@ strong { color: var(--color-text); font-weight: 500; }
   .pillars { border: none; gap: 0; }
   .two-col--reverse .two-col__visual { order: 0; }
   .hero h1, .hero__name { font-size: clamp(2.5rem, 10vw, 3.5rem); }
-  .hero__avocat-name { font-size: 1.35rem; }
+  .hero__prenom { font-size: 1.5rem; }
 }
 
 @media print {

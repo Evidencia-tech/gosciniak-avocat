@@ -95,25 +95,38 @@
       const objet   = document.getElementById('objet').value;
       const message = document.getElementById('message').value.trim();
 
-      const body = encodeURIComponent(
-        'Nom : ' + nom + '\n' +
-        (societe ? 'Société : ' + societe + '\n' : '') +
-        'Email : ' + email + '\n' +
-        'Objet : ' + objet + '\n\n' +
-        message
-      );
+      const submitBtn = form.querySelector('[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Envoi en cours…';
 
-      window.location.href = 'mailto:contact@gosciniak-avocat.fr'
-        + '?subject=' + encodeURIComponent('[Contact site] ' + objet)
-        + '&body=' + body;
-
-      const success = document.getElementById('formSuccess');
-      if (success) {
-        form.style.opacity = '0.4';
-        form.style.pointerEvents = 'none';
-        success.classList.add('visible');
-        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, societe, email, objet, message })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            form.style.opacity = '0.4';
+            form.style.pointerEvents = 'none';
+            const success = document.getElementById('formSuccess');
+            if (success) {
+              success.classList.add('visible');
+              success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else {
+            throw new Error(data.error || 'Erreur inconnue');
+          }
+        })
+        .catch(function () {
+          const errEl = document.getElementById('formError');
+          if (errEl) {
+            errEl.classList.add('visible');
+            errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Envoyer ma demande';
+        });
     });
   }
 
