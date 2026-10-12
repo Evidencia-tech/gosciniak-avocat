@@ -42,10 +42,10 @@ app.post('/api/contact', async (req, res) => {
    ============================================================ */
 
 const BLOG_DATA_PATH = path.join(__dirname, 'blog-data.js');
-const ADMIN_PWD      = 'Gosciniak2026!';
+const ADMIN_PWD      = process.env.ADMIN_PASSWORD;
 
 function adminAuth(req, res) {
-  if (req.headers['authorization'] !== `Bearer ${ADMIN_PWD}`) {
+  if (!ADMIN_PWD || req.headers['authorization'] !== `Bearer ${ADMIN_PWD}`) {
     res.status(401).json({ ok: false, error: 'Non autorisé' });
     return false;
   }

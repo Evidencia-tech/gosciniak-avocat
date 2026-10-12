@@ -604,20 +604,33 @@ Troisième paragraphe…"
 </div>
 
 <script>
-  const PASSWORD = 'Gosciniak2026!';
-
   /* ---- Auth ---- */
 
-  function checkAuth() {
-    return sessionStorage.getItem('admin_auth') === '1';
+  // Le mot de passe n'est plus dans le code : il est saisi à la connexion,
+  // vérifié par le serveur, puis gardé en mémoire pour la session du navigateur.
+  function getPassword() {
+    return sessionStorage.getItem('admin_pwd') || '';
   }
 
-  function handleLogin(e) {
+  function checkAuth() {
+    return getPassword() !== '';
+  }
+
+  async function handleLogin(e) {
     e.preventDefault();
     const input = document.getElementById('loginPassword');
     const error = document.getElementById('loginError');
-    if (input.value === PASSWORD) {
-      sessionStorage.setItem('admin_auth', '1');
+    let valid = false;
+    try {
+      const res = await fetch('/api/admin/articles', {
+        headers: { 'Authorization': `Bearer ${input.value}` }
+      });
+      valid = res.ok;
+    } catch (err) {
+      console.error(err);
+    }
+    if (valid) {
+      sessionStorage.setItem('admin_pwd', input.value);
       error.classList.remove('visible');
       showAdminPanel();
     } else {
@@ -629,7 +642,7 @@ Troisième paragraphe…"
   }
 
   function handleLogout() {
-    sessionStorage.removeItem('admin_auth');
+    sessionStorage.removeItem('admin_pwd');
     document.getElementById('adminPanel').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('loginPassword').value = '';
@@ -664,7 +677,7 @@ Troisième paragraphe…"
   }
 
   function authHeaders(extra) {
-    return Object.assign({ 'Authorization': `Bearer ${PASSWORD}` }, extra || {});
+    return Object.assign({ 'Authorization': `Bearer ${getPassword()}` }, extra || {});
   }
 
   /* ---- Load articles ---- */
