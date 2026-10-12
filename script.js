@@ -99,12 +99,17 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Envoi en cours…';
 
-      fetch('/api/contact', {
+      fetch('/.netlify/functions/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nom, societe, email, objet, message })
       })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          return r.text().then(function (text) {
+            try { return JSON.parse(text); }
+            catch (e) { throw new Error('Réponse non JSON (HTTP ' + r.status + ') : ' + text.slice(0, 200)); }
+          });
+        })
         .then(function (data) {
           if (data.ok) {
             form.style.opacity = '0.4';
@@ -118,7 +123,8 @@
             throw new Error(data.error || 'Erreur inconnue');
           }
         })
-        .catch(function () {
+        .catch(function (err) {
+          console.error('[contact] envoi impossible :', err);
           const errEl = document.getElementById('formError');
           if (errEl) {
             errEl.classList.add('visible');
