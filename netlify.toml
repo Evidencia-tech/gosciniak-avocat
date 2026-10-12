@@ -1,0 +1,22 @@
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  included_files = ["blog-data.js"]
+
+[[redirects]]
+  from = "/api/contact"
+  to = "/.netlify/functions/contact"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/*"
+  to = "/.netlify/functions/admin-articles/:splat"
+  status = 200
+
+# Les articles publiés depuis /admin sont stockés dans Netlify Blobs :
+# blog-data.js est donc servi par une Function (force = true car le fichier statique existe).
+[[redirects]]
+  from = "/blog-data.js"
+  to = "/.netlify/functions/blog-data"
+  status = 200
+  force = true
